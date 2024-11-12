@@ -44,7 +44,10 @@ bibliography: 2025-04-28-sparse-ad.bib
 toc:
   - name: Automatic differentiation
     subsections:
-    - name: Chain rule
+    - name: Toy example
+    - name: The chain rule
+    - name: Automatic differentiation is matrix-free
+    - name: Evaluating linear maps
     - name: Forward-mode AD
     - name: Reverse-mode AD
   - name: Sparse AD
@@ -94,14 +97,14 @@ providing performance benchmarks and guidance on when to use sparse AD over "den
 
 We start out by covering the fundamentals of classic AD, which we will refer to as "dense" AD, in distinction to sparse AD.
 
+### Toy example
+
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
-As our motivating example, we will therefore take a look at a function $f$
-composed from $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ 
+As our motivating example, we will therefore take a look at a differentiable function $f$
+composed from differentiable $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ 
 and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$, 
 such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
-At no loss of generality, we will illustrate this function for $n=5$, $m=4$ and $p=3$.
 The insights gained from this toy example should translate directly to more deeply composed functions.
-
 
 ### The chain rule
 
@@ -121,13 +124,16 @@ For a composed function $f = h \circ g$, the **multivariable chain rule** tells 
 
 $$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
 
+Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
+<!-- TODO: explain that values are random? -->
+Without loss of generality, we will keep using these dimensionalities in following illustrations.
 
 ### Automatic differentiation is matrix-free
 
-We've seen how to apply the chain rule to translate the compositional structure of a function into the compositional structure of its Jacobian.
-Due to how small we chose $n$, $m$ and $p$, this approach worked well on our toy example in figure 1.  
+We've seen how the chain rule directly translates the compositional structure of a function into the compositional structure of its Jacobian.
+Due to the small size of our chosen dimensions $n$, $m$ and $p$, this approach worked well on our toy example in Figure 1.  
 In practice however, there is a problem:
-Keeping intermediate Jacobian matrices **in computer memory** is inefficient and often impossible.
+**Keeping intermediate Jacobian matrices in computer memory is inefficient and often impossible.**
 
 We will refer to this kind of matrix, for which all entries are kept in computer memory, as a **materialized**.
 Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`s, JAX's `Array` and Julia's `Matrix`.
@@ -138,42 +144,50 @@ Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`
     Figure 2: Structure of the Jacobian of a tiny convolutional layer.
 </div>
 
+
+<!-- TODO: Maybe the identity function is a simpler example? -->
 As a motivating example against **materialized Jacobians**, let's take a look at a tiny convolutional layer.
 We assume a convolutional filter of size $5 \times 5$, as well as a single input and a single output channel.
-An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in figure 2.
+An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
 Computing it would be highly memory inefficient, as $96.8\%$ of all entries are zero.
 Additionally, matrix multiplication with the Jacobians of following layers would be computationally inefficient due to numerous redundant additions and multiplications by zero.
 
 In modern neural network architectures, which are crossing the threshold of one trillion parameters, 
-Jacobians are not only inefficient, but also exceed available memory.
+computing intermediate Jacobians is not only inefficient, but also exceeds available memory.
 Further examples include the Jacobians resulting from an identity function or any activation function that is applied element-wise.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 3a: Chain rule using materialized Jacobians.
+    Figure 3a: Chain rule using materialized Jacobians (solid outline).
 </div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 3b: Chain rule using matrix-free linear maps.
+    Figure 3b: Chain rule using matrix-free linear maps (dashed outline).
 </div>
 
 Since keeping **materialized** Jacobian matrices in memory is inefficient or impossible,
-AD instead implements **functions** called **linear maps** that act exactly like matrices.
-Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.  
+AD instead implements **linear maps**, **functions** that act exactly like materialized matrices.
 
-Mathematically speaking, this linear map can be obtained by applying the differential operator $D$ to the function $f$.
+<!-- TODO: "In terms  of notation" or "Mathematically speaking"? -->
+In terms of notation, this linear map can be obtained by applying the differential operator $D$ to $f$. 
+The resulting function $Df(\mathbf{x})$ corresponds to the linear approximation of $f$ at $\mathbf{x}$.
+We can rephrase  the chain rule as   
+
+$$ Df(\mathbf{x}) = D(h \circ g)(\mathbf{x}) =Dh(g(\mathbf{x})) \circ Dg(\mathbf{x}) \quad .$$
+
+Note that all terms in this formulation of the chain rule are functions.
+A visualization for our toy example can be found in Figure 3b. 
+Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.
 
 
-Efficiently **materializing** these functions to a matrix $J_f$ is what this talk is about! 
-
-<!-- * Figures:
-  * materialized matrices: solid border
-  * non-materialized matrices: dashed border
-* Even though I will sometimes put numbers into linear maps in the upcoming slides, they should be considered "**opaque black boxes**" until materialized into matrices
-* Intuitive example for why materialization can be bad: **identity function** -->
+*We visualize "matrix entries" in linear maps to build intuition.
+Even though following illustrations will sometimes put numbers onto these "matrix entries", 
+linear maps are best thought of as black-box functions.*
 
 ### Evaluating linear maps
+
+Efficiently **materializing** these functions to a matrix $J_f$ is what this talk is about.
 
 We only propagate **materialized vectors** (*solid*) through our **linear maps** (*dashed*):
 
