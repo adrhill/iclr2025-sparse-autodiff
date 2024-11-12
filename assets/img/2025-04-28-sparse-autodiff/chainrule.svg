@@ -439,10 +439,10 @@
 <use xlink:href="#glyph-0-11" x="217.4" y="85.205"/>
 </g>
 <path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(81%, 13.228188%, 9%)" stroke-opacity="1" stroke-miterlimit="10" d="M 154.5 96.5 L 154.5 3.5 L 225.5 3.5 L 225.5 96.5 Z M 154.5 96.5 "/>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-1-0" x="131.04" y="55"/>
 </g>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-1-1" x="241.64" y="55"/>
 </g>
 <path fill-rule="nonzero" fill="rgb(84.541387%, 98%, 82%)" fill-opacity="1" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(11.353468%, 45%, 5%)" stroke-opacity="1" stroke-miterlimit="10" d="M 63 66.5 L 50 66.5 C 43.371094 66.5 38 61.128906 38 54.5 L 38 45.5 C 38 38.871094 43.371094 33.5 50 33.5 L 76 33.5 C 82.628906 33.5 88 38.871094 88 45.5 L 88 54.5 C 88 61.128906 82.628906 66.5 76 66.5 Z M 63 66.5 "/>

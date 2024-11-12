@@ -31,8 +31,9 @@ color_green = HSL(hue_green, saturation, 0.25)
 color_blue = HSL(hue_blue, saturation, lightness)
 color_black = convert(HSL, Gray(0))
 color_white = convert(HSL, Gray(1))
-color_operator = convert(HSL, Gray(0.2))
+color_operator = convert(HSL, Gray(0.3))
 color_transparent = RGBA(0, 0, 0, 0)
+color_background = color_transparent
 
 named_color(name) = convert(HSL, RGB(Colors.color_names[name] ./ 256...))
 
@@ -299,7 +300,7 @@ DDG = DrawOverlay(; text = "Dg(x)", color = color_G, fontsize = 18)
 DDH = DrawOverlay(; text = "Dh(g(x))", color = color_H, fontsize = 15, width = 65)
 
 function setup!()
-    background(0, 0, 0, 0)
+    background(color_background)
     fontsize(18)
     fontface("JuliaMono")
 end

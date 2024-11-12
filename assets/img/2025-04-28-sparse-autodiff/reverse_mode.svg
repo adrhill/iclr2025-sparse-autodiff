@@ -138,7 +138,7 @@
 <use xlink:href="#glyph-0-2" x="87.3" y="62.205"/>
 </g>
 <path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(8%, 22.711409%, 72%)" stroke-opacity="1" stroke-miterlimit="10" d="M 6 73.5 L 6 46.5 L 99 46.5 L 99 73.5 Z M 6 73.5 "/>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-1-0" x="235.54" y="65"/>
 </g>
 <path fill-rule="nonzero" fill="rgb(29.934573%, 90.935095%, 18.415858%)" fill-opacity="1" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(11.353468%, 45%, 5%)" stroke-opacity="1" stroke-miterlimit="10" d="M 262.5 70 L 262.5 50 L 282.5 50 L 282.5 70 Z M 262.5 70 "/>
@@ -257,7 +257,7 @@
 <use xlink:href="#glyph-0-2" x="87.3" y="202.205"/>
 </g>
 <path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(8%, 22.711409%, 72%)" stroke-opacity="1" stroke-miterlimit="10" d="M 6 213.5 L 6 186.5 L 99 186.5 L 99 213.5 Z M 6 213.5 "/>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-1-0" x="235.54" y="205"/>
 </g>
 <path fill-rule="nonzero" fill="rgb(87.258293%, 98.351507%, 85.163563%)" fill-opacity="1" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(11.353468%, 45%, 5%)" stroke-opacity="1" stroke-miterlimit="10" d="M 262.5 210 L 262.5 190 L 282.5 190 L 282.5 210 Z M 262.5 210 "/>
@@ -329,13 +329,13 @@
 <g fill="rgb(11.353468%, 45%, 5%)" fill-opacity="1">
 <use xlink:href="#glyph-2-4" x="183.304" y="206.500001"/>
 </g>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-3-0" x="174.96" y="133.12"/>
 </g>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-3-0" x="186.08" y="133.12"/>
 </g>
-<g fill="rgb(20%, 20%, 20%)" fill-opacity="1">
+<g fill="rgb(30%, 30%, 30%)" fill-opacity="1">
 <use xlink:href="#glyph-3-0" x="197.2" y="133.12"/>
 </g>
 </svg>
