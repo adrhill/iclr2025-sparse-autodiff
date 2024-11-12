@@ -114,7 +114,7 @@ When viewed as a  linear map, this Jacobian can be though of as the **linear app
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 1: Visualization of the multivariate chain rule on $f = h \circ g$.
+    Figure 1: Visualization of the multivariate chain rule for $f = h \circ g$.
 </div>
 
 For a composed function $f = h \circ g$, the **multivariable chain rule** tells us that we obtain the Jacobian of $f$ by **composing** the Jacobians of $h$ and $g$:
@@ -138,7 +138,7 @@ Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`
     Figure 2: Structure of the Jacobian of a tiny convolutional layer.
 </div>
 
-As a motivating example against **materialized Jacobians**, let's take a look at the a tiny convolutional layer.
+As a motivating example against **materialized Jacobians**, let's take a look at a tiny convolutional layer.
 We assume a convolutional filter of size $5 \times 5$, as well as a single input and a single output channel.
 An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in figure 2.
 Computing it would be highly memory inefficient, as $96.8\%$ of all entries are zero.
@@ -178,12 +178,19 @@ Efficiently **materializing** these functions to a matrix $J_f$ is what this tal
 We only propagate **materialized vectors** (*solid*) through our **linear maps** (*dashed*):
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree2.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 4: Evaluating linear maps in forward-mode.
+</div>
+
 
 ### Forward-mode AD
 
 **Materialize $J$ column-wise**: number of evaluations matches **input dimensionality**
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 5: Forward-mode AD materializes Jacobians column-by-column.
+</div>
 
 This is called a **Jacobian-vector product** (JVP) or **pushforward**.
 
@@ -195,6 +202,9 @@ This is called a **Jacobian-vector product** (JVP) or **pushforward**.
 **Materialize $J$ row-wise**: number of evaluations matches **output dimensionality**
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 6: Reverse-mode AD materializes Jacobians row-by-row.
+</div>
 
 This is called a **vector-Jacobian product** (VJP) or **pullback**.
 
@@ -205,19 +215,21 @@ The gradient of a scalar function $f : \mathbb{R}^n \rightarrow \mathbb{R}$ requ
 
 ### Sparsity
 
-**Sparse Matrix**
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure 7: A sparse matrix and its respective sparse linear map.
+</div>
 
 A matrix in which most elements are zero.
 
-
-**Sparse Linear Map**
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map.svg" class="img-fluid" %}
-
 A linear map that materializes to a sparse matrix.
-
 
 <!-- ::: {.callout-note}
 ### Remark: Sparsity of computer programs
@@ -230,7 +242,9 @@ However, corresponding Jacobians can still be sparse. As an example, consider a 
 **Assuming the structure of the Jacobian is known, we can materialize several columns of the Jacobian in a single evaluation:**
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
-
+<div class="caption">
+    Figure 8: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
+</div>
 
 * Linear maps are **additive**: $\;Df(e_i+\ldots+e_j) = Df(e_i) +\ldots+ Df(e_j)$
 * The RHS summands are columns of the Jacobian
@@ -238,11 +252,7 @@ However, corresponding Jacobians can still be sparse. As an example, consider a 
 
 The same idea also applies to rows in reverse-mode.
 
-### But there is a problem...
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map_colored.svg" class="img-fluid" %}
-
-### Unfortunately, the structure of the Jacobian is unknown
+### Problem: The structure of the Jacobian is unknown
 * The linear map is a black-box function
 * **Without materializing the linear map, the structure of the Jacobian is unknown**
 * If we fully materialize the Jacobian via "dense AD", sparse AD isn't needed
@@ -252,15 +262,19 @@ The same idea also applies to rows in reverse-mode.
 
 ### The Solution: Sparsity patterns
 
-**Step 1:** Pattern detection
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/coloring.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure 9: The two elementary steps in sparse AD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
+</div>
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
-
-**Step 2:** Pattern coloring
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/coloring.svg" class="img-fluid" %}
-
-### Performance is the crux of Sparse AD
+Performance is the crux of Sparse AD
 * These two steps need to be faster than the computation of columns/rows they allow us to skip. Otherwise, we didn't gain any performance...
 * ...unless we are able to reuse the pattern!
 
@@ -272,18 +286,20 @@ The same idea also applies to rows in reverse-mode.
 
 Binary Jacobian patterns are efficiently compressed using **indices of non-zero values**:
 
-**Uncompressed**
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
-
-**Binary Pattern**
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
-
-**Index Set**
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_compressed.svg" class="img-fluid" %}
-
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_compressed.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure 10: Equivalent sparsity pattern representations: (a) uncompressed matrix, (b) binary pattern, (c) index set (compressed along rows).
+</div>
 
 (Since the method we are about to show is essentially a binary forward-mode AD system, we compress along rows.)
 
@@ -293,13 +309,19 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 **Naive approach:** materialize full Jacobians (inefficient or impossible):
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 11: Materializing a Jacobian forward-mode. 
+    Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
+</div>
 
 **Our goal:** propagate full basis index sets:
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 12: Propagating an index set through a linear map to obtain a sparsity pattern.  
+</div>
 
 **But how do we define these propagation rules?**
-Let's do some analysis!
 
 ## Matrix coloring
 
