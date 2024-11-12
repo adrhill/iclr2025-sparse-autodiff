@@ -1,9 +1,9 @@
 name: filter-files
 
-on:
-  pull_request:
-    branches:
-      - main
+# on:
+#   pull_request:
+#     branches:
+#       - main
 
 # hack for https://github.com/actions/cache/issues/810#issuecomment-1222550359
 #env:
@@ -106,7 +106,7 @@ jobs:
     - name: Save filterout
       if: always()
       run: echo "${{ steps.pythonfilter.outputs.offendingfiles }}" > site_out/filterout.txt
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v2
       if: always()
       with: 
         name: website_out
