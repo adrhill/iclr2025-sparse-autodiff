@@ -80,7 +80,7 @@ Note: please use the table of contents as defined in the front matter rather tha
 For a **composed function** $f(x) = h(g(x))$, 
 the chain rule tells us that we obtain the Jacobian of $f$ by **composing the Jacobians** of $h$ and $g$:
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 
 
 where the $(i,j)$-th entry in the Jacobian is $(J_f(x))_{i,j} = \frac{\partial f_i}{\partial x_j}(x) \in \mathbb{R}$."
@@ -109,13 +109,13 @@ e.g. a NumPy `np.array` or Julia `Matrix`.
 
 Keeping full Jacobian **matrices in memory** (*solid*) is inefficient or even impossible.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 
 Instead, AD implements **functions** (*dashed*) that act exactly like Jacobians.
 These are **linear maps**. 
 Denoted using the differential operator $D$.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree.svg" class="img-fluid" %}
 
 Efficiently **materializing** these functions to a matrix $J_f$ is what this talk is about! 
 
@@ -129,13 +129,13 @@ Efficiently **materializing** these functions to a matrix $J_f$ is what this tal
 
 We only propagate **materialized vectors** (*solid*) through our **linear maps** (*dashed*):
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree2.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree2.svg" class="img-fluid" %}
 
 ### Forward-mode AD
 
 **Materialize $J$ column-wise**: number of evaluations matches **input dimensionality**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 
 This is called a **Jacobian-vector product** (JVP) or **pushforward**.
 
@@ -146,7 +146,7 @@ This is called a **Jacobian-vector product** (JVP) or **pushforward**.
 
 **Materialize $J$ row-wise**: number of evaluations matches **output dimensionality**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 
 This is called a **vector-Jacobian product** (VJP) or **pullback**.
 
@@ -159,14 +159,14 @@ The gradient of a scalar function $f : \mathbb{R}^n \rightarrow \mathbb{R}$ requ
 
 **Sparse Matrix**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
 
 A matrix in which most elements are zero.
 
 
 **Sparse Linear Map**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map.svg" class="img-fluid" %}
 
 A linear map that materializes to a sparse matrix.
 
@@ -181,7 +181,7 @@ However, corresponding Jacobians can still be sparse. As an example, consider a 
 
 **Assuming the structure of the Jacobian is known, we can materialize several columns of the Jacobian in a single evaluation:**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
 
 
 * Linear maps are **additive**: $\;Df(e_i+\ldots+e_j) = Df(e_i) +\ldots+ Df(e_j)$
@@ -192,7 +192,7 @@ The same idea also applies to rows in reverse-mode.
 
 ### But there is a problem...
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map_colored.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_map_colored.svg" class="img-fluid" %}
 
 ### Unfortunately, the structure of the Jacobian is unknown
 * The linear map is a black-box function
@@ -206,11 +206,11 @@ The same idea also applies to rows in reverse-mode.
 
 **Step 1:** Pattern detection
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
 
 **Step 2:** Pattern coloring
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/coloring.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/coloring.svg" class="img-fluid" %}
 
 ### Performance is the crux of Sparse AD
 * These two steps need to be faster than the computation of columns/rows they allow us to skip. Otherwise, we didn't gain any performance...
@@ -226,15 +226,15 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 
 **Uncompressed**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
 
 **Binary Pattern**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
 
 **Index Set**
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_compressed.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_compressed.svg" class="img-fluid" %}
 
 
 (Since the method we are about to show is essentially a binary forward-mode AD system, we compress along rows.)
@@ -244,11 +244,11 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 
 **Naive approach:** materialize full Jacobians (inefficient or impossible):
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 
 **Our goal:** propagate full basis index sets:
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
 
 **But how do we define these propagation rules?**
 Let's do some analysis!
