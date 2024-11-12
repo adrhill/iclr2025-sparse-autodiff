@@ -44,13 +44,11 @@ bibliography: 2025-04-28-sparse-ad.bib
 toc:
   - name: Automatic differentiation
     subsections:
-    - name: Toy example
     - name: The chain rule
-    - name: Automatic differentiation is matrix-free
-    - name: Evaluating linear maps
+    - name: AD is matrix-free
     - name: Forward-mode AD
     - name: Reverse-mode AD
-  - name: Sparse AD
+  - name: Sparse automatic differentiation
   - name: Sparsity pattern detection
   - name: Matrix coloring
   - name: Second-order sparse AD
@@ -128,7 +126,7 @@ Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
 <!-- TODO: explain that values are random? -->
 Without loss of generality, we will keep using these dimensionalities in following illustrations.
 
-### Automatic differentiation is matrix-free
+### AD is matrix-free
 
 We've seen how the chain rule directly translates the compositional structure of a function into the compositional structure of its Jacobian.
 Due to the small size of our chosen dimensions $n$, $m$ and $p$, this approach worked well on our toy example in Figure 1.  
@@ -144,6 +142,7 @@ Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`
     Figure 2: Structure of the Jacobian of a tiny convolutional layer.
 </div>
 
+*TODO: replace with identity function on arrays as a simpler example?*
 
 <!-- TODO: Maybe the identity function is a simpler example? -->
 As a motivating example against **materialized Jacobians**, let's take a look at a tiny convolutional layer.
@@ -180,52 +179,77 @@ Note that all terms in this formulation of the chain rule are functions.
 A visualization for our toy example can be found in Figure 3b. 
 Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.
 
-
 *We visualize "matrix entries" in linear maps to build intuition.
 Even though following illustrations will sometimes put numbers onto these "matrix entries", 
 linear maps are best thought of as black-box functions.*
 
-### Evaluating linear maps
+### Forward-mode AD
 
-Efficiently **materializing** these functions to a matrix $J_f$ is what this talk is about.
-
-We only propagate **materialized vectors** (*solid*) through our **linear maps** (*dashed*):
+Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating **materialized vectors** through them.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree2.svg" class="img-fluid" %}
 <div class="caption">
     Figure 4: Evaluating linear maps in forward-mode.
 </div>
 
+Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
+Since we propagate in the order of the original function evaluation, this is called **forward-mode AD**.
 
-### Forward-mode AD
+In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
+Since this operation by definition corresponds to 
 
-**Materialize $J$ column-wise**: number of evaluations matches **input dimensionality**
+$$ \mathbf{v}_2 = Dg(\mathbf{x})(\mathbf{v}_1) = J_{g}(\mathbf{x}) \cdot \mathbf{v}_1 \;\in \mathbb{R}^p \quad ,$$
+
+it is also commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
+The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
+
+$$ \mathbf{v}_3 = Dh(g(\mathbf{x}))(\mathbf{v}_2) = J_{h}(g(\mathbf{x})) \cdot \mathbf{v}_2 \;\in \mathbb{R}^m \quad ,$$
+
+which in accordance with the chain rule is equivalent to 
+
+$$ \mathbf{v}_3 = Df(\mathbf{x})(\mathbf{v}_1) = J_{f}(\mathbf{x}) \cdot \mathbf{v}_1 \quad ,$$
+
+the JVP of our composed function $f$.
+
+**Note that we didn't materialize intermediate Jacobians at any point**–we only propagated vectors.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
     Figure 5: Forward-mode AD materializes Jacobians column-by-column.
 </div>
 
-This is called a **Jacobian-vector product** (JVP) or **pushforward**.
+But how can we use this machinery to compute a **materialized Jacobian**? 
+Figure 5 shows the answer.
+While it might look redundant at first, evaluating the **linear map** $Df(\mathbf{x})$ with the $i$-th standard basis vector **materializes** the $i$-th column of the Jacobian $J_f(\mathbf{x})$. 
+Materializing the full $m \times n$ Jacobian takes $n$ evaluations with all $n$ standard basis vectors,
+as many as there are inputs.
 
-<!-- * I personally prefer **pushforward**, since the JVP could imply a materialized matrix.
-* Note that while this might look redundant at first glance, it took a **linear map** (*dashed*) and turned it into a **materialized matrix** (*solid*)  -->
+When applied to gradient-based optimization of neural networks with large amounts of parameters, 
+this dependence on the input dimensionality hinders the performance of forward-mode AD.
+Luckily, we can also propagate vectors through our linear maps from the left-hand side, resulting in **reverse-mode AD**.
 
 ### Reverse-mode AD
 
-**Materialize $J$ row-wise**: number of evaluations matches **output dimensionality**
+<!-- TODO: add analogous reverse-mode figure -->
+*TODO: Add and describe reverse-mode equivalent of figure 4.*
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 <div class="caption">
     Figure 6: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
-This is called a **vector-Jacobian product** (VJP) or **pullback**.
 
-### Special case: *"Backpropagation"*
-The gradient of a scalar function $f : \mathbb{R}^n \rightarrow \mathbb{R}$ requires just **one** evaluation with $\mathbf{e}_1=1$.
+As illustated in Figure 6, we can also **materialize Jacobians row by row**.
+Analogous to forward-mode in figure 5, 
+this requires evaluating $m$ VJPs with all $m$ standard basis vectors,
+as many as there are outputs.
 
-## Sparse AD
+Since neural networks are usually trained using scalar loss functions,
+reverse-mode only requires the evaluation of a single VJP to compute a gradient.
+This makes it the method of choice for machine learners, 
+who more commonly refer to reverse-mode AD as  *backpropagation*.
+
+## Sparse automatic differentiation
 
 ### Sparsity
 
