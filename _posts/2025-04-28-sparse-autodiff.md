@@ -92,31 +92,36 @@ providing performance benchmarks and guidance on when to use sparse AD over "den
 
 ## Automatic differentiation
 
-### Chain rule
+We start out by covering the fundamentals of classic AD, which we will refer to as "dense" AD, in distinction to sparse AD.
 
-For a **composed function** $f(x) = h(g(x))$, 
-the chain rule tells us that we obtain the Jacobian of $f$ by **composing the Jacobians** of $h$ and $g$:
+AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
+As our motivating example, we will therefore take a look at a function $f$
+composed from $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ 
+and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$, 
+such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
+At no loss of generality, we will illustrate this function for $n=5$, $m=4$ and $p=3$.
+The insights gained from this toy example should translate directly to more deeply composed functions.
+
+
+### The chain rule
+
+For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$, 
+the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
+
+$$ (J_f(\mathbf{x}))_{i,j} = \frac{\partial f_i}{\partial x_j}(\mathbf{x}) \in \mathbb{R} \quad . $$
+
+When viewed as a  linear map, this Jacobian can be though of as the **linear approximation** of $f$ around $\mathbf{x}$.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 1: Visualization of the multivariate chain rule on $f = h \circ g$.
+</div>
+
+For a composed function $f = h \circ g$, the **multivariable chain rule** tells us that we obtain the Jacobian of $f$ by **composing** the Jacobians of $h$ and $g$:
+
+$$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
 
 
-where the $(i,j)$-th entry in the Jacobian is $(J_f(x))_{i,j} = \frac{\partial f_i}{\partial x_j}(x) \in \mathbb{R}$."
-
-### Problem: Jacobians are too large
-
-Keeping intermediate Jacobian **matrices in memory** is inefficient or even impossible.
-
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-fluid" %}
-
-
-**Example:** Tiny convolutional layer
-
-* $5 \times 5$ filter, $1$ input channel, $1$ output channel
-* Input size: $28 \times 28 \times 1$ 
-* Resulting Jacobian:
-  * size $576 \times 784$
-  * $96.8\%$ of entries are zero
 
 ### Definition: Materialized matrices
 By **materialized matrices**, we refer to matrices $A$ for which entries $(A)_{i,j}$ are kept in **computer memory**,
