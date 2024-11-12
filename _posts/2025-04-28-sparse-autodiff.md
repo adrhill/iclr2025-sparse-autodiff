@@ -49,7 +49,11 @@ toc:
     - name: Forward-mode AD
     - name: Reverse-mode AD
   - name: Sparse automatic differentiation
-  - name: Sparsity pattern detection
+    subsections:
+    - name: Sparse matrices
+    - name: Leveraging structure
+    - name: Sparsity pattern detection and coloring
+  - name: Pattern detection
   - name: Matrix coloring
   - name: Second-order sparse AD
   - name: Demonstration
@@ -75,8 +79,7 @@ _styles: >
 ---
 
 While the use of gradient-based optimization is ubiquitous in machine learning,
-the usage of Jacobians and second-order-optimization via Hessians remains scarce.
-This often motivated by the high computational cost of these matrices.
+the usage of Jacobians and second-order-optimization via Hessians remains scarce due to high computational costs.
 However, in numerous applications within scientific machine learning, 
 Jacobians and Hessians exhibit sparsity, a characteristic that–when leveraged–has the potential to vastly accelerate computation.
 While the use of **Automatic Differentiation** (AD) via frameworks and programming languages like PyTorch, JAX and Julia is ubiquitous, **sparse AD** is mostly unknown.
@@ -238,7 +241,6 @@ Luckily, we can also propagate vectors through our linear maps from the left-han
     Figure 6: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
-
 As illustated in Figure 6, we can also **materialize Jacobians row by row**.
 Analogous to forward-mode in figure 5, 
 this requires evaluating $m$ VJPs with all $m$ standard basis vectors,
@@ -251,7 +253,10 @@ who more commonly refer to reverse-mode AD as  *backpropagation*.
 
 ## Sparse automatic differentiation
 
-### Sparsity
+### Sparse matrices
+
+Sparse matrices are matrices in which most elements are zero.
+We refer to linear maps as "sparse linear maps" if they materialize to sparse matrices.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -262,43 +267,56 @@ who more commonly refer to reverse-mode AD as  *backpropagation*.
     </div>
 </div>
 <div class="caption">
-    Figure 7: A sparse matrix and its respective sparse linear map.
+    Figure 7: A sparse Jacobian and its respective sparse linear map.
 </div>
 
-A matrix in which most elements are zero.
+Compute graphs of programs are almost always "dense", 
+as the existence of superfluous operations would be considered a bug. 
+However, corresponding Jacobians can still be sparse. 
+As an example, consider the previous example of an efficiently programmed convolutional layer.
+A toy example of a sparse Jacobian matrix and it's respective linear map is shown in Figure 7.
 
-A linear map that materializes to a sparse matrix.
+### Leveraging structure
 
-<!-- ::: {.callout-note}
-### Remark: Sparsity of computer programs
-Compute graphs of programs are almost always "dense": the existence of superfluous operations could be considered a bug. 
-However, corresponding Jacobians can still be sparse. As an example, consider a convolution.
-::: -->
+Assuming we know the structure of the Jacobian, we can find orthogonal, 
+non-overlapping columns or rows via a method called **matrix coloring** that we will go into more detail on later.
 
-### Core Idea: Exploit structure
+**The core idea of sparse AD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
+Since linear maps are additive, it always holds that
 
-**Assuming the structure of the Jacobian is known, we can materialize several columns of the Jacobian in a single evaluation:**
+$$ Df(\mathbf{x})(\mathbf{e}_i+\ldots+e_j) = Df(\mathbf{x})(\mathbf{e}_i) +\ldots+ Df(\mathbf{x})(\mathbf{e}_j) \quad .$$
+
+The right hand side summands each correspond to a column of the Jacobian.
+If the columns are **orthogonal** and their **structure is known**, 
+the sum can be decomposed into its summands, materializing multiple columns in a single JVP.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
 <div class="caption">
     Figure 8: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
 </div>
 
-* Linear maps are **additive**: $\;Df(e_i+\ldots+e_j) = Df(e_i) +\ldots+ Df(e_j)$
-* The RHS summands are columns of the Jacobian
-* If columns are **orthogonal** and their **structure is known**, the sum can be decomposed 
+This specific example using JVPs corresponds to sparse forward-mode AD 
+and is visualized in Figure 8, where all orthogonal columns have been colored in matching hues.
+By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
+we materialize the sum of the first, second and fifth column of our Jacobian.
+Since we can assume we know the structure of the Jacobian,
+we can assign the values in the resulting vector to the correct Jacobian entries. 
 
-The same idea also applies to rows in reverse-mode.
+The same idea can also be applied to reverse mode AD.
+Instead of finding orthogonal column, we need to find orthogonal rows.
+We can then materialize multiple rows in a single VJP.
 
-### Problem: The structure of the Jacobian is unknown
-* The linear map is a black-box function
-* **Without materializing the linear map, the structure of the Jacobian is unknown**
-* If we fully materialize the Jacobian via "dense AD", sparse AD isn't needed
-:::
+*TODO: illustrate reverse-mode*
+<!-- TODO: illustrate reverse mode -->
 
-<!-- * **"Coloring":** find orthogonal columns (or rows) via graph coloring  -->
+### Sparsity pattern detection and coloring
 
-### The Solution: Sparsity patterns
+Unfortunately, our initial assumption had a major flaw: 
+Since AD only gives us a composition of linear maps and linear maps are black-box functions,
+the structure of the Jacobian is completely unknown.
+
+**We can't tell which rows and columns are orthogonal without first materializing a Jacobian matrix.**
+But if we fully materialize a Jacobian via dense AD, sparse AD isn't needed.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -312,13 +330,18 @@ The same idea also applies to rows in reverse-mode.
     Figure 9: The two elementary steps in sparse AD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
 </div>
 
-Performance is the crux of Sparse AD
-* These two steps need to be faster than the computation of columns/rows they allow us to skip. Otherwise, we didn't gain any performance...
-* ...unless we are able to reuse the pattern!
+The solution to this problem is shown in Figure 9:
+in order to find orthogonal columns (or rows), we don't need to materialize the full Jacobian.
+Instead, it is enough to materialize a binary sparsity pattern of the Jacobian.
+This pattern contains enough information to color it.
 
-<!-- * **"Coloring":** find orthogonal columns (or rows) via graph coloring  -->
+Performance is key: For one-off computations, these two steps need to be faster than the computation of columns or rows they allow us to skip. Otherwise, we didn't gain any performance.
+As we will see in later benchmarks, this level of performance can be achieved.
+Additionally, if we need to compute Jacobians multiple times and are able to reuse the sparsity pattern, 
+the cost of sparsity pattern detection and coloring can be amortized over time.
 
-## Sparsity pattern detection
+
+## Pattern detection
 
 ### Index sets
 
@@ -361,7 +384,7 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 
 **But how do we define these propagation rules?**
 
-## Matrix coloring
+### Matrix coloring
 
 ## Second-order sparse AD
 
