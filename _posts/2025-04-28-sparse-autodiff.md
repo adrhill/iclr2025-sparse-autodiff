@@ -15,8 +15,10 @@ hidden: false
 # rbenv install 3.3.0
 # rbenv local 3.3.0
 # bundle install
-# bundle exec jekyll serve --future
+# bundle exec jekyll serve --future --open-url /blog/sparse-autodiff/ --livereload
 # ```
+#
+# Then navigate to `/blog/sparse-autodiff/`
 
 # Anonymize when submitting
 # authors:
@@ -71,7 +73,22 @@ _styles: >
   }
 ---
 
-Note: please use the table of contents as defined in the front matter rather than the traditional markdown styling.
+While the use of gradient-based optimization is ubiquitous in machine learning,
+the usage of Jacobians and second-order-optimization via Hessians remains scarce.
+This often motivated by the high computational cost of these matrices.
+However, in numerous applications within scientific machine learning, 
+Jacobians and Hessians exhibit sparsity, a characteristic that–when leveraged–has the potential to vastly accelerate computation.
+While the use of **Automatic Differentiation** (AD) via frameworks and programming languages like PyTorch, JAX and Julia is ubiquitous, **sparse AD** is mostly unknown.
+
+With this blog post, we aim to shed light on the inner workings of sparse AD, 
+starting out with a high-level introduction into classical AD, 
+covering the computation of Jacobians in both forward- and reverse-mode.
+We then dive into the two primary components of sparse AD:
+sparsity pattern **detection** and **coloring**.
+Having covered the computation of sparse Jacobians, 
+we then move on to sparse Hessians.  
+We conclude with a demonstration of sparse automatic differentiation,
+providing performance benchmarks and guidance on when to use sparse AD over "dense" AD.
 
 ## Automatic differentiation
 
