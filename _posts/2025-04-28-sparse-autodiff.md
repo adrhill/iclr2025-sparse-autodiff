@@ -122,22 +122,48 @@ For a composed function $f = h \circ g$, the **multivariable chain rule** tells 
 $$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
 
 
+### Automatic differentiation is matrix-free
 
-### Definition: Materialized matrices
-By **materialized matrices**, we refer to matrices $A$ for which entries $(A)_{i,j}$ are kept in **computer memory**,
-e.g. a NumPy `np.array` or Julia `Matrix`.
+We've seen how to apply the chain rule to translate the compositional structure of a function into the compositional structure of its Jacobian.
+Due to how small we chose $n$, $m$ and $p$, this approach worked well on our toy example in figure 1.  
+In practice however, there is a problem:
+Keeping intermediate Jacobian matrices **in computer memory** is inefficient and often impossible.
 
-### AD is matrix-free
+We will refer to this kind of matrix, for which all entries are kept in computer memory, as a **materialized**.
+Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`s, JAX's `Array` and Julia's `Matrix`.
+<!-- TODO: Check capitalization of Python types. It's the wild west over there. -->
 
-Keeping full Jacobian **matrices in memory** (*solid*) is inefficient or even impossible.
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-fluid" %}
+<div class="caption">
+    Figure 2: Structure of the Jacobian of a tiny convolutional layer.
+</div>
+
+As a motivating example against **materialized Jacobians**, let's take a look at the a tiny convolutional layer.
+We assume a convolutional filter of size $5 \times 5$, as well as a single input and a single output channel.
+An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in figure 2.
+Computing it would be highly memory inefficient, as $96.8\%$ of all entries are zero.
+Additionally, matrix multiplication with the Jacobians of following layers would be computationally inefficient due to numerous redundant additions and multiplications by zero.
+
+In modern neural network architectures, which are crossing the threshold of one trillion parameters, 
+Jacobians are not only inefficient, but also exceed available memory.
+Further examples include the Jacobians resulting from an identity function or any activation function that is applied element-wise.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
-
-Instead, AD implements **functions** (*dashed*) that act exactly like Jacobians.
-These are **linear maps**. 
-Denoted using the differential operator $D$.
+<div class="caption">
+    Figure 3a: Chain rule using materialized Jacobians.
+</div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 3b: Chain rule using matrix-free linear maps.
+</div>
+
+Since keeping **materialized** Jacobian matrices in memory is inefficient or impossible,
+AD instead implements **functions** called **linear maps** that act exactly like matrices.
+Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.  
+
+Mathematically speaking, this linear map can be obtained by applying the differential operator $D$ to the function $f$.
+
 
 Efficiently **materializing** these functions to a matrix $J_f$ is what this talk is about! 
 
