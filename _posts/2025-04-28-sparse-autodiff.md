@@ -81,7 +81,15 @@ _styles: >
     \def\sR{\mathbb{R}}
     \def\vx{\mathbf{x}}
     \def\vv{\mathbf{v}}
-    \newcommand{\dfdx}[2]{\frac{\partial f_{#1}}{\partial x_{#2}}(\vx)}   
+    \newcommand{\dfdx}[2]{\frac{\partial f_{#1}}{\partial x_{#2}}(\vx)}
+    \newcommand{\D}[2]{D{#1}(#2)}   
+    \newcommand{\J}[2]{J_{#1}(#2)} 
+    \def\Jf{\J{f}{\vx}}
+    \def\Df{\D{f}{\vx}}
+    \def\Jg{\J{g}{\vx}}
+    \def\Dg{\D{g}{\vx}}
+    \def\Jh{\J{h}{g(\vx)}}
+    \def\Dh{\D{h}{g(\vx)}}
     $$
 </div>
 
@@ -124,11 +132,11 @@ For ease of visualization, we work in small dimension, but the real benefits of 
 For a function $f: \sR^{n} \rightarrow \sR^{m}$ and a point of linearization $\vx \in \sR^{n}$,
 the Jacobian $J_f(\vx)$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
 
-$$ (J_f(\vx))_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
+$$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
 
 For a composed function $f = h \circ g$, the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
 
-$$ J_f(\vx) = J_{h \circ g}(\vx) =J_h(g(\vx)) \cdot J_g(\vx) \quad .$$
+$$ \Jf = \J{h \circ g}{\vx} = \Jh \cdot \Jg \quad .$$
 
 Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
 We will keep using these dimensions in following illustrations.
@@ -169,7 +177,7 @@ AD circumvents this limitation using **linear maps**, lazy operators that act ex
 The differential $Df: \vx \longmapsto Df(\vx)$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
-$$ Df(\vx) = D(h \circ g)(\vx) =Dh(g(\vx)) \circ Dg(\vx) .$$
+$$ \Df = \D{(h \circ g)}{\vx} = \Dh \circ \Dg .$$
 
 Note that all terms in this formulation of the chain rule are linear maps.
 A new visualization for our toy example can be found in Figure 3b.
@@ -204,16 +212,16 @@ Since we propagate in the order of the original function evaluation, this is cal
 In the first step, we evaluate $Dg(\vx)(\vv_1)$.
 Since this operation by definition corresponds to 
 
-$$ \vv_2 = Dg(\vx)(\vv_1) = J_{g}(\vx) \cdot \vv_1 \;\in \sR^p ,$$
+$$ \vv_2 = \Dg(\vv_1) = \Jg \cdot \vv_1 \;\in \sR^p ,$$
 
 it is also commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
 The resulting vector $\vv_2$ is then used to compute the subsequent JVP 
 
-$$ \vv_3 = Dh(g(\vx))(\vv_2) = J_{h}(g(\vx)) \cdot \vv_2 \;\in \sR^m ,$$
+$$ \vv_3 = \Dh(\vv_2) = \Jh \cdot \vv_2 \;\in \sR^m ,$$
 
 which in accordance with the chain rule is equivalent to 
 
-$$ \vv_3 = Df(\vx)(\vv_1) = J_{f}(\vx) \cdot \vv_1 ,$$
+$$ \vv_3 = \Df(\vv_1) = \Jf \cdot \vv_1 ,$$
 
 the JVP of our composed function $f$.
 
@@ -362,7 +370,7 @@ Our goal with sparsity pattern detection is to quickly materialize the binary pa
 One way to achieve better performance than traditional AD is to compress of rows of matrices to index sets.
 The $i$-th row of the Jacobian corresponds to 
 
-$$ \big(J_f(\vx)\big)_{i,:} 
+$$ \big( \Jf \big)_{i,:} 
 = \left[\dfdx{i}{j}\right]_{1 \le j \le n}
 = \begin{bmatrix}
     \dfdx{i}{1} &
