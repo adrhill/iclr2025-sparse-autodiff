@@ -78,18 +78,34 @@ _styles: >
 <!-- LaTeX commands -->
 <div style="display: none">
     $$
+    \newcommand{\colorf}[1]{\textcolor{green}{#1}}
+    \newcommand{\colorg}[1]{\textcolor{Mulberry}{#1}}
+    \newcommand{\colorh}[1]{\textcolor{Crimson}{#1}}
+    \newcommand{\colorv}[1]{\textcolor{MidnightBlue}{#1}}
     \def\sR{\mathbb{R}}
     \def\vx{\mathbf{x}}
-    \def\vv{\mathbf{v}}
     \newcommand{\dfdx}[2]{\frac{\partial f_{#1}}{\partial x_{#2}}(\vx)}
-    \newcommand{\D}[2]{D{#1}(#2)}   
+    % Jacobians
     \newcommand{\J}[2]{J_{#1}(#2)} 
     \def\Jf{\J{f}{\vx}}
-    \def\Df{\D{f}{\vx}}
     \def\Jg{\J{g}{\vx}}
-    \def\Dg{\D{g}{\vx}}
     \def\Jh{\J{h}{g(\vx)}}
+    \def\Jfc{\colorf{\Jf}}
+    \def\Jgc{\colorg{\Jg}}
+    \def\Jhc{\colorh{\Jh}}
+    % Derivatives
+    \newcommand{\D}[2]{D{#1}(#2)}
+    \def\Df{\D{f}{\vx}}
+    \def\Dg{\D{g}{\vx}}
     \def\Dh{\D{h}{g(\vx)}}
+    \def\Dfc{\colorf{\Df}}
+    \def\Dgc{\colorg{\Dg}}
+    \def\Dhc{\colorh{\Dh}}
+    % Vectors
+    \def\vv{\mathbf{v}}
+    \def\vb{\mathbf{e}}
+    \newcommand{\vvc}[1]{\colorv{\vv_{#1}}}
+    \newcommand{\vbc}[1]{\colorv{\vb_{#1}}}
     $$
 </div>
 
@@ -134,9 +150,13 @@ the Jacobian $J_f(\vx)$ is the $m \times n$ matrix of first-order partial deriva
 
 $$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
 
-For a composed function $f = h \circ g$, the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
+For a composed function 
 
-$$ \Jf = \J{h \circ g}{\vx} = \Jh \cdot \Jg \quad .$$
+$$ \colorf{f} = \colorh{h} \circ \colorg{g}, $$
+
+the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
+
+$$ \Jfc = \Jhc \cdot \Jgc \quad .$$
 
 Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
 We will keep using these dimensions in following illustrations.
@@ -177,7 +197,7 @@ AD circumvents this limitation using **linear maps**, lazy operators that act ex
 The differential $Df: \vx \longmapsto Df(\vx)$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
-$$ \Df = \D{(h \circ g)}{\vx} = \Dh \circ \Dg .$$
+$$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc .$$
 
 Note that all terms in this formulation of the chain rule are linear maps.
 A new visualization for our toy example can be found in Figure 3b.
@@ -212,16 +232,16 @@ Since we propagate in the order of the original function evaluation, this is cal
 In the first step, we evaluate $Dg(\vx)(\vv_1)$.
 Since this operation by definition corresponds to 
 
-$$ \vv_2 = \Dg(\vv_1) = \Jg \cdot \vv_1 \;\in \sR^p ,$$
+$$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p ,$$
 
 it is also commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
 The resulting vector $\vv_2$ is then used to compute the subsequent JVP 
 
-$$ \vv_3 = \Dh(\vv_2) = \Jh \cdot \vv_2 \;\in \sR^m ,$$
+$$ \vvc{3} = \Dhc(\vvc{2}) = \Jhc \cdot \vvc{2} \;\in \sR^m ,$$
 
 which in accordance with the chain rule is equivalent to 
 
-$$ \vv_3 = \Df(\vv_1) = \Jf \cdot \vv_1 ,$$
+$$ \vvc{3} = \Dfc(\vvc{1}) = \Jfc \cdot \vvc{1} ,$$
 
 the JVP of our composed function $f$.
 
@@ -296,7 +316,7 @@ non-overlapping columns or rows via a method called **matrix coloring** that we 
 **The core idea of ASD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
 Since linear maps are additive, it always holds that
 
-$$ Df(\vx)(\mathbf{e}_i+\ldots+e_j) = Df(\vx)(\mathbf{e}_i) +\ldots+ Df(\vx)(\mathbf{e}_j) \quad .$$
+$$ \Dfc(\vbc{i}+\ldots+\vbc{j}) = \Dfc(\vbc{i}) + \ldots+ \Dfc(\vbc{j}) \quad .$$
 
 The right hand side summands each correspond to a column of the Jacobian.
 If the columns are **orthogonal** and their **structure is known**, 
