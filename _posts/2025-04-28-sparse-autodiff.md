@@ -48,7 +48,7 @@ toc:
     - name: Sparsity pattern detection and coloring
   - name: Pattern detection
     subsections:
-    - name: Compressing Jacobians to index sets
+    - name: Compressing Jacobians
     - name: Propagating index sets
     - name: Alternative evaluation
   - name: Matrix coloring
@@ -364,7 +364,7 @@ in which performance is gained by compressing matrix rows.
 *TODO: Alternatives include Bayesian probing, ...* 
 <!-- TODO: cite a wide list of approaches here -->
 
-### Compressing Jacobians to index sets
+### Compressing Jacobians
 
 Our goal with sparsity pattern detection is to quickly materialize the binary pattern of the Jacobian.
 One way to achieve better performance than traditional AD is to compress of rows of matrices to index sets.
@@ -408,7 +408,6 @@ These equivalent sparsity pattern representations are illustrated in Figure 10.
 
 (Since the method we are about to show is essentially a binary forward-mode AD system, we compress along rows.)
 
-
 ### Propagating index sets
 
 Figure 11 shows the traditional forward-AD pass we want to avoid:
@@ -442,14 +441,16 @@ we want to provide some intuition on the second key ingredient of our forward-mo
 
 We will demonstrate this on a second toy example, the function
 
-$$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $$
+$$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) .$$
 
+The corresponding computational graph is shown in Figure 13,
+where circular nodes correspond to elementary operators,
+in this case addition, multiplication and the sign function.
 
+<!-- TODO: remove for submission -->
+**Note: It's normal that this diagram won't render locally!**
 
-As discussed in the previous section, 
-we seed all inputs with their respective input index sets 
-
-```mermaid
+{% mermaid %}
 flowchart LR
     subgraph Inputs
     X1["$$x_1$$"]
@@ -472,13 +473,30 @@ flowchart LR
     SIGN --> |"{}"| PLUS2
 
     PLUS2 --> |"{1,2,3}"| RES["$$y=f(x)$$"]
-```
+{% endmermaid %}
+
 <div class="caption">
     Figure 13: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
 
+As discussed in the previous section,
+all inputs are seeded with their respective input index sets.
+Figure 13 annotates these index sets on the edges of the computational graph.
+Our system for sparsity detection must now perform an **alternative evaluation of our computational graph**.
+Instead of computing the original function, 
+each operator must correctly propagate and accumulate the index sets of its inputs, 
+depending on whether an operator has a non-zero derivative or not.  
 
-## Matrix coloring
+Since addition and multiplication globally have non-zero derivatives with respect to both of their inputs, 
+the index sets of their inputs are accumulated and propagated. 
+The sign function has a zero-valued derivatives for any input value. 
+It therefore doesn't propagate the index set of its input. 
+Instead, it returns an empty set.
+
+*TODO: switch to multivariate function, quickly discuss resulting Jacobian.*
+<!-- TODO -->
+
+### Matrix coloring
 
 ## Second-order sparse differentiation
 
