@@ -190,7 +190,6 @@ In modern neural network architectures, which can contain over one trillion para
 computing intermediate Jacobians is not only inefficient: it exceeds available memory.
 AD circumvents this limitation using **linear maps**, lazy operators that act exactly like matrices but without materializing them.
 
-<!-- TODO: "In terms  of notation" or "Mathematically speaking"? -->
 The differential $Df: \vx \longmapsto Df(\vx)$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
@@ -218,7 +217,7 @@ linear maps are best thought of as black-box functions.*
 
 Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating **materialized vectors** through them.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree2.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_eval.svg" class="img-fluid" %}
 <div class="caption">
     Figure 4: Evaluating linear maps in forward-mode.
 </div>
@@ -248,7 +247,12 @@ the JVP of our composed function $f$.
 
 We can also propagate vectors through our linear maps from the left-hand side, resulting in **reverse-mode AD**.
 
-<!-- TODO: add analogous reverse-mode figure -->
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode_eval.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 5: Evaluating linear maps in forward-mode.
+</div>
+
+<!-- TODO: should we add more text here? Not sure anything would be gained and it's notationally bothersome. -->
 
 ### From linear maps back to Jacobians
 
@@ -407,18 +411,7 @@ $$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} . $$
 
 These equivalent sparsity pattern representations are illustrated in Figure 10.
 
-<!-- TODO: just draw a combined figure to avoid dealing with HTML column shenanigans -->
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern.svg" class="img-fluid" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_compressed.svg" class="img-fluid" %}
-    </div>
-</div>
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_representations.svg" class="img-fluid" %}
 <div class="caption">
     Figure 10: Equivalent sparsity pattern representations: (a) uncompressed matrix, (b) binary pattern, (c) index set (compressed along rows).
 </div>
