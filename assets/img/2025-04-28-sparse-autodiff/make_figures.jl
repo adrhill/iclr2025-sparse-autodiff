@@ -644,6 +644,15 @@ function sparse_map_colored()
     return draw!(PS)
 end
 
+function sparsity_pattern()
+    setup!()
+
+    P_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
+    DP = DrawMatrix(; mat = P, mat_text = P_text, color = color_F, show_text = true)
+    PP = Position(DP, Point(0.0, 0.0))
+    return draw!(PP)
+end
+
 function sparsity_pattern_representations()
     setup!()
 
@@ -828,6 +837,7 @@ var"@save" = var"@svg" # var"@pdf"
 @save sparse_ad() 220 120 joinpath(@__DIR__, "sparse_ad")
 @save sparse_map_colored() 120 100 joinpath(@__DIR__, "sparse_map_colored")
 
+@save sparsity_pattern() 120 100 joinpath(@__DIR__, "sparsity_pattern")
 @save sparsity_pattern_representations() 330 120 joinpath(@__DIR__, "sparsity_pattern_representations")
 @save sparsity_coloring() 120 100 joinpath(@__DIR__, "coloring")
 
