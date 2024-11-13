@@ -71,6 +71,16 @@ _styles: >
   }
 ---
 
+<!-- LaTeX commands -->
+<div style="display: none">
+    $$
+    \def\sR{\mathbb{R}}
+    \def\vx{\mathbf{x}}
+    \def\vv{\mathbf{v}}
+    \newcommand{\dfdx}[2]{\frac{\partial f_{#1}}{\partial x_{#2}}(\vx)}   
+    $$
+</div>
+
 First-order optimization is ubiquitous in Machine Learning (ML) but second-order optimization is much less common.
 The intuitive reason is that large gradients are cheap, whereas large Hessian matrices are expensive.
 Luckily, in numerous applications of ML to science or engineering, **Hessians (and Jacobians) exhibit sparsity**:
@@ -100,21 +110,21 @@ Let us start by covering the fundamentals of traditional AD.
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
 To make things simple, we will mainly look at a differentiable function $f$
 composed of two differentiable functions
-$g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$,
-such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
+$g: \sR^{n} \rightarrow \sR^{p}$ and $h: \sR^{p} \rightarrow \sR^{m}$,
+such that $f = h \circ g: \sR^{n} \rightarrow \sR^{m}$.
 The insights gained from this toy example should translate directly to more deeply composed functions $f = g^{(L)} \circ g^{(L-1)} \circ \cdots \circ g^{(1)}$.
 For ease of visualization, we work in small dimension, but the real benefits of ASD only appear as the dimension grows.
 
 ### The chain rule
 
-For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
-the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
+For a function $f: \sR^{n} \rightarrow \sR^{m}$ and a point of linearization $\vx \in \sR^{n}$,
+the Jacobian $J_f(\vx)$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
 
-$$ (J_f(\mathbf{x}))_{i,j} = \frac{\partial f_i}{\partial x_j}(\mathbf{x}) \in \mathbb{R} \quad . $$
+$$ (J_f(\vx))_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
 
 For a composed function $f = h \circ g$, the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
 
-$$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
+$$ J_f(\vx) = J_{h \circ g}(\vx) =J_h(g(\vx)) \cdot J_g(\vx) \quad .$$
 
 Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
 We will keep using these dimensions in following illustrations.
@@ -152,10 +162,10 @@ computing intermediate Jacobians is not only inefficient: it exceeds available m
 AD circumvents this limitation using **linear maps**, lazy operators that act exactly like matrices but without materializing them.
 
 <!-- TODO: "In terms  of notation" or "Mathematically speaking"? -->
-The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
+The differential $Df: \vx \longmapsto Df(\vx)$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
-$$ Df(\mathbf{x}) = D(h \circ g)(\mathbf{x}) =Dh(g(\mathbf{x})) \circ Dg(\mathbf{x}) .$$
+$$ Df(\vx) = D(h \circ g)(\vx) =Dh(g(\vx)) \circ Dg(\vx) .$$
 
 Note that all terms in this formulation of the chain rule are linear maps.
 A new visualization for our toy example can be found in Figure 3b.
@@ -184,22 +194,22 @@ Now that we have translated the compositional structure of our function $f$ into
     Figure 4: Evaluating linear maps in forward-mode.
 </div>
 
-Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
+Figure 4 illustrates the propagation of a vector $\vv_1 \in \sR^n$ from the right-hand side.
 Since we propagate in the order of the original function evaluation, this is called **forward-mode AD**.
 
-In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
+In the first step, we evaluate $Dg(\vx)(\vv_1)$.
 Since this operation by definition corresponds to 
 
-$$ \mathbf{v}_2 = Dg(\mathbf{x})(\mathbf{v}_1) = J_{g}(\mathbf{x}) \cdot \mathbf{v}_1 \;\in \mathbb{R}^p ,$$
+$$ \vv_2 = Dg(\vx)(\vv_1) = J_{g}(\vx) \cdot \vv_1 \;\in \sR^p ,$$
 
 it is also commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
-The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
+The resulting vector $\vv_2$ is then used to compute the subsequent JVP 
 
-$$ \mathbf{v}_3 = Dh(g(\mathbf{x}))(\mathbf{v}_2) = J_{h}(g(\mathbf{x})) \cdot \mathbf{v}_2 \;\in \mathbb{R}^m ,$$
+$$ \vv_3 = Dh(g(\vx))(\vv_2) = J_{h}(g(\vx)) \cdot \vv_2 \;\in \sR^m ,$$
 
 which in accordance with the chain rule is equivalent to 
 
-$$ \mathbf{v}_3 = Df(\mathbf{x})(\mathbf{v}_1) = J_{f}(\mathbf{x}) \cdot \mathbf{v}_1 ,$$
+$$ \vv_3 = Df(\vx)(\vv_1) = J_{f}(\vx) \cdot \vv_1 ,$$
 
 the JVP of our composed function $f$.
 
@@ -217,7 +227,7 @@ The linear map formulation allows us to avoid intermediate Jacobian matrices in 
 But can we use this machinery to materialize the **Jacobian** of the composition $f$ itself?
 
 As shown in Figure 5, we can **materialize Jacobians column by column** in forward mode.
-Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\mathbf{x})$.
+Evaluating the linear map $Df(\vx)$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\vx)$.
 Thus, materializing the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
@@ -274,7 +284,7 @@ non-overlapping columns or rows via a method called **matrix coloring** that we 
 **The core idea of ASD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
 Since linear maps are additive, it always holds that
 
-$$ Df(\mathbf{x})(\mathbf{e}_i+\ldots+e_j) = Df(\mathbf{x})(\mathbf{e}_i) +\ldots+ Df(\mathbf{x})(\mathbf{e}_j) \quad .$$
+$$ Df(\vx)(\mathbf{e}_i+\ldots+e_j) = Df(\vx)(\mathbf{e}_i) +\ldots+ Df(\vx)(\mathbf{e}_j) \quad .$$
 
 The right hand side summands each correspond to a column of the Jacobian.
 If the columns are **orthogonal** and their **structure is known**, 
