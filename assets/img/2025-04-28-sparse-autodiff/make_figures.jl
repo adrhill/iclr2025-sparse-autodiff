@@ -660,7 +660,7 @@ function sparsity_pattern_representations()
     DI = DrawMatrix(; mat = I, mat_text = I_text, color = color_F, show_text = true)
     
     # Text labels
-    fontsize = 15
+    fontsize = 11
     Da = DrawText(; text="(a)", fontsize)
     Db = DrawText(; text="(b)", fontsize)
     Dc = DrawText(; text="(c)", fontsize)
@@ -671,13 +671,13 @@ function sparsity_pattern_representations()
     total_width = sum(width, drawables) + (length(drawables) - 1) * space
     xstart = (width(DS) - total_width) / 2
     
-    PS = Position(DS, Point(xstart, 12))
+    PS = Position(DS, Point(xstart, 7.5))
     PB = position_right_of(PS; space)(DB)
     PI = position_right_of(PB; space)(DI)
 
-    Pa = position_above(PS)(Da)
-    Pb = position_above(PB)(Db)
-    Pc = position_above(PI)(Dc)
+    Pa = position_above(PS; space=7)(Da)
+    Pb = position_above(PB; space=7)(Db)
+    Pc = position_above(PI; space=7)(Dc)
     
     for obj in (PS, PB, PI, Pa, Pb, Pc)
         draw!(obj)
@@ -828,7 +828,7 @@ var"@save" = var"@svg" # var"@pdf"
 @save sparse_ad() 220 120 joinpath(@__DIR__, "sparse_ad")
 @save sparse_map_colored() 120 100 joinpath(@__DIR__, "sparse_map_colored")
 
-@save sparsity_pattern_representations() 330 130 joinpath(@__DIR__, "sparsity_pattern_representations")
+@save sparsity_pattern_representations() 330 120 joinpath(@__DIR__, "sparsity_pattern_representations")
 @save sparsity_coloring() 120 100 joinpath(@__DIR__, "coloring")
 
 # Sized need to match:
