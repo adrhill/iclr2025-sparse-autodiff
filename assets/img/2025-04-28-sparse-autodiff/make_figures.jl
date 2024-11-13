@@ -66,8 +66,8 @@ center(P::Position) = P.center
 xcenter(P::Position) = center(P).x
 ycenter(P::Position) = center(P).y
 
-top(P::Position) = Point(xcenter(P), ycenter(P) + height(P) / 2)
-bottom(P::Position) = Point(xcenter(P), ycenter(P) - height(P) / 2)
+top(P::Position) = Point(xcenter(P), ycenter(P) - height(P) / 2)
+bottom(P::Position) = Point(xcenter(P), ycenter(P) + height(P) / 2)
 right(P::Position) = Point(xcenter(P) + width(P) / 2, ycenter(P))
 left(P::Position) = Point(xcenter(P) - width(P) / 2, ycenter(P))
 
@@ -75,6 +75,14 @@ function position_right_of(P::Position; space = SPACE)
     x, y = right(P)
     function position_drawable(D::Drawable)
         return Position(D, Point(x + space + width(D) / 2, y))
+    end
+    return position_drawable
+end
+
+function position_above(P::Position; space = SPACE)
+    x, y = top(P)
+    function position_drawable(D::Drawable)
+        return Position(D, Point(x, y - space - height(D) / 2))
     end
     return position_drawable
 end
@@ -203,16 +211,16 @@ luma(c::RGB) = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b # using BT. 709 coeffi
 # Operator #
 #==========#
 
-Base.@kwdef struct DrawOperator <: Drawable
+Base.@kwdef struct DrawText <: Drawable
     text::LaTeXString
     color::HSL{Float64} = color_operator
     cellsize::Float64 = 12
     fontsize::Float64 = 20
 end
-width(O::DrawOperator) = O.cellsize
-height(O::DrawOperator) = O.cellsize
+width(O::DrawText) = O.cellsize
+height(O::DrawText) = O.cellsize
 
-function draw!(O::DrawOperator, center)
+function draw!(O::DrawText, center)
     # Apply offset
     setcolor(O.color)
     fontsize(O.fontsize)
@@ -287,9 +295,9 @@ DHd = DrawMatrix(; mat = H, color = color_H, dashed = true)
 
 DFdn = DrawMatrix(; mat = F, color = color_F, dashed = true, show_text = true)
 
-DEq = DrawOperator(; text = "=")
-DTimes = DrawOperator(; text = "⋅")
-DCirc = DrawOperator(; text = "∘")
+DEq = DrawText(; text = "=")
+DTimes = DrawText(; text = "⋅")
+DCirc = DrawText(; text = "∘")
 
 DJF = DrawOverlay(; text = L"J_{f}(x)", color = color_F)
 DJG = DrawOverlay(; text = L"J_{g}(x)", color = color_G)
@@ -468,7 +476,7 @@ function forward_mode()
     De2 = DrawMatrix(; mat = e2, color = color_blue, show_text = true)
     DFe1 = DrawMatrix(; mat = F * e1, color = color_F, absmax = absmax, show_text = true)
     DFe2 = DrawMatrix(; mat = F * e2, color = color_F, absmax = absmax, show_text = true)
-    DDots = DrawOperator(; text = "...", fontsize = 40)
+    DDots = DrawText(; text = "...", fontsize = 40)
 
     # Position drawables
     drawables = [DF1, De1, DEq, DFe1, DDots, DFdn, De2, DEq, DFe2]
@@ -534,7 +542,7 @@ function reverse_mode()
     De2 = DrawMatrix(; mat = e2, color = color_blue, show_text = true)
     DFe1 = DrawMatrix(; mat = e1 * F, color = color_F, absmax = absmax, show_text = true)
     DFe2 = DrawMatrix(; mat = e2 * F, color = color_F, absmax = absmax, show_text = true)
-    DDots = DrawOperator(; text = "...", fontsize = 40)
+    DDots = DrawText(; text = "...", fontsize = 40)
 
     # Position drawables
     drawables = [De1, DF1, DEq, DFe1]
@@ -588,13 +596,44 @@ function sparse_map_colored()
     return draw!(PS)
 end
 
-function sparsity_pattern()
+function sparsity_pattern_representations()
     setup!()
 
-    P_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
-    DP = DrawMatrix(; mat = P, mat_text = P_text, color = color_F, show_text = true)
-    PP = Position(DP, Point(0.0, 0.0))
-    return draw!(PP)
+    # Dense Jacobian
+    DS = DrawMatrix(; mat = S, color = color_F, dashed = false, show_text = true)
+    
+    # Binary Jacobian
+    B_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
+    DB = DrawMatrix(; mat = P, mat_text = B_text, color = color_F, show_text = true)
+    
+    # Index set representations
+    I = fill(1.0, n, 1)
+    I_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], n, 1)
+    DI = DrawMatrix(; mat = I, mat_text = I_text, color = color_F, show_text = true)
+    
+    # Text labels
+    fontsize = 15
+    Da = DrawText(; text="(a)", fontsize)
+    Db = DrawText(; text="(b)", fontsize)
+    Dc = DrawText(; text="(c)", fontsize)
+
+    # Center drawables
+    space = 30
+    drawables = [DS, DB, DI]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * space
+    xstart = (width(DS) - total_width) / 2
+    
+    PS = Position(DS, Point(xstart, 12))
+    PB = position_right_of(PS; space)(DB)
+    PI = position_right_of(PB; space)(DI)
+
+    Pa = position_above(PS)(Da)
+    Pb = position_above(PB)(Db)
+    Pc = position_above(PI)(Dc)
+    
+    for obj in (PS, PB, PI, Pa, Pb, Pc)
+        draw!(obj)
+    end
 end
 
 function sparsity_coloring()
@@ -658,16 +697,6 @@ function sparse_ad()
     end
 end
 
-function sparsity_pattern_compressed()
-    setup!()
-
-    P = fill(1.0, n, 1)
-    P_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], n, 1)
-    DP = DrawMatrix(; mat = P, mat_text = P_text, color = color_F, show_text = true)
-    PP = Position(DP, Point(0.0, 0.0))
-    return draw!(PP)
-end
-
 function forward_mode_naive()
     setup!()
 
@@ -711,7 +740,7 @@ function forward_mode_sparse()
     DFj = DrawMatrix(; mat = PJ, mat_text = PJ_text, color = color_F, show_text = true)
     DP = DrawMatrix(; mat = P, mat_text = P_text, color = color_F, show_text = true)
 
-    DEq2 = DrawOperator(; text = "≔")
+    DEq2 = DrawText(; text = "≔")
 
     # Position drawables
     PFd = Position(DFd, Point(-137.5, 0.0)) # reuse center from `forward_mode_naive`
@@ -749,10 +778,10 @@ var"@save" = var"@svg" # var"@pdf"
 @save sparse_ad() 220 120 joinpath(@__DIR__, "sparse_ad")
 @save sparse_map_colored() 120 100 joinpath(@__DIR__, "sparse_map_colored")
 
-@save sparsity_pattern() 120 100 joinpath(@__DIR__, "sparsity_pattern")
 @save sparsity_coloring() 120 100 joinpath(@__DIR__, "coloring")
-@save sparsity_pattern_compressed() 40 100 joinpath(@__DIR__, "sparsity_pattern_compressed")
 
 # Sized need to match:
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
+
+@save sparsity_pattern_representations() 330 130 joinpath(@__DIR__, "sparsity_pattern_representations")
