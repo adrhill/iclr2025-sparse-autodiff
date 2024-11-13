@@ -280,9 +280,15 @@ iszero_string(x) = !iszero(x) ? "≠ 0" : "0"
 P = map(!iszero, S)
 P_text = map(iszero_string, P)
 
-vFr = randn(StableRNG(3), m, 1)
-vHr = G * vFr
-vRr = H * vHr # result from right
+# Forward mode
+vFfw = randn(StableRNG(3), m, 1)
+vHfw = G * vFfw
+vRfw = H * vHfw # result from right
+
+# Reverse mode
+vFrv = randn(StableRNG(3), 1, n)
+vGrv = vFrv * H 
+vRrv = vGrv * G # result from left
 
 # Create drawables
 DF = DrawMatrix(; mat = F, color = color_F)
@@ -400,33 +406,33 @@ function matrixfree()
     end
 end
 
-function matrixfree2()
+function forward_mode_eval()
     setup!()
 
-    DvFr = DrawMatrix(; mat = vFr, color = color_blue)
-    DvHr = DrawMatrix(; mat = vHr, color = color_blue)
-    DvRr = DrawMatrix(; mat = vRr, color = color_blue)
+    DvFfw = DrawMatrix(; mat = vFfw, color = color_blue)
+    DvHfw = DrawMatrix(; mat = vHfw, color = color_blue)
+    DvRfw = DrawMatrix(; mat = vRfw, color = color_blue)
 
     # Position drawables
-    drawables = [DFd, DvFr, DEq, DHd, DGd, DvFr]
+    drawables = [DFd, DvFfw, DEq, DHd, DGd, DvFfw]
     total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
     xstart = (width(DF) - total_width) / 2
     ystart = -105.0
 
     PF = Position(DFd, Point(xstart, ystart))
-    PvFr = position_right_of(PF)(DvFr)
+    PvFfw = position_right_of(PF)(DvFfw)
 
-    PEq = position_right_of(PvFr)(DEq)
+    PEq = position_right_of(PvFfw)(DEq)
     PH = position_right_of(PEq)(DHd)
     PG = position_right_of(PH)(DGd)
-    PvFr2 = position_right_of(PG)(DvFr)
+    PvFfw2 = position_right_of(PG)(DvFfw)
 
     PEq2 = Position(DEq, center(PEq) + Point(0, 110))
     PH2 = position_right_of(PEq2)(DHd)
-    PvHr = position_right_of(PH2)(DvHr)
+    PvHfw = position_right_of(PH2)(DvHfw)
 
     PEq3 = Position(DEq, center(PEq2) + Point(0, 110))
-    PvRr = position_right_of(PEq3)(DvRr)
+    PvRfw = position_right_of(PEq3)(DvRfw)
 
     PDF = position_on(PF)(DDF)
     PDG = position_on(PG)(DDG)
@@ -767,7 +773,6 @@ var"@save" = var"@svg" # var"@pdf"
 @save chainrule() 380 100 joinpath(@__DIR__, "chainrule")
 @save chainrule(; show_text = true) 380 100 joinpath(@__DIR__, "chainrule_num")
 @save matrixfree() 380 100 joinpath(@__DIR__, "matrixfree")
-@save matrixfree2() 450 340 joinpath(@__DIR__, "matrixfree2")
 
 @save forward_mode() 510 120 joinpath(@__DIR__, "forward_mode")
 @save reverse_mode() 380 250 joinpath(@__DIR__, "reverse_mode")
@@ -785,3 +790,4 @@ var"@save" = var"@svg" # var"@pdf"
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
 @save sparsity_pattern_representations() 330 130 joinpath(@__DIR__, "sparsity_pattern_representations")
+@save forward_mode_eval() 450 340 joinpath(@__DIR__, "forward_mode_eval")
