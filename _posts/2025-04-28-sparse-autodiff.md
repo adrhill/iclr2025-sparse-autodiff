@@ -25,17 +25,10 @@ hidden: false
 #   - name: Anonymous
 
 authors:
-  - name: Adrian Hill
-    url: "http://adrianhill.de/"
-    affiliations:
-      name: Machine Learning Group, TU Berlin
-  - name: Guillaume Dalle
-    url: "https://gdalle.github.io"
-    affiliations:
-      name: IdePHICS, INDY and SPOC laboratories, EPFL
+  - name: Anonymous
 
 # must be the exact same name as your blogpost
-bibliography: 2025-04-28-sparse-ad.bib  
+bibliography: 2025-04-28-sparse-autodiff.bib  
 
 # Add a table of contents to your post.
 #   - make sure that TOC names match the actual section names
@@ -78,85 +71,95 @@ _styles: >
   }
 ---
 
-While the use of gradient-based optimization is ubiquitous in machine learning,
-the usage of Jacobians and second-order-optimization via Hessians remains scarce due to high computational costs.
-However, in numerous applications within scientific machine learning, 
-Jacobians and Hessians exhibit sparsity, a characteristic that–when leveraged–has the potential to vastly accelerate computation.
-While the use of **Automatic Differentiation** (AD) via frameworks and programming languages like PyTorch, JAX and Julia is ubiquitous, **sparse AD** is mostly unknown.
+First-order optimization is ubiquitous in Machine Learning (ML) but second-order optimization is much less common.
+The intuitive reason is that large gradients are cheap, whereas large Hessian matrices are expensive.
+Luckily, in numerous applications of ML to science or engineering, **Hessians (and Jacobians) exhibit sparsity**:
+most of their coefficients are known to be zero.
+Leveraging this sparsity can vastly **accelerate Automatic Differentiation** (AD) for Hessians and Jacobians,
+while decreasing its memory requirements.
+Yet, while traditional AD is available in many high-level programming languages,
+**sparse AD is not as widely used**.
+One reason is that the underlying theory was developed outside of the ML research ecosystem,
+by people more familiar with low-level programming languages.
 
-With this blog post, we aim to shed light on the inner workings of sparse AD, 
-starting out with a high-level introduction into classical AD, 
-covering the computation of Jacobians in both forward- and reverse-mode.
+With this blog post, we aim to shed light on the inner workings of sparse AD,
+thus bridging the gap between the ML and AD communities.
+We start out with a short introduction to traditional AD,
+covering the computation of Jacobians in both forward and reverse mode.
 We then dive into the two primary components of sparse AD:
-sparsity pattern **detection** and **coloring**.
-Having covered the computation of sparse Jacobians, 
-we then move on to sparse Hessians.  
-We conclude with a demonstration of sparse automatic differentiation,
-providing performance benchmarks and guidance on when to use sparse AD over "dense" AD.
+**sparsity pattern detection** and **matrix coloring**.
+Having described the computation of sparse Jacobians,
+we move on to sparse Hessians.  
+We conclude with a practical demonstration of sparse AD,
+providing performance benchmarks and guidance on when to use sparse AD over dense AD.
 
-## Automatic differentiation
+## Automatic Differentiation
 
-We start out by covering the fundamentals of classic AD, which we will refer to as "dense" AD, in distinction to sparse AD.
-
-### Toy example
+Let us start by covering the fundamentals of traditional AD.
 
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
-As our motivating example, we will therefore take a look at a differentiable function $f$
-composed from differentiable $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ 
-and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$, 
+To make things simple, we will mainly look at a differentiable function $f$
+composed of two differentiable functions
+$g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$,
 such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
-The insights gained from this toy example should translate directly to more deeply composed functions.
+The insights gained from this toy example should translate directly to more deeply composed functions $f = g^{(L)} \circ g^{(L-1)} \circ \cdots \circ g^{(1)}$.
+For ease of visualization, we work in small dimension, but the real benefits of sparse AD only appear as the dimension grows.
 
 ### The chain rule
 
-For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$, 
+For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
 the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
 
 $$ (J_f(\mathbf{x}))_{i,j} = \frac{\partial f_i}{\partial x_j}(\mathbf{x}) \in \mathbb{R} \quad . $$
 
-When viewed as a  linear map, this Jacobian can be though of as the **linear approximation** of $f$ around $\mathbf{x}$.
+For a composed function $f = h \circ g$, the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
+
+$$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
+
+Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
+We will keep using these dimensions in following illustrations.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 <div class="caption">
     Figure 1: Visualization of the multivariate chain rule for $f = h \circ g$.
 </div>
 
-For a composed function $f = h \circ g$, the **multivariable chain rule** tells us that we obtain the Jacobian of $f$ by **composing** the Jacobians of $h$ and $g$:
-
-$$ J_f(\mathbf{x}) = J_{h \circ g}(\mathbf{x}) =J_h(g(\mathbf{x})) \cdot J_g(\mathbf{x}) \quad .$$
-
-Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
-<!-- TODO: explain that values are random? -->
-Without loss of generality, we will keep using these dimensionalities in following illustrations.
-
 ### AD is matrix-free
 
-We've seen how the chain rule directly translates the compositional structure of a function into the compositional structure of its Jacobian.
-Due to the small size of our chosen dimensions $n$, $m$ and $p$, this approach worked well on our toy example in Figure 1.  
+We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian.
+Thanks to the small dimensions $n$, $m$ and $p$, this approach worked well on our toy example in Figure 1.
 In practice however, there is a problem:
-**Keeping intermediate Jacobian matrices in computer memory is inefficient and often impossible.**
+**materializing intermediate Jacobian matrices is inefficient and often impossible**, especially with a dense matrix format.
+Examples of dense matrix formats include NumPy's `ndarray`, PyTorch's `Tensor`, JAX's `Array` and Julia's `Matrix`.
 
-We will refer to this kind of matrix, for which all entries are kept in computer memory, as a **materialized**.
-Examples for materialized matrices include NumPy's `ndarray`, PyTorch's `Tensor`s, JAX's `Array` and Julia's `Matrix`.
-<!-- TODO: Check capitalization of Python types. It's the wild west over there. -->
+As a motivating example, let us take a look at a tiny convolutional layer.
+We consider a convolutional filter of size $5 \times 5$, a single input channel and a single output channel.
+An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
+All the white coefficients are **structural zeros**.
+
+If we materialize the entire Jacobian as a dense matrix:
+
+- we waste time computing coefficients which are mostly zero;
+- we waste memory storing those zero coefficients.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-fluid" %}
 <div class="caption">
     Figure 2: Structure of the Jacobian of a tiny convolutional layer.
 </div>
 
-*TODO: replace with identity function on arrays as a simpler example?*
+In modern neural network architectures, which can contain over one trillion parameters,
+computing intermediate Jacobians is not only inefficient: it exceeds available memory.
+AD circumvents this limitation using **linear maps**, lazy operators that act exactly like matrices but without materializing them.
 
-<!-- TODO: Maybe the identity function is a simpler example? -->
-As a motivating example against **materialized Jacobians**, let's take a look at a tiny convolutional layer.
-We assume a convolutional filter of size $5 \times 5$, as well as a single input and a single output channel.
-An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
-Computing it would be highly memory inefficient, as $96.8\%$ of all entries are zero.
-Additionally, matrix multiplication with the Jacobians of following layers would be computationally inefficient due to numerous redundant additions and multiplications by zero.
+<!-- TODO: "In terms  of notation" or "Mathematically speaking"? -->
+The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
+We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
-In modern neural network architectures, which are crossing the threshold of one trillion parameters, 
-computing intermediate Jacobians is not only inefficient, but also exceeds available memory.
-Further examples include the Jacobians resulting from an identity function or any activation function that is applied element-wise.
+$$ Df(\mathbf{x}) = D(h \circ g)(\mathbf{x}) =Dh(g(\mathbf{x})) \circ Dg(\mathbf{x}) .$$
+
+Note that all terms in this formulation of the chain rule are linear maps.
+A new visualization for our toy example can be found in Figure 3b.
+Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 <div class="caption">
@@ -168,22 +171,8 @@ Further examples include the Jacobians resulting from an identity function or an
     Figure 3b: Chain rule using matrix-free linear maps (dashed outline).
 </div>
 
-Since keeping **materialized** Jacobian matrices in memory is inefficient or impossible,
-AD instead implements **linear maps**, **functions** that act exactly like materialized matrices.
-
-<!-- TODO: "In terms  of notation" or "Mathematically speaking"? -->
-In terms of notation, this linear map can be obtained by applying the differential operator $D$ to $f$. 
-The resulting function $Df(\mathbf{x})$ corresponds to the linear approximation of $f$ at $\mathbf{x}$.
-We can rephrase  the chain rule as   
-
-$$ Df(\mathbf{x}) = D(h \circ g)(\mathbf{x}) =Dh(g(\mathbf{x})) \circ Dg(\mathbf{x}) \quad .$$
-
-Note that all terms in this formulation of the chain rule are functions.
-A visualization for our toy example can be found in Figure 3b. 
-Our illustrations distinguish between materialized matrices and linear maps by using solid and dashed lines respectively.
-
 *We visualize "matrix entries" in linear maps to build intuition.
-Even though following illustrations will sometimes put numbers onto these "matrix entries", 
+Even though following illustrations will sometimes put numbers onto these "matrix entries",
 linear maps are best thought of as black-box functions.*
 
 ### Forward-mode AD
@@ -201,55 +190,54 @@ Since we propagate in the order of the original function evaluation, this is cal
 In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
 Since this operation by definition corresponds to 
 
-$$ \mathbf{v}_2 = Dg(\mathbf{x})(\mathbf{v}_1) = J_{g}(\mathbf{x}) \cdot \mathbf{v}_1 \;\in \mathbb{R}^p \quad ,$$
+$$ \mathbf{v}_2 = Dg(\mathbf{x})(\mathbf{v}_1) = J_{g}(\mathbf{x}) \cdot \mathbf{v}_1 \;\in \mathbb{R}^p ,$$
 
 it is also commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
 The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
 
-$$ \mathbf{v}_3 = Dh(g(\mathbf{x}))(\mathbf{v}_2) = J_{h}(g(\mathbf{x})) \cdot \mathbf{v}_2 \;\in \mathbb{R}^m \quad ,$$
+$$ \mathbf{v}_3 = Dh(g(\mathbf{x}))(\mathbf{v}_2) = J_{h}(g(\mathbf{x})) \cdot \mathbf{v}_2 \;\in \mathbb{R}^m ,$$
 
 which in accordance with the chain rule is equivalent to 
 
-$$ \mathbf{v}_3 = Df(\mathbf{x})(\mathbf{v}_1) = J_{f}(\mathbf{x}) \cdot \mathbf{v}_1 \quad ,$$
+$$ \mathbf{v}_3 = Df(\mathbf{x})(\mathbf{v}_1) = J_{f}(\mathbf{x}) \cdot \mathbf{v}_1 ,$$
 
 the JVP of our composed function $f$.
 
-**Note that we didn't materialize intermediate Jacobians at any point**–we only propagated vectors.
+**Note that we did not materialize intermediate Jacobians at any point** – we only propagated vectors through linear maps.
+
+### Reverse-mode AD
+
+We can also propagate vectors through our linear maps from the left-hand side, resulting in **reverse-mode AD**.
+
+<!-- TODO: add analogous reverse-mode figure -->
+
+### From linear maps back to Jacobians
+
+The linear map formulation allows us to avoid intermediate Jacobian matrices in long chains of function compositions.
+But can we use this machinery to materialize the **Jacobian** of the composition $f$ itself?
+
+As shown in Figure 5, we can **materialize Jacobians column by column** in forward mode.
+Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\mathbf{x})$.
+Thus, materializing the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
     Figure 5: Forward-mode AD materializes Jacobians column-by-column.
 </div>
 
-But how can we use this machinery to compute a **materialized Jacobian**? 
-Figure 5 shows the answer.
-While it might look redundant at first, evaluating the **linear map** $Df(\mathbf{x})$ with the $i$-th standard basis vector **materializes** the $i$-th column of the Jacobian $J_f(\mathbf{x})$. 
-Materializing the full $m \times n$ Jacobian takes $n$ evaluations with all $n$ standard basis vectors,
-as many as there are inputs.
-
-When applied to gradient-based optimization of neural networks with large amounts of parameters, 
-this dependence on the input dimensionality hinders the performance of forward-mode AD.
-Luckily, we can also propagate vectors through our linear maps from the left-hand side, resulting in **reverse-mode AD**.
-
-### Reverse-mode AD
-
-<!-- TODO: add analogous reverse-mode figure -->
-*TODO: Add and describe reverse-mode equivalent of figure 4.*
+As illustated in Figure 6, we can also **materialize Jacobians row by row** in reverse mode.
+Unlike forward mode in Figure 5,
+this requires one VJP with each of the $m$ standard basis vectors of the **output space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 <div class="caption">
     Figure 6: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
-As illustated in Figure 6, we can also **materialize Jacobians row by row**.
-Analogous to forward-mode in figure 5, 
-this requires evaluating $m$ VJPs with all $m$ standard basis vectors,
-as many as there are outputs.
-
 Since neural networks are usually trained using scalar loss functions,
-reverse-mode only requires the evaluation of a single VJP to compute a gradient.
-This makes it the method of choice for machine learners, 
-who more commonly refer to reverse-mode AD as  *backpropagation*.
+reverse-mode AD only requires the evaluation of a single VJP to compute a gradient.
+This makes it the method of choice for machine learners,
+who typically refer to reverse-mode AD as *backpropagation*.
 
 ## Sparse automatic differentiation
 
@@ -267,14 +255,16 @@ We refer to linear maps as "sparse linear maps" if they materialize to sparse ma
     </div>
 </div>
 <div class="caption">
-    Figure 7: A sparse Jacobian and its respective sparse linear map.
+    Figure 7: A sparse Jacobian and its corresponding sparse linear map.
 </div>
 
-Compute graphs of programs are almost always "dense", 
-as the existence of superfluous operations would be considered a bug. 
-However, corresponding Jacobians can still be sparse. 
-As an example, consider the previous example of an efficiently programmed convolutional layer.
-A toy example of a sparse Jacobian matrix and it's respective linear map is shown in Figure 7.
+Whene functions have many inputs and many outputs,
+a given output does not always depend on every single input.
+This endows the corresponding Jacobian with a sparse structure,
+where zero coefficients denote an absence of (first-order) dependency.
+The previous case of a convolutional layer is a simple example.
+An even simpler example is an activation function applied elementwise,
+for which the Jacobian is the identity matrix.
 
 ### Leveraging structure
 
@@ -300,7 +290,7 @@ and is visualized in Figure 8, where all orthogonal columns have been colored in
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we materialize the sum of the first, second and fifth column of our Jacobian.
 Since we can assume we know the structure of the Jacobian,
-we can assign the values in the resulting vector to the correct Jacobian entries. 
+we can assign the values in the resulting vector to the correct Jacobian entries.
 
 The same idea can also be applied to reverse mode AD.
 Instead of finding orthogonal column, we need to find orthogonal rows.
