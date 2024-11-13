@@ -409,9 +409,10 @@ end
 function forward_mode_eval()
     setup!()
 
-    DvFfw = DrawMatrix(; mat = vFfw, color = color_blue)
+    # Create three vectors
+    DvFfw = DrawMatrix(; mat = vFfw, color = color_blue) # input
     DvHfw = DrawMatrix(; mat = vHfw, color = color_blue)
-    DvRfw = DrawMatrix(; mat = vRfw, color = color_blue)
+    DvRfw = DrawMatrix(; mat = vRfw, color = color_blue) # output
 
     # Position drawables
     drawables = [DFd, DvFfw, DEq, DHd, DGd, DvFfw]
@@ -441,7 +442,48 @@ function forward_mode_eval()
 
     # Draw 
     for obj in
-        (PF, PvFr, PEq, PH, PG, PvFr2, PEq2, PH2, PvHr, PEq3, PvRr, PDF, PDG, PDH, PDH2)
+        (PF, PvFfw, PEq, PH, PG, PvFfw2, PEq2, PH2, PvHfw, PEq3, PvRfw, PDF, PDG, PDH, PDH2)
+        draw!(obj)
+    end
+end
+
+function reverse_mode_eval()
+    setup!()
+
+    # Create drawables for three vectors
+    DvFrv = DrawMatrix(; mat = vFrv, color = color_blue) # input
+    DvGrv = DrawMatrix(; mat = vGrv, color = color_blue)
+    DvRrv = DrawMatrix(; mat = vRrv, color = color_blue) # output
+
+    # Position drawables
+    drawables = [DvFrv, DFd, DEq, DvFrv, DHd, DGd]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
+    xstart = (width(DvFrv) - total_width) / 2
+    ystart = -82.5
+
+    PvFrv = Position(DvFrv, Point(xstart, ystart))
+    PF = position_right_of(PvFrv)(DFd)
+
+    PEq = position_right_of(PF)(DEq)
+    PvFrv2 = position_right_of(PEq)(DvFrv)
+    PH = position_right_of(PvFrv2)(DHd)
+    PG = position_right_of(PH)(DGd)
+
+    PEq2 = Position(DEq, center(PEq) + Point(0, 110))
+    PvGrv = position_right_of(PEq2)(DvGrv)
+    PG2 = position_right_of(PvGrv)(DGd)
+
+    PEq3 = Position(DEq, center(PEq2) + Point(0, 90))
+    PvRrv = position_right_of(PEq3)(DvRrv)
+
+    PDF = position_on(PF)(DDF)
+    PDG = position_on(PG)(DDG)
+    PDH = position_on(PH)(DDH)
+    PDG2 = position_on(PG2)(DDG)
+
+    # Draw 
+    for obj in
+        (PF, PvFrv, PEq, PH, PG, PvFrv2, PEq2, PG2, PvGrv, PEq3, PvRrv, PDF, PDG, PDH, PDG2)
         draw!(obj)
     end
 end
@@ -774,6 +816,9 @@ var"@save" = var"@svg" # var"@pdf"
 @save chainrule(; show_text = true) 380 100 joinpath(@__DIR__, "chainrule_num")
 @save matrixfree() 380 100 joinpath(@__DIR__, "matrixfree")
 
+@save forward_mode_eval() 450 340 joinpath(@__DIR__, "forward_mode_eval")
+@save reverse_mode_eval() 570 280 joinpath(@__DIR__, "reverse_mode_eval")
+
 @save forward_mode() 510 120 joinpath(@__DIR__, "forward_mode")
 @save reverse_mode() 380 250 joinpath(@__DIR__, "reverse_mode")
 
@@ -783,11 +828,11 @@ var"@save" = var"@svg" # var"@pdf"
 @save sparse_ad() 220 120 joinpath(@__DIR__, "sparse_ad")
 @save sparse_map_colored() 120 100 joinpath(@__DIR__, "sparse_map_colored")
 
+@save sparsity_pattern_representations() 330 130 joinpath(@__DIR__, "sparsity_pattern_representations")
 @save sparsity_coloring() 120 100 joinpath(@__DIR__, "coloring")
 
 # Sized need to match:
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
-@save sparsity_pattern_representations() 330 130 joinpath(@__DIR__, "sparsity_pattern_representations")
-@save forward_mode_eval() 450 340 joinpath(@__DIR__, "forward_mode_eval")
+
