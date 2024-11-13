@@ -47,6 +47,10 @@ toc:
     - name: Leveraging structure
     - name: Sparsity pattern detection and coloring
   - name: Pattern detection
+    subsections:
+    - name: Compressing Jacobians to index sets
+    - name: Propagating index sets
+    - name: Alternative evaluation
   - name: Matrix coloring
   - name: Second-order sparse differentiation
   - name: Demonstration
@@ -340,13 +344,45 @@ As we will see in later benchmarks, this level of performance can be achieved.
 Additionally, if we need to compute Jacobians multiple times and are able to reuse the sparsity pattern, 
 the cost of sparsity pattern detection and coloring can be amortized over time.
 
-
 ## Pattern detection
 
-### Index sets
+Sparsity pattern detection can be thought of as a binary version of AD.
+Mirroring the diversity of existing approaches to AD,
+there are also many possible approaches to sparsity pattern detection,
+each with their own advantages and tradeoffs.
 
-Binary Jacobian patterns are efficiently compressed using **indices of non-zero values**:
+The method we will present here corresponds to a binary forward-mode AD system 
+in which performance is gained by compressing matrix rows.
+*TODO: Alternatives include Bayesian probing, ...* 
+<!-- TODO: cite a wide list of approaches here -->
 
+### Compressing Jacobians to index sets
+
+Our goal with sparsity pattern detection is to quickly materialize the binary pattern of the Jacobian.
+One way to achieve better performance than traditional AD is to compress of rows of matrices to index sets.
+The $i$-th row of the Jacobian corresponds to 
+
+$$ \big(J_f(\vx)\big)_{i,:} 
+= \left[\dfdx{i}{j}\right]_{1 \le j \le n}
+= \begin{bmatrix}
+    \dfdx{i}{1} &
+    \ldots      &
+    \dfdx{i}{n}
+\end{bmatrix} .
+$$
+
+This can naively be represented in a computer program by computing and storing using the corresponding $n$ first-order partial derivatives.
+However, since we are only interested in the binary pattern 
+
+$$ \left[\dfdx{i}{j} \neq 0\right]_{1 \le j \le n} , $$
+
+we can instead represent the sparsity pattern of the $i$-th column of a Jacobian by the corresponding **index set of non-zero values**
+
+$$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} . $$
+
+These equivalent sparsity pattern representations are illustrated in Figure 10.
+
+<!-- TODO: just draw a combined figure to avoid dealing with HTML column shenanigans -->
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
         {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_matrix.svg" class="img-fluid" %}
@@ -365,9 +401,12 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 (Since the method we are about to show is essentially a binary forward-mode AD system, we compress along rows.)
 
 
-### Core Idea: Propagate index sets
+### Propagating index sets
 
-**Naive approach:** materialize full Jacobians (inefficient or impossible):
+Figure 11 shows the traditional forward-AD pass we want to avoid:
+propagating a full identity matrix through a linear map would materialize the Jacobian of $f$, 
+but also all intermediate linear maps.
+As previously discussed, this is not a viable option due to its inefficiency and high memory requirements.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
@@ -375,7 +414,12 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
     Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
 </div>
 
-**Our goal:** propagate full basis index sets:
+Instead, we *seed* an input vector with index sets corresponding to the compressed identity matrix. 
+An alternative view on this vector is that it corresponds to the index set representation of the Jacobian of the input, since $\frac{\partial x_i}{\partial x_j} \neq 0$ only holds for $i=j$.
+
+Our goal is to propagate this index set such that we get an output vector of index sets 
+that corresponds to the Jacobian sparsity pattern.
+This idea is visualized in Figure 12.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
 <div class="caption">
@@ -384,7 +428,7 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 
 **But how do we define these propagation rules?**
 
-### Matrix coloring
+## Matrix coloring
 
 ## Second-order sparse differentiation
 
