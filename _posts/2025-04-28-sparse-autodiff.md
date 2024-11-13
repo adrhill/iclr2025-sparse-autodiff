@@ -426,7 +426,49 @@ This idea is visualized in Figure 12.
     Figure 12: Propagating an index set through a linear map to obtain a sparsity pattern.  
 </div>
 
-**But how do we define these propagation rules?**
+### Alternative evaluation
+
+Instead of going into implementation details,
+we want to provide some intuition on the second key ingredient of our forward-mode sparsity detection: 
+**alternative function evaluation**.
+
+We will demonstrate this on a second toy example, the function
+
+$$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $$
+
+
+
+As discussed in the previous section, 
+we seed all inputs with their respective input index sets 
+
+```mermaid
+flowchart LR
+    subgraph Inputs
+    X1["$$x_1$$"]
+    X2["$$x_2$$"]
+    X3["$$x_3$$"]
+    X4["$$x_4$$"]
+    end
+
+    PLUS((+))
+    TIMES((*))
+    SIGN((sgn))
+    PLUS2((+))
+
+    X1 --> |"{1}"| PLUS
+    X2 --> |"{2}"| TIMES
+    X3 --> |"{3}"| TIMES
+    X4 --> |"{4}"| SIGN
+    TIMES  --> |"{2,3}"| PLUS
+    PLUS --> |"{1,2,3}"| PLUS2
+    SIGN --> |"{}"| PLUS2
+
+    PLUS2 --> |"{1,2,3}"| RES["$$y=f(x)$$"]
+```
+<div class="caption">
+    Figure 13: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
+</div>
+
 
 ## Matrix coloring
 
