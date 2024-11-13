@@ -1,6 +1,6 @@
 ---
 layout: distill
-title: An Illustrated Guide to Sparse Automatic Differentiation
+title: An Illustrated Guide to Automatic Sparse Differentiation
 description: Your blog post's abstract.
   Please add your abstract or summary here and not in the main body of your text. 
   Do not include math/latex or hyperlinks.
@@ -41,14 +41,14 @@ toc:
     - name: AD is matrix-free
     - name: Forward-mode AD
     - name: Reverse-mode AD
-  - name: Sparse automatic differentiation
+  - name: Automatic sparse differentiation
     subsections:
     - name: Sparse matrices
     - name: Leveraging structure
     - name: Sparsity pattern detection and coloring
   - name: Pattern detection
   - name: Matrix coloring
-  - name: Second-order sparse AD
+  - name: Second-order sparse differentiation
   - name: Demonstration
 
 # Below is an example of injecting additional post-specific styles.
@@ -78,20 +78,20 @@ most of their coefficients are known to be zero.
 Leveraging this sparsity can vastly **accelerate Automatic Differentiation** (AD) for Hessians and Jacobians,
 while decreasing its memory requirements.
 Yet, while traditional AD is available in many high-level programming languages,
-**sparse AD is not as widely used**.
+**automatic sparse differentiation (ASD) is not as widely used**.
 One reason is that the underlying theory was developed outside of the ML research ecosystem,
 by people more familiar with low-level programming languages.
 
-With this blog post, we aim to shed light on the inner workings of sparse AD,
+With this blog post, we aim to shed light on the inner workings of ASD,
 thus bridging the gap between the ML and AD communities.
 We start out with a short introduction to traditional AD,
 covering the computation of Jacobians in both forward and reverse mode.
-We then dive into the two primary components of sparse AD:
+We then dive into the two primary components of ASD:
 **sparsity pattern detection** and **matrix coloring**.
 Having described the computation of sparse Jacobians,
 we move on to sparse Hessians.  
-We conclude with a practical demonstration of sparse AD,
-providing performance benchmarks and guidance on when to use sparse AD over dense AD.
+We conclude with a practical demonstration of ASD,
+providing performance benchmarks and guidance on when to use ASD over AD.
 
 ## Automatic Differentiation
 
@@ -103,7 +103,7 @@ composed of two differentiable functions
 $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$,
 such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
 The insights gained from this toy example should translate directly to more deeply composed functions $f = g^{(L)} \circ g^{(L-1)} \circ \cdots \circ g^{(1)}$.
-For ease of visualization, we work in small dimension, but the real benefits of sparse AD only appear as the dimension grows.
+For ease of visualization, we work in small dimension, but the real benefits of ASD only appear as the dimension grows.
 
 ### The chain rule
 
@@ -271,7 +271,7 @@ for which the Jacobian is the identity matrix.
 Assuming we know the structure of the Jacobian, we can find orthogonal, 
 non-overlapping columns or rows via a method called **matrix coloring** that we will go into more detail on later.
 
-**The core idea of sparse AD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
+**The core idea of ASD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
 Since linear maps are additive, it always holds that
 
 $$ Df(\mathbf{x})(\mathbf{e}_i+\ldots+e_j) = Df(\mathbf{x})(\mathbf{e}_i) +\ldots+ Df(\mathbf{x})(\mathbf{e}_j) \quad .$$
@@ -306,7 +306,7 @@ Since AD only gives us a composition of linear maps and linear maps are black-bo
 the structure of the Jacobian is completely unknown.
 
 **We can't tell which rows and columns are orthogonal without first materializing a Jacobian matrix.**
-But if we fully materialize a Jacobian via dense AD, sparse AD isn't needed.
+But if we fully materialize a Jacobian via traditional AD, ASD isn't needed.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -317,7 +317,7 @@ But if we fully materialize a Jacobian via dense AD, sparse AD isn't needed.
     </div>
 </div>
 <div class="caption">
-    Figure 9: The two elementary steps in sparse AD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
+    Figure 9: The two elementary steps in ASD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
 </div>
 
 The solution to this problem is shown in Figure 9:
@@ -376,6 +376,6 @@ Binary Jacobian patterns are efficiently compressed using **indices of non-zero 
 
 ### Matrix coloring
 
-## Second-order sparse AD
+## Second-order sparse differentiation
 
 ## Demonstration
