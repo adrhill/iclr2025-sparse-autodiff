@@ -24,6 +24,12 @@ hidden: false
 # authors:
 #   - name: Anonymous
 
+# TODO before submission:
+# - revert CI workflows
+# - check correct figure caption numbering and references
+# - check accessibility – color-blindness
+# - check correct rendering of SVGs on multiple browsers
+
 authors:
   - name: Anonymous
 
@@ -245,11 +251,13 @@ the JVP of our composed function $f$.
 
 ### Reverse-mode AD
 
-We can also propagate vectors through our linear maps from the left-hand side, resulting in **reverse-mode AD**.
+We can also propagate vectors through our linear maps from the left-hand side, 
+resulting in **reverse-mode AD**, shown in Figure 5.
+Just like forward-mode, reverse-mode is also matrix-free: **no intermediate Jacobians are materialized at any point**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode_eval.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 5: Evaluating linear maps in forward-mode.
+    Figure 5: Evaluating linear maps in reverse-mode.
 </div>
 
 <!-- TODO: should we add more text here? Not sure anything would be gained and it's notationally bothersome. -->
@@ -259,22 +267,22 @@ We can also propagate vectors through our linear maps from the left-hand side, r
 The linear map formulation allows us to avoid intermediate Jacobian matrices in long chains of function compositions.
 But can we use this machinery to materialize the **Jacobian** of the composition $f$ itself?
 
-As shown in Figure 5, we can **materialize Jacobians column by column** in forward mode.
+As shown in Figure 6, we can **materialize Jacobians column by column** in forward mode.
 Evaluating the linear map $Df(\vx)$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\vx)$.
 Thus, materializing the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 5: Forward-mode AD materializes Jacobians column-by-column.
+    Figure 6: Forward-mode AD materializes Jacobians column-by-column.
 </div>
 
-As illustated in Figure 6, we can also **materialize Jacobians row by row** in reverse mode.
-Unlike forward mode in Figure 5,
+As illustated in Figure 7, we can also **materialize Jacobians row by row** in reverse mode.
+Unlike forward mode in Figure 6,
 this requires one VJP with each of the $m$ standard basis vectors of the **output space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 6: Reverse-mode AD materializes Jacobians row-by-row.
+    Figure 7: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
 Since neural networks are usually trained using scalar loss functions,
@@ -298,7 +306,7 @@ We refer to linear maps as "sparse linear maps" if they materialize to sparse ma
     </div>
 </div>
 <div class="caption">
-    Figure 7: A sparse Jacobian and its corresponding sparse linear map.
+    Figure 8: A sparse Jacobian and its corresponding sparse linear map.
 </div>
 
 Whene functions have many inputs and many outputs,
@@ -325,11 +333,11 @@ the sum can be decomposed into its summands, materializing multiple columns in a
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 8: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
+    Figure 9: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
 </div>
 
 This specific example using JVPs corresponds to sparse forward-mode AD 
-and is visualized in Figure 8, where all orthogonal columns have been colored in matching hues.
+and is visualized in Figure 9, where all orthogonal columns have been colored in matching hues.
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we materialize the sum of the first, second and fifth column of our Jacobian.
 Since we can assume we know the structure of the Jacobian,
@@ -360,10 +368,10 @@ But if we fully materialize a Jacobian via traditional AD, ASD isn't needed.
     </div>
 </div>
 <div class="caption">
-    Figure 9: The two elementary steps in ASD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
+    Figure 10: The two elementary steps in ASD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
 </div>
 
-The solution to this problem is shown in Figure 9:
+The solution to this problem is shown in Figure 10:
 in order to find orthogonal columns (or rows), we don't need to materialize the full Jacobian.
 Instead, it is enough to materialize a binary sparsity pattern of the Jacobian.
 This pattern contains enough information to color it.
@@ -409,25 +417,25 @@ we can instead represent the sparsity pattern of the $i$-th column of a Jacobian
 
 $$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} . $$
 
-These equivalent sparsity pattern representations are illustrated in Figure 10.
+These equivalent sparsity pattern representations are illustrated in Figure 11.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_representations.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 10: Equivalent sparsity pattern representations: (a) uncompressed matrix, (b) binary pattern, (c) index set (compressed along rows).
+    Figure 11: Equivalent sparsity pattern representations: (a) uncompressed matrix, (b) binary pattern, (c) index set (compressed along rows).
 </div>
 
 (Since the method we are about to show is essentially a binary forward-mode AD system, we compress along rows.)
 
 ### Propagating index sets
 
-Figure 11 shows the traditional forward-AD pass we want to avoid:
+Figure 12 shows the traditional forward-AD pass we want to avoid:
 propagating a full identity matrix through a linear map would materialize the Jacobian of $f$, 
 but also all intermediate linear maps.
 As previously discussed, this is not a viable option due to its inefficiency and high memory requirements.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 11: Materializing a Jacobian forward-mode. 
+    Figure 12: Materializing a Jacobian forward-mode. 
     Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
 </div>
 
@@ -436,11 +444,11 @@ An alternative view on this vector is that it corresponds to the index set repre
 
 Our goal is to propagate this index set such that we get an output vector of index sets 
 that corresponds to the Jacobian sparsity pattern.
-This idea is visualized in Figure 12.
+This idea is visualized in Figure 13.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 12: Propagating an index set through a linear map to obtain a sparsity pattern.  
+    Figure 13: Propagating an index set through a linear map to obtain a sparsity pattern.  
 </div>
 
 ### Alternative evaluation
@@ -453,19 +461,19 @@ We will demonstrate this on a second toy example, the function
 
 $$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) .$$
 
-The corresponding computational graph is shown in Figure 13,
+The corresponding computational graph is shown in Figure 14,
 where circular nodes correspond to elementary operators,
 in this case addition, multiplication and the sign function.
 
 <!-- TODO: add graph -->
 
 <div class="caption">
-    Figure 13: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
+    Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
 
 As discussed in the previous section,
 all inputs are seeded with their respective input index sets.
-Figure 13 annotates these index sets on the edges of the computational graph.
+Figure 14 annotates these index sets on the edges of the computational graph.
 Our system for sparsity detection must now perform an **alternative evaluation of our computational graph**.
 Instead of computing the original function, 
 each operator must correctly propagate and accumulate the index sets of its inputs, 
