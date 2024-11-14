@@ -262,9 +262,9 @@ end
 #==========#
 
 # Get random matrices
-n, m, p = 4, 5, 3
-H = randn(StableRNG(121), n, p)
-G = randn(StableRNG(123), p, m)
+m, n, p = 4, 5, 3
+H = randn(StableRNG(121), m, p)
+G = randn(StableRNG(123), p, n)
 F = H * G
 
 S = Matrix(
@@ -285,12 +285,12 @@ P = map(!iszero, S)
 P_text = map(iszero_string, P)
 
 # Forward mode
-vFfw = randn(StableRNG(3), m, 1)
+vFfw = randn(StableRNG(3), n, 1)
 vHfw = G * vFfw
 vRfw = H * vHfw # result from right
 
 # Reverse mode
-vFrv = randn(StableRNG(3), 1, n)
+vFrv = randn(StableRNG(3), 1, m)
 vGrv = vFrv * H
 vRrv = vGrv * G # result from left
 
@@ -496,11 +496,11 @@ function forward_mode()
     setup!()
 
     i1 = 1
-    e1 = zeros(m, 1)
+    e1 = zeros(n, 1)
     e1[i1, 1] = 1
 
     i2 = 5
-    e2 = zeros(m, 1)
+    e2 = zeros(n, 1)
     e2[i2, 1] = 1
 
     absmax = maximum(abs, F)
@@ -561,11 +561,11 @@ function reverse_mode()
     setup!()
 
     i1 = 1
-    e1 = zeros(1, n)
+    e1 = zeros(1, m)
     e1[1, i1] = 1
 
     i2 = 4
-    e2 = zeros(1, n)
+    e2 = zeros(1, m)
     e2[1, i2] = 1
 
     absmax = maximum(abs, F)
@@ -665,8 +665,8 @@ function sparsity_pattern_representations()
     DB = DrawMatrix(; mat = P, mat_text = B_text, color = color_F, show_text = true)
 
     # Index set representations
-    I = fill(1.0, n, 1)
-    I_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], n, 1)
+    I = fill(1.0, m, 1)
+    I_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], m, 1)
     DI = DrawMatrix(; mat = I, mat_text = I_text, color = color_F, show_text = true)
 
     # Text labels
@@ -808,8 +808,8 @@ end
 function sparse_ad_forward_decompression()
     setup!()
 
-    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
-    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    v1 = reshape([1.0 1.0 0.0 0.0 1.0], n, 1)
+    v2 = reshape([0.0 0.0 1.0 1.0 0.0], n, 1)
     absmax = maximum(abs, S)
     column_colors = [c1, c1, c2, c2, c1]
 
@@ -853,6 +853,62 @@ function sparse_ad_forward_decompression()
     end
 end
 
+function sparse_ad_reverse_full()
+    setup!()
+
+    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
+    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    absmax = maximum(abs, S)
+    column_colors = [c1, c1, c2, c2, c1]
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        column_colors = column_colors,
+    )
+    Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
+    Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
+    DSv1 = DrawMatrix(;
+        mat = S * v1,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c1],
+    )
+    DSv2 = DrawMatrix(;
+        mat = S * v2,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c2],
+    )
+
+    ## Position drawables
+    drawables = [DS, Dv1, DEq, DSv1]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
+    xstart = (width(DS) - total_width) / 2
+    ystart = -65.0
+
+    # First row
+    PS1 = Position(DS, Point(xstart, ystart))
+    Pv1 = position_right_of(PS1)(Dv1)
+    PEq1 = position_right_of(Pv1)(DEq)
+    PSv1 = position_right_of(PEq1)(DSv1)
+
+    # Second row
+    PS2 = Position(DS, Point(xstart, -ystart))
+    Pv2 = position_right_of(PS2)(Dv2)
+    PEq2 = position_right_of(Pv2)(DEq)
+    PSv2 = position_right_of(PEq2)(DSv2)
+
+    # Draw 
+    for obj in (PS1, Pv1, PEq1, PSv1, PS2, Pv2, PEq2, PSv2)
+        draw!(obj)
+    end
+end
+
 function forward_mode_naive()
     setup!()
 
@@ -884,11 +940,11 @@ end
 function forward_mode_sparse()
     setup!()
 
-    PI = fill(1, m, 1)
-    PJ = fill(1, n, 1)
+    PI = fill(1, n, 1)
+    PJ = fill(1, m, 1)
 
-    PI_text = reshape(["{1}", "{2}", "{3}", "{4}", "{5}"], m, 1)
-    PJ_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], n, 1)
+    PI_text = reshape(["{1}", "{2}", "{3}", "{4}", "{5}"], n, 1)
+    PJ_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], m, 1)
     P_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
 
     DFd = DrawMatrix(; mat = S, color = color_F, dashed = true, show_text = false)
@@ -953,3 +1009,5 @@ var"@save" = var"@svg" # var"@pdf"
     @__DIR__,
     "sparse_ad_forward_decompression",
 )
+
+@save sparse_ad_reverse_full() 400 260 joinpath(@__DIR__, "sparse_ad_reverse_full")
