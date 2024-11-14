@@ -165,8 +165,8 @@ function draw!(M::DrawMatrix, center::Point)
             val = mat[i, j]
             cell_color = mat_colors[i, j]
             h = hue(cell_color)
-            v = 0.8
-            l = scale(abs(val), 0, absmax, 1.0, 0.25)
+            v = 0.6
+            l = iszero(val) ? 1.0 : scale(abs(val), 0, absmax, 0.45, 0.3)
             cell_color_background = HSL(h, v, l)
 
             # Draw rectangle
@@ -182,7 +182,7 @@ function draw!(M::DrawMatrix, center::Point)
             # Add text showing matrix value
             if show_text
                 fontsize(min(cellsize ÷ 3, 14))
-                if !is_background_bright(cell_color_background)
+                if l < 0.6
                     setcolor(color_white)
                 end
                 text(
@@ -284,7 +284,7 @@ P_text = map(iszero_string, P)
 
 # Colors for pattern above
 c1 = named_color("orchid")
-c2 = named_color("lightslateblue")
+c2 = named_color("darkorange")
 
 column_colors = [
     c1 c1 c2 c2 c1
