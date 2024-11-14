@@ -1060,16 +1060,16 @@ var"@save" = var"@svg" # var"@pdf"
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
-# Make sure the sizes of these two figures match for the blog post layout
+# Make sure the aspect ratios of these two figures match for the blog post layout
 @save sparse_ad_forward_full() 230 260 joinpath(@__DIR__, "sparse_ad_forward_full")
 @save sparse_ad_forward_decompression() 230 260 joinpath(
     @__DIR__,
     "sparse_ad_forward_decompression",
 )
 
-# Make sure the sizes of these two figures match for the blog post layout
+# Make sure the aspect ratios of these two figures match for the blog post layout
 @save sparse_ad_reverse_full() 390 230 joinpath(@__DIR__, "sparse_ad_reverse_full")
-@save sparse_ad_reverse_decompression() 390 230 joinpath(
+@save sparse_ad_reverse_decompression() 290 170 joinpath(
     @__DIR__,
     "sparse_ad_reverse_decompression",
 )
