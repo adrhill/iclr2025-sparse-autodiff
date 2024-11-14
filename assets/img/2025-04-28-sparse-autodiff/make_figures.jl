@@ -804,6 +804,55 @@ function sparse_ad_forward_full()
         draw!(obj)
     end
 end
+
+function sparse_ad_forward_decompression()
+    setup!()
+
+    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
+    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    absmax = maximum(abs, S)
+    column_colors = [c1, c1, c2, c2, c1]
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = false,
+        show_text = true,
+        column_colors = column_colors,
+    )
+    DSv1 = DrawMatrix(;
+        mat = S * v1,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c1],
+    )
+    DSv2 = DrawMatrix(;
+        mat = S * v2,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c2],
+    )
+    DArrow = DrawText(; text = "→")
+
+    ## Position drawables
+    drawables = [DSv1, DSv2, DEq, DS]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
+    xstart = (width(DSv1) - total_width) / 2
+    ystart = 0
+
+    PSv1 = Position(DSv1, Point(xstart, ystart))
+    PSv2 = position_right_of(PSv1)(DSv2)
+    PArrow = position_right_of(PSv2)(DArrow)
+    PS = position_right_of(PArrow)(DS)
+
+    # Draw 
+    for obj in (PSv1, PSv2, PArrow, PS)
+        draw!(obj)
+    end
+end
+
 function forward_mode_naive()
     setup!()
 
@@ -899,4 +948,10 @@ var"@save" = var"@svg" # var"@pdf"
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
+
+# Make sure the sizes of these two figures match
 @save sparse_ad_forward_full() 230 260 joinpath(@__DIR__, "sparse_ad_forward_full")
+@save sparse_ad_forward_decompression() 230 260 joinpath(
+    @__DIR__,
+    "sparse_ad_forward_decompression",
+)
