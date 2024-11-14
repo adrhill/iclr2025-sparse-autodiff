@@ -765,7 +765,7 @@ function sparse_ad_forward_full()
         column_colors = column_colors,
     )
     Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
-    Dv2 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
+    Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
     DSv1 = DrawMatrix(;
         mat = S * v1,
         color = color_F,
@@ -843,7 +843,7 @@ function sparse_ad_forward_decompression()
     ystart = 0
 
     PSv1 = Position(DSv1, Point(xstart, ystart))
-    PSv2 = position_right_of(PSv1)(DSv2)
+    PSv2 = position_right_of(PSv1; space=5)(DSv2)
     PArrow = position_right_of(PSv2)(DArrow)
     PS = position_right_of(PArrow)(DS)
 
@@ -914,7 +914,6 @@ function forward_mode_sparse()
     end
 end
 
-
 # This one is huge, avoid SVG and PDF:
 @png big_conv_jacobian() 1600 1200 joinpath(@__DIR__, "big_conv_jacobian")
 
@@ -948,8 +947,7 @@ var"@save" = var"@svg" # var"@pdf"
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
-
-# Make sure the sizes of these two figures match
+# Make sure the sizes of these two figures match for the blog post layout
 @save sparse_ad_forward_full() 230 260 joinpath(@__DIR__, "sparse_ad_forward_full")
 @save sparse_ad_forward_decompression() 230 260 joinpath(
     @__DIR__,
