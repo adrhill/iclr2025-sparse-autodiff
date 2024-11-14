@@ -855,7 +855,7 @@ function sparse_ad_forward_decompression()
     PSv1 = Position(DSv1, Point(xstart, ystart))
     PSv2 = position_right_of(PSv1; space = 5)(DSv2)
     PArrow = position_right_of(PSv2)(DArrow)
-    PS = position_right_of(PArrow)(DS)
+    PS = position_right_of(PArrow; space = 16)(DS)
 
     # Draw 
     for obj in (PSv1, PSv2, PArrow, PS)
@@ -914,6 +914,54 @@ function sparse_ad_reverse_full()
 
     # Draw 
     for obj in (PS1, Pv1, PEq1, PSv1, PS2, Pv2, PEq2, PSv2)
+        draw!(obj)
+    end
+end
+
+function sparse_ad_reverse_decompression()
+    setup!()
+
+    v1 = reshape([1.0 0.0 0.0 1.0], 1, m)
+    v2 = reshape([0.0 1.0 1.0 0.0], 1, m)
+    absmax = maximum(abs, S)
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        mat_colors = row_colors,
+    )
+    DSv1 = DrawMatrix(;
+        mat = v1 * S,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        mat_colors = fill(c1, 1, n),
+    )
+    DSv2 = DrawMatrix(;
+        mat = v2 * S,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        mat_colors = fill(c2, 1, n),
+    )
+    DArrow = DrawText(; text = "→")
+
+    ## Position drawables
+    drawables = [DSv1, DEq, DS]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
+    xstart = (width(DSv1) - total_width) / 2
+    ystart = -16
+
+    PSv1 = Position(DSv1, Point(xstart, ystart))
+    PSv2 = Position(DSv2, Point(xstart, -ystart))
+    xarrow = right(PSv1).x + SPACE + width(DArrow) / 2
+    PArrow = Position(DArrow, Point(xarrow, 0))
+    PS = position_right_of(PArrow; space = 16)(DS)
+
+    # Draw 
+    for obj in (PSv1, PSv2, PArrow, PS)
         draw!(obj)
     end
 end
@@ -1021,3 +1069,7 @@ var"@save" = var"@svg" # var"@pdf"
 
 # Make sure the sizes of these two figures match for the blog post layout
 @save sparse_ad_reverse_full() 390 230 joinpath(@__DIR__, "sparse_ad_reverse_full")
+@save sparse_ad_reverse_decompression() 390 230 joinpath(
+    @__DIR__,
+    "sparse_ad_reverse_decompression",
+)
