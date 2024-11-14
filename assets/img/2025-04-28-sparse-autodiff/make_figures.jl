@@ -866,51 +866,50 @@ end
 function sparse_ad_reverse_full()
     setup!()
 
-    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
-    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    v1 = reshape([1.0 0.0 0.0 1.0], 1, m)
+    v2 = reshape([0.0 1.0 1.0 0.0], 1, m)
     absmax = maximum(abs, S)
-    column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
         dashed = true,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = row_colors,
     )
     Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
     Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
     DSv1 = DrawMatrix(;
-        mat = S * v1,
+        mat = v1 * S,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c1],
+        mat_colors = fill(c1, 1, n),
     )
     DSv2 = DrawMatrix(;
-        mat = S * v2,
+        mat = v2 * S,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c2],
+        mat_colors = fill(c2, 1, n),
     )
 
     ## Position drawables
-    drawables = [DS, Dv1, DEq, DSv1]
+    drawables = [Dv1, DS, DEq, DSv1]
     total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
-    xstart = (width(DS) - total_width) / 2
-    ystart = -65.0
+    xstart = (width(Dv1) - total_width) / 2
+    ystart = -60.0
 
     # First row
-    PS1 = Position(DS, Point(xstart, ystart))
-    Pv1 = position_right_of(PS1)(Dv1)
-    PEq1 = position_right_of(Pv1)(DEq)
+    Pv1 = Position(Dv1, Point(xstart, ystart))
+    PS1 = position_right_of(Pv1)(DS)
+    PEq1 = position_right_of(PS1)(DEq)
     PSv1 = position_right_of(PEq1)(DSv1)
 
     # Second row
-    PS2 = Position(DS, Point(xstart, -ystart))
-    Pv2 = position_right_of(PS2)(Dv2)
-    PEq2 = position_right_of(Pv2)(DEq)
+    Pv2 = Position(Dv2, Point(xstart, -ystart))
+    PS2 = position_right_of(Pv2)(DS)
+    PEq2 = position_right_of(PS2)(DEq)
     PSv2 = position_right_of(PEq2)(DSv2)
 
     # Draw 
@@ -1020,4 +1019,5 @@ var"@save" = var"@svg" # var"@pdf"
     "sparse_ad_forward_decompression",
 )
 
-@save sparse_ad_reverse_full() 400 260 joinpath(@__DIR__, "sparse_ad_reverse_full")
+# Make sure the sizes of these two figures match for the blog post layout
+@save sparse_ad_reverse_full() 390 230 joinpath(@__DIR__, "sparse_ad_reverse_full")
