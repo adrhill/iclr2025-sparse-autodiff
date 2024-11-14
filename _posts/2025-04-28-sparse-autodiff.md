@@ -350,7 +350,7 @@ we materialize the sum of the first, second and fifth column of our Jacobian.
 
 Since we can assume we know the structure of the Jacobian,
 we can assign the values in the resulting vector to the correct Jacobian entries.
-The full forward-mode SAD materialization of our toy Jacobian is shown in Figure X. 
+The full forward-mode ASD materialization of our toy Jacobian is shown in Figure X. 
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
