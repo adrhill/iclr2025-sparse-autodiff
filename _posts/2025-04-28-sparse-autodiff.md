@@ -361,15 +361,24 @@ The full forward-mode SAD materialization of our toy Jacobian is shown in Figure
     </div>
 </div>
 <div class="caption">
-    Figure X: Full sparse forward-mode pass: (a) compressed evaluation of orthogonal columns (b) decompression to Jacobian matrix
+    Figure X: Materializing a Jacobian with forward-mode ASD: (a) compressed evaluation of orthogonal columns (b) decompression to Jacobian matrix
 </div>
 
-The same idea can also be applied to reverse mode AD.
+The same idea can also be applied to reverse mode AD, as shown in Figure Y.
 Instead of finding orthogonal column, we need to find orthogonal rows.
 We can then materialize multiple rows in a single VJP.
 
-*TODO: illustrate reverse-mode*
-<!-- TODO: illustrate reverse mode -->
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad_reverse_full.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad_reverse_decompression.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure Y: Materializing a Jacobian with reverse-mode ASD: (a) compressed evaluation of orthogonal rows (b) decompression to Jacobian matrix
+</div>
 
 ### Sparsity pattern detection and coloring
 

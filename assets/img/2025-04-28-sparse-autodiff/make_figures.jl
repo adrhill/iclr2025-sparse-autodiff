@@ -928,7 +928,7 @@ function sparse_ad_reverse_decompression()
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
-        dashed = true,
+        dashed = false,
         show_text = true,
         mat_colors = row_colors,
     )

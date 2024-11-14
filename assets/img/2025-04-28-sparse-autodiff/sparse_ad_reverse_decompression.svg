@@ -246,5 +246,5 @@
 <use xlink:href="#glyph-0-2" x="316.7" y="150.205"/>
 <use xlink:href="#glyph-0-1" x="320.3" y="150.205"/>
 </g>
-<path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(11.353468%, 45%, 5%)" stroke-opacity="1" stroke-dasharray="7 4" stroke-miterlimit="10" d="M 217 161.5 L 217 68.5 L 332 68.5 L 332 161.5 Z M 217 161.5 "/>
+<path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(11.353468%, 45%, 5%)" stroke-opacity="1" stroke-miterlimit="10" d="M 217 161.5 L 217 68.5 L 332 68.5 L 332 161.5 Z M 217 161.5 "/>
 </svg>
