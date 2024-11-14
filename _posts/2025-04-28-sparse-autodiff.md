@@ -268,7 +268,10 @@ The linear map formulation allows us to avoid intermediate Jacobian matrices in 
 But can we use this machinery to materialize the **Jacobian** of the composition $f$ itself?
 
 As shown in Figure 6, we can **materialize Jacobians column by column** in forward mode.
-Evaluating the linear map $Df(\vx)$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\vx)$.
+Evaluating the linear map $Df(\vx)$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\vx)$:
+
+$$ \Dfc(\vbc{i}) = \left( \Jfc \right)_\colorv{i,:} $$
+
 Thus, materializing the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
@@ -325,7 +328,11 @@ non-overlapping columns or rows via a method called **matrix coloring** that we 
 **The core idea of ASD is that we can materialize multiple orthogonal columns or rows in a single evaluation.**
 Since linear maps are additive, it always holds that
 
-$$ \Dfc(\vbc{i}+\ldots+\vbc{j}) = \Dfc(\vbc{i}) + \ldots+ \Dfc(\vbc{j}) \quad .$$
+$$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
+= \underbrace{\Dfc(\vbc{i})}_{\textcolor{Fuchsia}{\left( \Jf \right)_{i,:}}} 
++ \ldots
++ \underbrace{\Dfc(\vbc{j})}_{\textcolor{Fuchsia}{\left( \Jf \right)_{j,:}}} 
+. $$
 
 The right hand side summands each correspond to a column of the Jacobian.
 If the columns are **orthogonal** and their **structure is known**, 
