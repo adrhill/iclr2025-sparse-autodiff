@@ -347,8 +347,22 @@ This specific example using JVPs corresponds to sparse forward-mode AD
 and is visualized in Figure 9, where all orthogonal columns have been colored in matching hues.
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we materialize the sum of the first, second and fifth column of our Jacobian.
+
 Since we can assume we know the structure of the Jacobian,
 we can assign the values in the resulting vector to the correct Jacobian entries.
+The full forward-mode SAD materialization of our toy Jacobian is shown in Figure X. 
+
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad_forward_full.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad_forward_decompression.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure X: Full sparse forward-mode pass: (a) compressed evaluation of orthogonal columns (b) decompression to Jacobian matrix
+</div>
 
 The same idea can also be applied to reverse mode AD.
 Instead of finding orthogonal column, we need to find orthogonal rows.
