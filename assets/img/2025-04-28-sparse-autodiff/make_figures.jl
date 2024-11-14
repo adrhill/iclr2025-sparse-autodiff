@@ -115,12 +115,12 @@ Base.@kwdef struct DrawMatrix <: Drawable
     dashed::Bool = false
     show_text::Bool = false
     mat_text::Matrix{String} = map(default_cell_text, mat)
+    mat_colors = fill(color, size(mat))
     absmax::Float64 = maximum(abs, mat)
     height::Float64 =
         size(mat, 1) * (cellsize + padding_inner) - padding_inner + 2 * padding_outer
     width::Float64 =
         size(mat, 2) * (cellsize + padding_inner) - padding_inner + 2 * padding_outer
-    column_colors = fill(color, size(mat, 2))
 end
 
 function draw!(M::DrawMatrix, center::Point)
@@ -136,10 +136,10 @@ function draw!(M::DrawMatrix, center::Point)
         dashed,
         show_text,
         mat_text,
+        mat_colors,
         absmax,
         height,
         width,
-        column_colors,
     ) = M
 
     rows, cols = size(mat)
@@ -163,25 +163,26 @@ function draw!(M::DrawMatrix, center::Point)
 
             # Calculate color based on normalized value
             val = mat[i, j]
-            h = hue(column_colors[j])
+            cell_color = mat_colors[i, j]
+            h = hue(cell_color)
             v = 0.8
             l = scale(abs(val), 0, absmax, 1.0, 0.25)
-            cell_color = HSL(h, v, l)
+            cell_color_background = HSL(h, v, l)
 
             # Draw rectangle
-            setcolor(cell_color)
+            setcolor(cell_color_background)
             rect(Point(x, y), cellsize, cellsize, :fill)
 
             # Draw border
             setline(border_inner)
-            setcolor(column_colors[j])
+            setcolor(cell_color)
             iszero(val) && setcolor("lightgray")
             rect(Point(x, y), cellsize, cellsize, :stroke)
 
             # Add text showing matrix value
             if show_text
                 fontsize(min(cellsize ÷ 3, 14))
-                if !is_background_bright(cell_color)
+                if !is_background_bright(cell_color_background)
                     setcolor(color_white)
                 end
                 text(
@@ -277,12 +278,26 @@ S = Matrix(
 )
 iszero_string(x) = !iszero(x) ? "≠ 0" : "0"
 
-# Colors for coloing examples
+# Pattern
+P = map(!iszero, S)
+P_text = map(iszero_string, P)
+
+# Colors for pattern above
 c1 = named_color("orchid")
 c2 = named_color("lightslateblue")
 
-P = map(!iszero, S)
-P_text = map(iszero_string, P)
+column_colors = [
+    c1 c1 c2 c2 c1
+    c1 c1 c2 c2 c1
+    c1 c1 c2 c2 c1
+    c1 c1 c2 c2 c1
+]
+row_colors = [
+    c1 c1 c1 c1 c1
+    c2 c2 c2 c2 c2
+    c2 c2 c2 c2 c2
+    c1 c1 c1 c1 c1
+]
 
 # Forward mode
 vFfw = randn(StableRNG(3), n, 1)
@@ -632,14 +647,13 @@ end
 
 function sparse_map_colored()
     setup!()
-    column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
         dashed = true,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = column_colors,
     )
     PS = Position(DS, Point(0.0, 0.0))
     return draw!(PS)
@@ -696,14 +710,13 @@ end
 
 function sparsity_coloring()
     setup!()
-    column_colors = [c1, c1, c2, c2, c1]
 
     DP = DrawMatrix(;
         mat = P,
         mat_text = P_text,
         color = color_F,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = column_colors,
     )
     PP = Position(DP, Point(0.0, 0.0))
     return draw!(PP)
@@ -712,16 +725,15 @@ end
 function sparse_ad()
     setup!()
 
-    v = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
+    v = reshape([1.0 1.0 0.0 0.0 1.0], n, 1)
     absmax = maximum(abs, S)
-    column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
         dashed = true,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = column_colors,
     )
     Dv = DrawMatrix(; mat = v, color = color_blue, show_text = true)
     DSv = DrawMatrix(;
@@ -729,7 +741,7 @@ function sparse_ad()
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c1],
+        mat_colors = fill(c1, n, 1),
     )
 
     # Position drawables
@@ -752,17 +764,16 @@ end
 function sparse_ad_forward_full()
     setup!()
 
-    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
-    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    v1 = reshape([1.0 1.0 0.0 0.0 1.0], n, 1)
+    v2 = reshape([0.0 0.0 1.0 1.0 0.0], n, 1)
     absmax = maximum(abs, S)
-    column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
         dashed = true,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = column_colors,
     )
     Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
     Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
@@ -771,14 +782,14 @@ function sparse_ad_forward_full()
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c1],
+        mat_colors = fill(c1, n, 1),
     )
     DSv2 = DrawMatrix(;
         mat = S * v2,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c2],
+        mat_colors = fill(c2, n, 1),
     )
 
     ## Position drawables
@@ -811,28 +822,27 @@ function sparse_ad_forward_decompression()
     v1 = reshape([1.0 1.0 0.0 0.0 1.0], n, 1)
     v2 = reshape([0.0 0.0 1.0 1.0 0.0], n, 1)
     absmax = maximum(abs, S)
-    column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
         mat = S,
         color = color_F,
         dashed = false,
         show_text = true,
-        column_colors = column_colors,
+        mat_colors = column_colors,
     )
     DSv1 = DrawMatrix(;
         mat = S * v1,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c1],
+        mat_colors = fill(c1, m, 1),
     )
     DSv2 = DrawMatrix(;
         mat = S * v2,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        column_colors = [c2],
+        mat_colors = fill(c2, m, 1),
     )
     DArrow = DrawText(; text = "→")
 
@@ -843,7 +853,7 @@ function sparse_ad_forward_decompression()
     ystart = 0
 
     PSv1 = Position(DSv1, Point(xstart, ystart))
-    PSv2 = position_right_of(PSv1; space=5)(DSv2)
+    PSv2 = position_right_of(PSv1; space = 5)(DSv2)
     PArrow = position_right_of(PSv2)(DArrow)
     PS = position_right_of(PArrow)(DS)
 
