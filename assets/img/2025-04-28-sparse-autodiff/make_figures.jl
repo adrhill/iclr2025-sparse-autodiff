@@ -277,6 +277,10 @@ S = Matrix(
 )
 iszero_string(x) = !iszero(x) ? "≠ 0" : "0"
 
+# Colors for coloing examples
+c1 = named_color("orchid")
+c2 = named_color("lightslateblue")
+
 P = map(!iszero, S)
 P_text = map(iszero_string, P)
 
@@ -287,7 +291,7 @@ vRfw = H * vHfw # result from right
 
 # Reverse mode
 vFrv = randn(StableRNG(3), 1, n)
-vGrv = vFrv * H 
+vGrv = vFrv * H
 vRrv = vGrv * G # result from left
 
 # Create drawables
@@ -628,9 +632,6 @@ end
 
 function sparse_map_colored()
     setup!()
-
-    c1 = named_color("orchid")
-    c2 = named_color("lightslateblue")
     column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
@@ -658,36 +659,36 @@ function sparsity_pattern_representations()
 
     # Dense Jacobian
     DS = DrawMatrix(; mat = S, color = color_F, dashed = false, show_text = true)
-    
+
     # Binary Jacobian
     B_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
     DB = DrawMatrix(; mat = P, mat_text = B_text, color = color_F, show_text = true)
-    
+
     # Index set representations
     I = fill(1.0, n, 1)
     I_text = reshape(["{2,4}", "{4,5}", "{2,3}", "{1,3}"], n, 1)
     DI = DrawMatrix(; mat = I, mat_text = I_text, color = color_F, show_text = true)
-    
+
     # Text labels
     fontsize = 11
-    Da = DrawText(; text="(a)", fontsize)
-    Db = DrawText(; text="(b)", fontsize)
-    Dc = DrawText(; text="(c)", fontsize)
+    Da = DrawText(; text = "(a)", fontsize)
+    Db = DrawText(; text = "(b)", fontsize)
+    Dc = DrawText(; text = "(c)", fontsize)
 
     # Center drawables
     space = 30
     drawables = [DS, DB, DI]
     total_width = sum(width, drawables) + (length(drawables) - 1) * space
     xstart = (width(DS) - total_width) / 2
-    
+
     PS = Position(DS, Point(xstart, 7.5))
     PB = position_right_of(PS; space)(DB)
     PI = position_right_of(PB; space)(DI)
 
-    Pa = position_above(PS; space=7)(Da)
-    Pb = position_above(PB; space=7)(Db)
-    Pc = position_above(PI; space=7)(Dc)
-    
+    Pa = position_above(PS; space = 7)(Da)
+    Pb = position_above(PB; space = 7)(Db)
+    Pc = position_above(PI; space = 7)(Dc)
+
     for obj in (PS, PB, PI, Pa, Pb, Pc)
         draw!(obj)
     end
@@ -695,9 +696,6 @@ end
 
 function sparsity_coloring()
     setup!()
-
-    c1 = named_color("orchid")
-    c2 = named_color("lightslateblue")
     column_colors = [c1, c1, c2, c2, c1]
 
     DP = DrawMatrix(;
@@ -716,9 +714,6 @@ function sparse_ad()
 
     v = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
     absmax = maximum(abs, S)
-
-    c1 = named_color("orchid")
-    c2 = named_color("lightslateblue")
     column_colors = [c1, c1, c2, c2, c1]
 
     DS = DrawMatrix(;
@@ -754,6 +749,61 @@ function sparse_ad()
     end
 end
 
+function sparse_ad_forward_full()
+    setup!()
+
+    v1 = reshape([1.0 1.0 0.0 0.0 1.0], 5, 1)
+    v2 = reshape([0.0 0.0 1.0 1.0 0.0], 5, 1)
+    absmax = maximum(abs, S)
+    column_colors = [c1, c1, c2, c2, c1]
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        column_colors = column_colors,
+    )
+    Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
+    Dv2 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
+    DSv1 = DrawMatrix(;
+        mat = S * v1,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c1],
+    )
+    DSv2 = DrawMatrix(;
+        mat = S * v2,
+        color = color_F,
+        absmax = absmax,
+        show_text = true,
+        column_colors = [c2],
+    )
+
+    ## Position drawables
+    drawables = [DS, Dv1, DEq, DSv1]
+    total_width = sum(width, drawables) + (length(drawables) - 1) * SPACE
+    xstart = (width(DS) - total_width) / 2
+    ystart = -65.0
+
+    # First row
+    PS1 = Position(DS, Point(xstart, ystart))
+    Pv1 = position_right_of(PS1)(Dv1)
+    PEq1 = position_right_of(Pv1)(DEq)
+    PSv1 = position_right_of(PEq1)(DSv1)
+
+    # Second row
+    PS2 = Position(DS, Point(xstart, -ystart))
+    Pv2 = position_right_of(PS2)(Dv2)
+    PEq2 = position_right_of(Pv2)(DEq)
+    PSv2 = position_right_of(PEq2)(DSv2)
+
+    # Draw 
+    for obj in (PS1, Pv1, PEq1, PSv1, PS2, Pv2, PEq2, PSv2)
+        draw!(obj)
+    end
+end
 function forward_mode_naive()
     setup!()
 
@@ -815,6 +865,7 @@ function forward_mode_sparse()
     end
 end
 
+
 # This one is huge, avoid SVG and PDF:
 @png big_conv_jacobian() 1600 1200 joinpath(@__DIR__, "big_conv_jacobian")
 
@@ -838,11 +889,14 @@ var"@save" = var"@svg" # var"@pdf"
 @save sparse_map_colored() 120 100 joinpath(@__DIR__, "sparse_map_colored")
 
 @save sparsity_pattern() 120 100 joinpath(@__DIR__, "sparsity_pattern")
-@save sparsity_pattern_representations() 330 120 joinpath(@__DIR__, "sparsity_pattern_representations")
+@save sparsity_pattern_representations() 330 120 joinpath(
+    @__DIR__,
+    "sparsity_pattern_representations",
+)
 @save sparsity_coloring() 120 100 joinpath(@__DIR__, "coloring")
 
 # Sized need to match:
 @save forward_mode_naive() 400 120 joinpath(@__DIR__, "forward_mode_naive")
 @save forward_mode_sparse() 400 120 joinpath(@__DIR__, "forward_mode_sparse")
 
-
+@save sparse_ad_forward_full() 230 260 joinpath(@__DIR__, "sparse_ad_forward_full")
