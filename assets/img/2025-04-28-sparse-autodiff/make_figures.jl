@@ -166,7 +166,7 @@ function draw!(M::DrawMatrix, center::Point)
             cell_color = mat_colors[i, j]
             h = hue(cell_color)
             v = 0.6
-            l = iszero(val) ? 1.0 : scale(abs(val), 0, absmax, 0.45, 0.3)
+            l = iszero(val) ? 1.0 : scale(abs(val), 0, absmax, 1.0, 0.25)
             cell_color_background = HSL(h, v, l)
 
             # Draw rectangle
@@ -182,7 +182,7 @@ function draw!(M::DrawMatrix, center::Point)
             # Add text showing matrix value
             if show_text
                 fontsize(min(cellsize ÷ 3, 14))
-                if l < 0.6
+                if !is_background_bright(cell_color_background)
                     setcolor(color_white)
                 end
                 text(
@@ -205,7 +205,7 @@ function draw!(M::DrawMatrix, center::Point)
 end
 
 is_background_bright(bg) = is_background_bright(convert(RGB, bg))
-is_background_bright(bg::RGB) = luma(bg) > 0.5
+is_background_bright(bg::RGB) = luma(bg) > 0.55
 luma(c::RGB) = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b # using BT. 709 coefficients
 
 #==========#
