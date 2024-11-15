@@ -84,10 +84,10 @@ _styles: >
 <!-- LaTeX commands -->
 <div style="display: none">
     $$
-    \newcommand{\colorf}[1]{\textcolor{green}{#1}}
-    \newcommand{\colorg}[1]{\textcolor{Mulberry}{#1}}
-    \newcommand{\colorh}[1]{\textcolor{Crimson}{#1}}
-    \newcommand{\colorv}[1]{\textcolor{MidnightBlue}{#1}}
+    \newcommand{\colorf}[1]{\textcolor{RoyalBlue}{#1}}
+    \newcommand{\colorh}[1]{\textcolor{RedOrange}{#1}}
+    \newcommand{\colorg}[1]{\textcolor{PineGreen}{#1}}
+    \newcommand{\colorv}[1]{\textcolor{VioletRed}{#1}}
     \def\sR{\mathbb{R}}
     \def\vx{\mathbf{x}}
     \def\vv{\mathbf{v}}
@@ -329,9 +329,9 @@ non-overlapping columns or rows via a method called **matrix coloring** that we 
 Since linear maps are additive, it always holds that
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
-= \underbrace{\Dfc(\vbc{i})}_{\textcolor{Fuchsia}{\left( \Jf \right)_{i,:}}} 
+= \underbrace{\Dfc(\vbc{i})}_{\left( \Jfc \right)_\colorv{i,:}} 
 + \ldots
-+ \underbrace{\Dfc(\vbc{j})}_{\textcolor{Fuchsia}{\left( \Jf \right)_{j,:}}} 
++ \underbrace{\Dfc(\vbc{j})}_{\left( \Jfc \right)_\colorv{j,:}} 
 . $$
 
 The right hand side summands each correspond to a column of the Jacobian.
