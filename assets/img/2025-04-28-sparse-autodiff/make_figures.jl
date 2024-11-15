@@ -268,7 +268,7 @@ function draw!(O::DrawOverlay, center)
     setcolor(O.background)
     box(center, O.width, O.height, O.radius; action = :fill)
     setline(0.75)
-    setcolor(O.color)
+    setcolor(HSL(O.color.h, O.color.s, 0.3)) # Darken text
     box(center, O.width, O.height, O.radius; action = :stroke)
     fontsize(O.fontsize)
     return text(O.text, center + Point(0, 2); halign = :center, valign = :middle)

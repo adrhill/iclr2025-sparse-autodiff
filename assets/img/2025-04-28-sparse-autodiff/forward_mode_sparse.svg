@@ -251,20 +251,20 @@
 <use xlink:href="#glyph-0-8" x="352.7" y="95.205"/>
 </g>
 <path fill="none" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 44.705882%, 69.803922%)" stroke-opacity="1" stroke-miterlimit="10" d="M 253 106.5 L 253 13.5 L 368 13.5 L 368 106.5 Z M 253 106.5 "/>
-<path fill-rule="nonzero" fill="rgb(80%, 92.808989%, 100%)" fill-opacity="1" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 44.705882%, 69.803922%)" stroke-opacity="1" stroke-miterlimit="10" d="M 62.5 76.5 L 49.5 76.5 C 42.871094 76.5 37.5 71.128906 37.5 64.5 L 37.5 55.5 C 37.5 48.871094 42.871094 43.5 49.5 43.5 L 75.5 43.5 C 82.128906 43.5 87.5 48.871094 87.5 55.5 L 87.5 64.5 C 87.5 71.128906 82.128906 76.5 75.5 76.5 Z M 62.5 76.5 "/>
-<g fill="rgb(0%, 44.705882%, 69.803922%)" fill-opacity="1">
+<path fill-rule="nonzero" fill="rgb(80%, 92.808989%, 100%)" fill-opacity="1" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(0%, 38.426966%, 60%)" stroke-opacity="1" stroke-miterlimit="10" d="M 62.5 76.5 L 49.5 76.5 C 42.871094 76.5 37.5 71.128906 37.5 64.5 L 37.5 55.5 C 37.5 48.871094 42.871094 43.5 49.5 43.5 L 75.5 43.5 C 82.128906 43.5 87.5 48.871094 87.5 55.5 L 87.5 64.5 C 87.5 71.128906 82.128906 76.5 75.5 76.5 Z M 62.5 76.5 "/>
+<g fill="rgb(0%, 38.426966%, 60%)" fill-opacity="1">
 <use xlink:href="#glyph-2-0" x="42.538" y="66.500001"/>
 </g>
-<g fill="rgb(0%, 44.705882%, 69.803922%)" fill-opacity="1">
+<g fill="rgb(0%, 38.426966%, 60%)" fill-opacity="1">
 <use xlink:href="#glyph-2-1" x="56.29" y="66.500001"/>
 </g>
-<g fill="rgb(0%, 44.705882%, 69.803922%)" fill-opacity="1">
+<g fill="rgb(0%, 38.426966%, 60%)" fill-opacity="1">
 <use xlink:href="#glyph-2-2" x="61.797999" y="66.500001"/>
 </g>
-<g fill="rgb(0%, 44.705882%, 69.803922%)" fill-opacity="1">
+<g fill="rgb(0%, 38.426966%, 60%)" fill-opacity="1">
 <use xlink:href="#glyph-2-3" x="68.8" y="66.500001"/>
 </g>
-<g fill="rgb(0%, 44.705882%, 69.803922%)" fill-opacity="1">
+<g fill="rgb(0%, 38.426966%, 60%)" fill-opacity="1">
 <use xlink:href="#glyph-2-4" x="78.304" y="66.500001"/>
 </g>
 </svg>
