@@ -180,7 +180,7 @@ function draw!(M::DrawMatrix, center::Point)
             val = mat[i, j]
             cell_color = convert(HSL, mat_colors[i, j])
             (; h, s, l) = cell_color
-            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.75, 0.65)
+            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.65, 0.65)
             cell_color_background = HSL(h, s, l_new)
 
             # Draw rectangle
@@ -199,7 +199,7 @@ function draw!(M::DrawMatrix, center::Point)
                 if luma(cell_color_background) > 0.6
                     setcolor(HSL(h, s, 0.15)) # dark
                 else
-                    setcolor(HSL(h, s, 0.9)) # bright
+                    setcolor(HSL(h, s, 0.95)) # bright
                 end
                 iszero(val) && setcolor("lightgray")
                 text(
