@@ -12,23 +12,33 @@ using ForwardDiff: ForwardDiff
 using LinearAlgebra: I
 using SparseArrays
 
-const purple = Luxor.julia_purple
-const red = Luxor.julia_red
-const green = Luxor.julia_green
-const blue = Luxor.julia_blue
+# https://github.com/MakieOrg/Makie.jl/blob/e90c042d16b461e67b750e5ce53790e732281dba/src/theming.jl#L1-L16
+# Conservative 7-color palette from Points of view: Color blindness, Bang Wong - Nature Methods
+# https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106
+COLORSCHEME_WONG =
+    convert.(
+        HSL,
+        (
+            RGB(0 / 255, 114 / 255, 178 / 255),   # blue
+            RGB(230 / 255, 159 / 255, 0 / 255),   # orange
+            RGB(0 / 255, 158 / 255, 115 / 255),   # green
+            RGB(204 / 255, 121 / 255, 167 / 255), # reddish purple
+            RGB(86 / 255, 180 / 255, 233 / 255),  # sky blue
+            RGB(213 / 255, 94 / 255, 0 / 255),    # vermillion
+            RGB(240 / 255, 228 / 255, 66 / 255),  # yellow
+        ),
+    )
 
-hue_purple = hue(convert(HSL, RGB(Luxor.julia_purple...)))
-hue_red = hue(convert(HSL, RGB(Luxor.julia_red...)))
-hue_green = hue(convert(HSL, RGB(Luxor.julia_green...)))
-hue_blue = hue(convert(HSL, RGB(Luxor.julia_blue...)))
+get_hue(c::HSL) = hue(c)
+get_hue(c::Colorant) = get_hue(convert(HSL, c))
+
+blue, orange, green, purple, lightblue, vermillion, yellow = COLORSCHEME_WONG
+hue_blue, hue_orange, hue_green, hue_purple, hue_lightblue, hue_vermillio, hue_yellow =
+    get_hue.(COLORSCHEME_WONG)
 
 lightness = 0.4
 saturation = 0.8
 
-color_purple = HSL(hue_purple, saturation, lightness)
-color_red = HSL(hue_red, saturation, 0.45)
-color_green = HSL(hue_green, saturation, 0.25)
-color_blue = HSL(hue_blue, saturation, lightness)
 color_black = convert(HSL, Gray(0))
 color_white = convert(HSL, Gray(1))
 color_operator = convert(HSL, Gray(0.3))
@@ -37,9 +47,14 @@ color_background = color_transparent
 
 named_color(name) = convert(HSL, RGB(Colors.color_names[name] ./ 256...))
 
-color_F = color_green
-color_H = color_red
-color_G = color_purple
+color_F = blue
+color_H = orange
+color_G = green
+color_vector = purple
+
+# Colors for matrix coloring
+mc1 = yellow
+mc2 = lightblue
 
 CELLSIZE = 20
 PADDING = 2  # Increased PADDING for better spacing
@@ -163,11 +178,10 @@ function draw!(M::DrawMatrix, center::Point)
 
             # Calculate color based on normalized value
             val = mat[i, j]
-            cell_color = mat_colors[i, j]
-            h = hue(cell_color)
-            v = 0.6
-            l = iszero(val) ? 1.0 : scale(abs(val), 0, absmax, 1.0, 0.25)
-            cell_color_background = HSL(h, v, l)
+            cell_color = convert(HSL, mat_colors[i, j])
+            (; h, s, l) = cell_color
+            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1, 0.65)
+            cell_color_background = HSL(h, s, l_new)
 
             # Draw rectangle
             setcolor(cell_color_background)
@@ -182,9 +196,12 @@ function draw!(M::DrawMatrix, center::Point)
             # Add text showing matrix value
             if show_text
                 fontsize(min(cellsize ÷ 3, 14))
-                if !is_background_bright(cell_color_background)
-                    setcolor(color_white)
+                if luma(cell_color_background) > 0.5
+                    setcolor(HSL(h, s, 0.15)) # dark
+                else
+                    setcolor(HSL(h, s, 0.9)) # bright
                 end
+                iszero(val) && setcolor("lightgray")
                 text(
                     mat_text[i, j],
                     Point(x + cellsize / 2, y + cellsize / 2);
@@ -204,8 +221,7 @@ function draw!(M::DrawMatrix, center::Point)
     return setdash("solid")
 end
 
-is_background_bright(bg) = is_background_bright(convert(RGB, bg))
-is_background_bright(bg::RGB) = luma(bg) > 0.55
+luma(c::Colorant) = luma(convert(RGB, c))
 luma(c::RGB) = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b # using BT. 709 coefficients
 
 #==========#
@@ -283,20 +299,17 @@ P = map(!iszero, S)
 P_text = map(iszero_string, P)
 
 # Colors for pattern above
-c1 = named_color("orchid")
-c2 = named_color("darkorange")
-
 column_colors = [
-    c1 c1 c2 c2 c1
-    c1 c1 c2 c2 c1
-    c1 c1 c2 c2 c1
-    c1 c1 c2 c2 c1
+    mc1 mc1 mc2 mc2 mc1
+    mc1 mc1 mc2 mc2 mc1
+    mc1 mc1 mc2 mc2 mc1
+    mc1 mc1 mc2 mc2 mc1
 ]
 row_colors = [
-    c1 c1 c1 c1 c1
-    c2 c2 c2 c2 c2
-    c2 c2 c2 c2 c2
-    c1 c1 c1 c1 c1
+    mc1 mc1 mc1 mc1 mc1
+    mc2 mc2 mc2 mc2 mc2
+    mc2 mc2 mc2 mc2 mc2
+    mc1 mc1 mc1 mc1 mc1
 ]
 
 # Forward mode
@@ -429,9 +442,9 @@ function forward_mode_eval()
     setup!()
 
     # Create three vectors
-    DvFfw = DrawMatrix(; mat = vFfw, color = color_blue) # input
-    DvHfw = DrawMatrix(; mat = vHfw, color = color_blue)
-    DvRfw = DrawMatrix(; mat = vRfw, color = color_blue) # output
+    DvFfw = DrawMatrix(; mat = vFfw, color = color_vector) # input
+    DvHfw = DrawMatrix(; mat = vHfw, color = color_vector)
+    DvRfw = DrawMatrix(; mat = vRfw, color = color_vector) # output
 
     # Position drawables
     drawables = [DFd, DvFfw, DEq, DHd, DGd, DvFfw]
@@ -470,9 +483,9 @@ function reverse_mode_eval()
     setup!()
 
     # Create drawables for three vectors
-    DvFrv = DrawMatrix(; mat = vFrv, color = color_blue) # input
-    DvGrv = DrawMatrix(; mat = vGrv, color = color_blue)
-    DvRrv = DrawMatrix(; mat = vRrv, color = color_blue) # output
+    DvFrv = DrawMatrix(; mat = vFrv, color = color_vector) # input
+    DvGrv = DrawMatrix(; mat = vGrv, color = color_vector)
+    DvRrv = DrawMatrix(; mat = vRrv, color = color_vector) # output
 
     # Position drawables
     drawables = [DvFrv, DFd, DEq, DvFrv, DHd, DGd]
@@ -539,8 +552,8 @@ function forward_mode()
         dashed = true,
         show_text = true,
     )
-    De1 = DrawMatrix(; mat = e1, color = color_blue, show_text = true)
-    De2 = DrawMatrix(; mat = e2, color = color_blue, show_text = true)
+    De1 = DrawMatrix(; mat = e1, color = color_vector, show_text = true)
+    De2 = DrawMatrix(; mat = e2, color = color_vector, show_text = true)
     DFe1 = DrawMatrix(; mat = F * e1, color = color_F, absmax = absmax, show_text = true)
     DFe2 = DrawMatrix(; mat = F * e2, color = color_F, absmax = absmax, show_text = true)
     DDots = DrawText(; text = "...", fontsize = 40)
@@ -605,8 +618,8 @@ function reverse_mode()
         show_text = true,
     )
 
-    De1 = DrawMatrix(; mat = e1, color = color_blue, show_text = true)
-    De2 = DrawMatrix(; mat = e2, color = color_blue, show_text = true)
+    De1 = DrawMatrix(; mat = e1, color = color_vector, show_text = true)
+    De2 = DrawMatrix(; mat = e2, color = color_vector, show_text = true)
     DFe1 = DrawMatrix(; mat = e1 * F, color = color_F, absmax = absmax, show_text = true)
     DFe2 = DrawMatrix(; mat = e2 * F, color = color_F, absmax = absmax, show_text = true)
     DDots = DrawText(; text = "...", fontsize = 40)
@@ -735,13 +748,13 @@ function sparse_ad()
         show_text = true,
         mat_colors = column_colors,
     )
-    Dv = DrawMatrix(; mat = v, color = color_blue, show_text = true)
+    Dv = DrawMatrix(; mat = v, color = color_vector, show_text = true)
     DSv = DrawMatrix(;
         mat = S * v,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c1, n, 1),
+        mat_colors = fill(mc1, n, 1),
     )
 
     # Position drawables
@@ -775,21 +788,21 @@ function sparse_ad_forward_full()
         show_text = true,
         mat_colors = column_colors,
     )
-    Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
-    Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
+    Dv1 = DrawMatrix(; mat = v1, color = color_vector, show_text = true)
+    Dv2 = DrawMatrix(; mat = v2, color = color_vector, show_text = true)
     DSv1 = DrawMatrix(;
         mat = S * v1,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c1, n, 1),
+        mat_colors = fill(mc1, n, 1),
     )
     DSv2 = DrawMatrix(;
         mat = S * v2,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c2, n, 1),
+        mat_colors = fill(mc2, n, 1),
     )
 
     ## Position drawables
@@ -835,14 +848,14 @@ function sparse_ad_forward_decompression()
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c1, m, 1),
+        mat_colors = fill(mc1, m, 1),
     )
     DSv2 = DrawMatrix(;
         mat = S * v2,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c2, m, 1),
+        mat_colors = fill(mc2, m, 1),
     )
     DArrow = DrawText(; text = "→")
 
@@ -877,21 +890,21 @@ function sparse_ad_reverse_full()
         show_text = true,
         mat_colors = row_colors,
     )
-    Dv1 = DrawMatrix(; mat = v1, color = color_blue, show_text = true)
-    Dv2 = DrawMatrix(; mat = v2, color = color_blue, show_text = true)
+    Dv1 = DrawMatrix(; mat = v1, color = color_vector, show_text = true)
+    Dv2 = DrawMatrix(; mat = v2, color = color_vector, show_text = true)
     DSv1 = DrawMatrix(;
         mat = v1 * S,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c1, 1, n),
+        mat_colors = fill(mc1, 1, n),
     )
     DSv2 = DrawMatrix(;
         mat = v2 * S,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c2, 1, n),
+        mat_colors = fill(mc2, 1, n),
     )
 
     ## Position drawables
@@ -937,14 +950,14 @@ function sparse_ad_reverse_decompression()
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c1, 1, n),
+        mat_colors = fill(mc1, 1, n),
     )
     DSv2 = DrawMatrix(;
         mat = v2 * S,
         color = color_F,
         absmax = absmax,
         show_text = true,
-        mat_colors = fill(c2, 1, n),
+        mat_colors = fill(mc2, 1, n),
     )
     DArrow = DrawText(; text = "→")
 
@@ -970,7 +983,7 @@ function forward_mode_naive()
     setup!()
 
     DFd = DrawMatrix(; mat = S, color = color_F, dashed = true, show_text = false)
-    DI = DrawMatrix(; mat = I(5), color = color_blue, show_text = true)
+    DI = DrawMatrix(; mat = I(5), color = color_vector, show_text = true)
     DFj = DrawMatrix(; mat = S * I(5), color = color_F, show_text = true)
 
     # Position drawables
@@ -1005,7 +1018,7 @@ function forward_mode_sparse()
     P_text = map(x -> !iszero(x) ? "≠ 0" : "0", P)
 
     DFd = DrawMatrix(; mat = S, color = color_F, dashed = true, show_text = false)
-    DI = DrawMatrix(; mat = PI, mat_text = PI_text, color = color_blue, show_text = true)
+    DI = DrawMatrix(; mat = PI, mat_text = PI_text, color = color_vector, show_text = true)
     DFj = DrawMatrix(; mat = PJ, mat_text = PJ_text, color = color_F, show_text = true)
     DP = DrawMatrix(; mat = P, mat_text = P_text, color = color_F, show_text = true)
 
