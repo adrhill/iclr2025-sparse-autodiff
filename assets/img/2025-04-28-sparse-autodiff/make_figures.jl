@@ -180,7 +180,7 @@ function draw!(M::DrawMatrix, center::Point)
             val = mat[i, j]
             cell_color = convert(HSL, mat_colors[i, j])
             (; h, s, l) = cell_color
-            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.5, 0.7)
+            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.75, 0.65)
             cell_color_background = HSL(h, s, l_new)
 
             # Draw rectangle
@@ -286,10 +286,10 @@ F = H * G
 
 S = Matrix(
     [
-        0.0 -2.295 0.0 0.207 0.0
-        0.0 0.0 0.0 0.170 2.11
-        0.0 1.852 1.472 0.0 0.0
-        -0.479 0.0 -0.264 0.0 0.0
+        0.0 1.852 0.0 2.207 0.0
+        0.0 0.0 0.0 0.970 -2.195
+        0.0 -0.579 1.472 0.0 0.0
+        -1.91 0.0 -0.464 0.0 0.0
     ],
 )
 iszero_string(x) = !iszero(x) ? "≠ 0" : "0"
