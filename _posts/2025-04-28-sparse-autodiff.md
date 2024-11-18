@@ -389,7 +389,7 @@ This final decompression step is shown in Figure X.
 </div>
 
 The same idea can also be applied to reverse mode AD, as shown in Figure Y.
-Instead of leveraging orthogonal column, we exploit orthogonal rows.
+Instead of leveraging orthogonal column, we rely on orthogonal rows.
 We can then materialize multiple rows in a single VJP.
 
 <div class="row mt-3">
@@ -417,7 +417,10 @@ in order to find orthogonal columns (or rows), we don't need to materialize the 
 Instead, it is enough to **detect the sparsity pattern** of the Jacobian.
 This binary-valued pattern contains enough information to deduce orthogonality.
 From there, we use a **coloring algorithm** to group mutually orthogonal columns (or rows) together.
-Such a coloring can be visualized on Figure 10 (b), where the yellow columns will be evaluated together and the light blue ones too.
+Such a coloring can be visualized on Figure 10 (b), 
+where the yellow columns will be evaluated together (first JVP) 
+and the light blue ones will be evaluated together (second JVP), 
+for a total of 2 JVPs instead of 5.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -562,7 +565,8 @@ If they are mutually orthogonal, then this gives all the necessary information t
 ### Graph formulation
 
 Luckily, this can be reformulated as a graph coloring problem, which is very well studied.
-Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
+Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set $\mathcal{V}$ and edge set $\mathcal{E}$, 
+such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
 <aside class="l-body box-note" markdown="1">
