@@ -234,9 +234,11 @@ Our illustrations distinguish between materialized matrices and linear maps by u
     Figure 3b: Chain rule using matrix-free linear maps (dashed outline).
 </div>
 
-*We visualize "matrix entries" in linear maps to build intuition.
+<aside class="l-body box-note" markdown="1">
+We visualize "matrix entries" in linear maps to build intuition.
 Even though following illustrations will sometimes put numbers onto these "matrix entries",
-linear maps are best thought of as black-box functions.*
+linear maps are best thought of as black-box functions.
+</aside>
 
 ### Forward-mode AD
 
@@ -308,10 +310,12 @@ this requires one VJP with each of the $m$ standard basis vectors of the **outpu
     Figure 7: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
+<aside class="l-body box-note" markdown="1">
 Since neural networks are usually trained using scalar loss functions,
 reverse-mode AD only requires the evaluation of a single VJP to compute a gradient.
 This makes it the method of choice for machine learners,
 who typically refer to reverse-mode AD as *backpropagation*.
+</aside>
 
 ## Sparse automatic differentiation
 
@@ -447,9 +451,13 @@ Mirroring the diversity of existing approaches to AD,
 there are also many possible approaches to sparsity pattern detection,
 each with their own advantages and tradeoffs.
 
-The method we describe is one of the most basic: it is equivalent to a binary forward-mode AD system.
-<!-- *TODO: Alternatives include Bayesian probing, ...*  -->
+The method we will present here corresponds to a binary forward-mode AD system. 
+in which performance is gained by representing matrix rows as index sets.
+
 <!-- TODO: cite a wide list of approaches here -->
+<aside class="l-body box-note" markdown="1">
+*TODO: Alternatives include Bayesian probing, ...* 
+</aside>
 
 ### Index sets
 
@@ -556,7 +564,11 @@ If they are mutually orthogonal, then this gives all the necessary information t
 Luckily, this can be reformulated as a graph coloring problem, which is very well studied.
 Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
-There are more efficient representations, but we leave them aside.
+
+<aside class="l-body box-note" markdown="1">
+<!-- TODO -->
+There are more efficient representations, e.g. TODO
+</aside>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
 This constraint ensures that columns in the same color group are indeed orthogonal.
