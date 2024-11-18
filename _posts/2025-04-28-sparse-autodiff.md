@@ -86,7 +86,7 @@ _styles: >
     .box-note {
         font-size: 14px;
         padding: 15px 15px 10px 15px;
-        margin: 20px 20px 10px 20px;
+        margin: 20px 20px 20px 10px;
         border-left: 7px solid #009E73;
         border-radius: 5px;
     }
@@ -236,7 +236,7 @@ Our illustrations distinguish between materialized matrices and linear maps by u
 
 <aside class="l-body box-note" markdown="1">
 We visualize "matrix entries" in linear maps to build intuition.
-Even though following illustrations will sometimes put numbers onto these "matrix entries",
+Even though following illustrations will sometimes put numbers onto these entries,
 linear maps are best thought of as black-box functions.
 </aside>
 
@@ -389,7 +389,7 @@ This final decompression step is shown in Figure X.
 </div>
 
 The same idea can also be applied to reverse mode AD, as shown in Figure Y.
-Instead of leveraging orthogonal column, we rely on orthogonal rows.
+Instead of leveraging orthogonal columns, we rely on orthogonal rows.
 We can then materialize multiple rows in a single VJP.
 
 <div class="row mt-3">
@@ -457,9 +457,9 @@ each with their own advantages and tradeoffs.
 The method we will present here corresponds to a binary forward-mode AD system. 
 in which performance is gained by representing matrix rows as index sets.
 
-<!-- TODO: cite a wide list of approaches here -->
 <aside class="l-body box-note" markdown="1">
-*TODO: Alternatives include Bayesian probing, ...* 
+<!-- TODO: cite a wide list of approaches here -->
+Alternatives include Bayesian probing, ... *TODO* 
 </aside>
 
 ### Index sets
@@ -571,7 +571,7 @@ Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_
 
 <aside class="l-body box-note" markdown="1">
 <!-- TODO -->
-There are more efficient representations, e.g. TODO
+There are more efficient representations, e.g. *TODO*
 </aside>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
