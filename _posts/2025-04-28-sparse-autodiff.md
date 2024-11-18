@@ -68,20 +68,36 @@ toc:
 # This is used in the 'Layouts' section of this post.
 # If you use this post as a template, delete this _styles block.
 _styles: >
-  .fake-img {
-    background: ##bbb;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 0px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 12px;
-  }
-  .fake-img p {
-    font-family: monospace;
-    color: white;
-    text-align: left;
-    margin: 12px 0;
-    text-align: center;
-    font-size: 16px;
-  }
+    .fake-img {
+        background: ##bbb;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 12px;
+    }
+    .fake-img p {
+        font-family: monospace;
+        color: white;
+        text-align: left;
+        margin: 12px 0;
+        text-align: center;
+        font-size: 16px;
+    }
+    /* Adapted from Andreas Kirsch https://github.com/iclr-blogposts/2024/blob/c111fe06039524fcb60a76c1e9bed26667d30fcf/_posts/2024-05-07-dpi-fsvi.md  */
+    .box-note {
+        font-size: 14px;
+        padding: 15px 15px 10px 15px;
+        margin: 20px 20px 10px 20px;
+        border-left: 7px solid #009E73;
+        border-radius: 5px;
+    }
+    d-article .box-note {
+        background-color: #eee;
+        border-left-color: #009E73;
+    }
+    html[data-theme='dark'] d-article .box-note {
+        background-color: #333333;
+        border-left-color: #009E73;
+    }
 ---
 
 <!-- LaTeX commands -->
