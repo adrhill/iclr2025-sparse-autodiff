@@ -33,7 +33,7 @@ get_hue(c::HSL) = hue(c)
 get_hue(c::Colorant) = get_hue(convert(HSL, c))
 
 blue, orange, green, purple, lightblue, vermillion, yellow = COLORSCHEME_WONG
-hue_blue, hue_orange, hue_green, hue_purple, hue_lightblue, hue_vermillio, hue_yellow =
+hue_blue, hue_orange, hue_green, hue_purple, hue_lightblue, hue_vermillion, hue_yellow =
     get_hue.(COLORSCHEME_WONG)
 
 lightness = 0.4
