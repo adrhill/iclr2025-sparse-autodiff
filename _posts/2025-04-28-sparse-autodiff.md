@@ -159,16 +159,15 @@ Let us start by covering the fundamentals of traditional AD.
 
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
 To make things simple, we will mainly look at a differentiable function $f$
-composed of two differentiable functions
-$g: \sR^{n} \rightarrow \sR^{p}$ and $h: \sR^{p} \rightarrow \sR^{m}$,
-such that $f = h \circ g: \sR^{n} \rightarrow \sR^{m}$.
+composed of two differentiable functions $g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{p}$ and $h: \mathbb{R}^{p} \rightarrow \mathbb{R}^{m}$,
+such that $f = h \circ g: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
 The insights gained from this toy example should translate directly to more deeply composed functions $f = g^{(L)} \circ g^{(L-1)} \circ \cdots \circ g^{(1)}$.
 For ease of visualization, we work in small dimension, but the real benefits of ASD only appear as the dimension grows.
 
 ### The chain rule
 
-For a function $f: \sR^{n} \rightarrow \sR^{m}$ and a point of linearization $\vx \in \sR^{n}$,
-the Jacobian $J_f(\vx)$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
+For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
+the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
 
 $$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
 
@@ -215,7 +214,7 @@ In modern neural network architectures, which can contain over one trillion para
 computing intermediate Jacobians is not only inefficient: it exceeds available memory.
 AD circumvents this limitation using **linear maps**, lazy operators that act exactly like matrices but without materializing them.
 
-The differential $Df: \vx \longmapsto Df(\vx)$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
+The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
 $$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc .$$
@@ -249,10 +248,10 @@ Now that we have translated the compositional structure of our function $f$ into
     Figure 4: Evaluating linear maps in forward-mode.
 </div>
 
-Figure 4 illustrates the propagation of a vector $\vv_1 \in \sR^n$ from the right-hand side.
+Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
 Since we propagate in the order of the original function evaluation, this is called **forward-mode AD**.
 
-In the first step, we evaluate $Dg(\vx)(\vv_1)$.
+In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
 Since this operation by definition corresponds to 
 
 $$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p ,$$
@@ -290,7 +289,7 @@ The linear map formulation allows us to avoid intermediate Jacobian matrices in 
 But can we use this machinery to materialize the **Jacobian** of the composition $f$ itself?
 
 As shown in Figure 6, we can **materialize Jacobians column by column** in forward mode.
-Evaluating the linear map $Df(\vx)$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\vx)$:
+Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\mathbf{x})$:
 
 $$ \Dfc(\vbc{i}) = \left( \Jfc \right)_\colorv{i,:} $$
 
