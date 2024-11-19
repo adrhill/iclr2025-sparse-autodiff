@@ -581,7 +581,7 @@ Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Suboptimal graph coloring. Node 5 could be colored in yellow, leading to redundant computations of matrix-vector products.
+    Figure X: Suboptimal graph coloring. Node 1 could be colored in yellow, leading to redundant computations of matrix-vector products.
 </div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}

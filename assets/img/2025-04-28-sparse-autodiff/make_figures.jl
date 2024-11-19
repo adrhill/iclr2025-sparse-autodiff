@@ -55,7 +55,7 @@ color_vector = purple
 # Colors for matrix coloring
 mc1 = yellow
 mc2 = lightblue
-mc3 = vermillion # used for suboptimal coloring
+mc3 = green # used for suboptimal coloring
 
 CELLSIZE = 20
 PADDING = 2  # Increased PADDING for better spacing
@@ -1163,11 +1163,11 @@ var"@save" = var"@svg" # var"@pdf"
 )
 
 @save colored_graph([mc1 mc1 mc2 mc2 mc1]) 300 120 joinpath(@__DIR__, "colored_graph")
-@save colored_graph([mc1 mc1 mc2 mc2 mc3]) 300 120 joinpath(
-    @__DIR__,
-    "colored_graph_suboptimal",
-)
 @save colored_graph([mc1 mc1 mc2 mc1 mc2]) 300 120 joinpath(
     @__DIR__,
     "colored_graph_infeasible",
+)
+@save colored_graph([mc3 mc1 mc2 mc2 mc1]) 300 120 joinpath(
+    @__DIR__,
+    "colored_graph_suboptimal",
 )
