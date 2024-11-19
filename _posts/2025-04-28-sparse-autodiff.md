@@ -531,7 +531,30 @@ The corresponding computational graph is shown in Figure 14,
 where circular nodes correspond to elementary operators,
 in this case addition, multiplication and the sign function.
 
-<!-- TODO: add graph -->
+{% mermaid %}
+flowchart LR
+    subgraph Inputs
+    X1["$$x_1$$"]
+    X2["$$x_2$$"]
+    X3["$$x_3$$"]
+    X4["$$x_4$$"]
+    end
+
+    PLUS(("$$+$$"))
+    TIMES(("$$\times$$"))
+    SIGN((sgn))
+    PLUS2(("$$+$$"))
+
+    X1 --> |"{1}"| PLUS
+    X2 --> |"{2}"| TIMES
+    X3 --> |"{3}"| TIMES
+    X4 --> |"{4}"| SIGN
+    TIMES  --> |"{2,3}"| PLUS
+    PLUS --> |"{1,2,3}"| PLUS2
+    SIGN --> |"{}"| PLUS2
+
+    PLUS2 --> |"{1,2,3}"| RES["$$y=f(x)$$"]
+{% endmermaid %}
 
 <div class="caption">
     Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
