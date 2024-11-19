@@ -264,14 +264,39 @@ Base.@kwdef struct DrawOverlay <: Drawable
 end
 
 function draw!(O::DrawOverlay, center)
-    # Apply offset
+    setline(0.75)
+    fontsize(O.fontsize)
+    # Draw box
     setcolor(O.background)
     box(center, O.width, O.height, O.radius; action = :fill)
-    setline(0.75)
-    setcolor(HSL(O.color.h, O.color.s, 0.3)) # Darken text
+    # Draw darker outline
+    setcolor(HSL(O.color.h, O.color.s, 0.3))
     box(center, O.width, O.height, O.radius; action = :stroke)
-    fontsize(O.fontsize)
     return text(O.text, center + Point(0, 2); halign = :center, valign = :middle)
+end
+
+#======#
+# Node #
+#======#
+
+Base.@kwdef struct DrawNode <: Drawable
+    text::LaTeXString
+    color::HSL{Float64} = color_operator
+    background::HSL{Float64} = HSL(color.h, color.s, 0.9)
+    radius::Float64 = 16
+    fontsize::Float64 = 20
+end
+
+function draw!(O::DrawNode, center)
+    setline(0.75)
+    fontsize(O.fontsize)
+    # Draw circle
+    setcolor(O.background)
+    circle(center, O.radius; action = :fill)
+    # Draw darker outline
+    setcolor(HSL(O.color.h, O.color.s, 0.3))
+    circle(center, O.radius; action = :stroke)
+    return text(O.text, center + Point(-1.25, 0); halign = :center, valign = :middle)
 end
 
 #==========#
@@ -1040,6 +1065,49 @@ function forward_mode_sparse()
     end
 end
 
+
+function colored_matrix()
+    setup!()
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        mat_colors = column_colors,
+    )
+
+    draw!(Position(DS, Point(0, 0)))
+end
+
+function colored_graph()
+    setup!()
+    column_colors = [mc1 mc1 mc2 mc2 mc1]
+
+    # Centers of vertices
+    positions = ngon(Point(0, 5), 45, 5, -2 * π / 5 - π / 2, vertices = true)
+
+    # First we draw edges...
+    setline(1)
+    setcolor(color_operator)
+    for r in eachrow(P)
+        js = findall(!iszero, r)
+        edges = Set((a, b) for a in js, b in js if a < b)
+        for (a, b) in edges
+            line(positions[a], positions[b])
+            strokepath()
+        end
+    end
+
+    # ... then vertices on top
+    for (i, (c, pos)) in enumerate(zip(column_colors, positions))
+        D = DrawNode(; text = string(i), color = c)
+        P = Position(D, pos)
+        draw!(P)
+    end
+end
+
+
 # This one is huge, avoid SVG and PDF:
 @png big_conv_jacobian() 1600 1200 joinpath(@__DIR__, "big_conv_jacobian")
 
@@ -1086,3 +1154,7 @@ var"@save" = var"@svg" # var"@pdf"
     @__DIR__,
     "sparse_ad_reverse_decompression",
 )
+
+# Make sure the aspect ratios of these two figures match for the blog post layout
+@save colored_matrix() 125 125 joinpath(@__DIR__, "colored_matrix")
+@save colored_graph() 125 125 joinpath(@__DIR__, "colored_graph")
