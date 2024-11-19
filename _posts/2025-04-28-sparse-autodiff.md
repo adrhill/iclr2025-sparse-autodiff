@@ -592,16 +592,19 @@ Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set 
 such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_matrix.svg" class="img-fluid" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
-    </div>
-</div>
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Sparse matrix and corresponding graph representation of orthogonal rows.
+    Figure X: Optimal graph coloring.
+</div>
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
+<div class="caption">
+    Figure X: Suboptimal graph coloring. Node 5 could be colored in yellow, leading to redundant computations of matrix-vector products.
+</div>
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}
+<div class="caption">
+    Figure X: Infeasible graph coloring. Nodes 2 and 4 on the graph are adjacent, but share a color. This results in overlapping columns.
 </div>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.

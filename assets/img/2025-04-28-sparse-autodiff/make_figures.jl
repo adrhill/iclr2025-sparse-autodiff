@@ -55,6 +55,7 @@ color_vector = purple
 # Colors for matrix coloring
 mc1 = yellow
 mc2 = lightblue
+mc3 = vermillion # used for suboptimal coloring
 
 CELLSIZE = 20
 PADDING = 2  # Increased PADDING for better spacing
@@ -1069,23 +1070,16 @@ end
 function colored_matrix()
     setup!()
 
-    DS = DrawMatrix(;
-        mat = S,
-        color = color_F,
-        dashed = true,
-        show_text = true,
-        mat_colors = column_colors,
-    )
 
-    draw!(Position(DS, Point(0, 0)))
 end
 
-function colored_graph()
+function colored_graph(column_colors)
     setup!()
-    column_colors = [mc1 mc1 mc2 mc2 mc1]
+
+    column_colors = reshape(column_colors, 1, n)
 
     # Centers of vertices
-    positions = ngon(Point(0, 5), 45, 5, -2 * π / 5 - π / 2, vertices = true)
+    positions = ngon(Point(-85, 0), 40, 5, -2 * π / 5 - π / 2, vertices = true)
 
     # First we draw edges...
     setline(1)
@@ -1101,10 +1095,23 @@ function colored_graph()
 
     # ... then vertices on top
     for (i, (c, pos)) in enumerate(zip(column_colors, positions))
-        D = DrawNode(; text = string(i), color = c)
+        D = DrawNode(; text = string(i), radius = 14, fontsize = 16, color = c)
         P = Position(D, pos)
         draw!(P)
     end
+
+    column_colors = repeat(column_colors, inner = (m, 1))
+
+    DS = DrawMatrix(;
+        mat = S,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        mat_colors = column_colors,
+    )
+
+    draw!(Position(DrawText(; text = "→"), Point(-10, 0)))
+    draw!(Position(DS, Point(80, 0)))
 end
 
 
@@ -1155,6 +1162,12 @@ var"@save" = var"@svg" # var"@pdf"
     "sparse_ad_reverse_decompression",
 )
 
-# Make sure the aspect ratios of these two figures match for the blog post layout
-@save colored_matrix() 125 125 joinpath(@__DIR__, "colored_matrix")
-@save colored_graph() 125 125 joinpath(@__DIR__, "colored_graph")
+@save colored_graph([mc1 mc1 mc2 mc2 mc1]) 300 120 joinpath(@__DIR__, "colored_graph")
+@save colored_graph([mc1 mc1 mc2 mc2 mc3]) 300 120 joinpath(
+    @__DIR__,
+    "colored_graph_suboptimal",
+)
+@save colored_graph([mc1 mc1 mc2 mc1 mc2]) 300 120 joinpath(
+    @__DIR__,
+    "colored_graph_infeasible",
+)
