@@ -517,46 +517,24 @@ This idea is visualized in Figure 13.
     Figure 13: Propagating an index set through a linear map to obtain a sparsity pattern.  
 </div>
 
-### Alternative evaluation
+### Abstract interpretation
 
 Instead of going into implementation details,
 we want to provide some intuition on the second key ingredient of our forward-mode sparsity detection: 
-**alternative function evaluation**.
+**abstract interpretation**.
 
 We will demonstrate this on a second toy example, the function
 
-$$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) .$$
+$$ f(\vx) = \begin{bmatrix}
+x_1 x_2 + \text{sgn}(x_3)\\
+\text{sgn}(x_3) \frac{x_4}{2}
+\end{bmatrix} \, .$$
 
 The corresponding computational graph is shown in Figure 14,
 where circular nodes correspond to elementary operators,
 in this case addition, multiplication and the sign function.
 
-{% mermaid %}
-flowchart LR
-
-    subgraph Inputs
-        X1["$$x_1$$"]
-        X2["$$x_2$$"]
-        X3["$$x_3$$"]
-        X4["$$x_4$$"]
-    end
-
-    PLUS(("$$+$$"))
-    TIMES(("$$\times$$"))
-    SIGN((sgn))
-    PLUS2(("$$+$$"))
-
-    X1 --> |"$$\{1\}$$"| PLUS
-    X2 --> |"$$\{2\}$$"| TIMES
-    X3 --> |"$$\{3\}$$"| TIMES
-    X4 --> |"$$\{4\}$$"| SIGN
-    TIMES  --> |"$$\{2,3\}$$"| PLUS
-    PLUS --> |"$$\{1,2,3\}$$"| PLUS2
-    SIGN --> |"$$\{\}"$$| PLUS2
-
-    PLUS2 --> |"$$\{1,2,3\}$$"| RES["$$y=f(x)$$"]
-{% endmermaid %}
-
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.svg" class="img-fluid" %}
 <div class="caption">
     Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
@@ -564,21 +542,25 @@ flowchart LR
 As discussed in the previous section,
 all inputs are seeded with their respective input index sets.
 Figure 14 annotates these index sets on the edges of the computational graph.
-Our system for sparsity detection must now perform an **alternative evaluation of our computational graph**.
+Our system for sparsity detection must now perform **abstract interpretation of our computational graph**.
 Instead of computing the original function, 
 each operator must correctly propagate and accumulate the index sets of its inputs, 
 depending on whether an operator has a non-zero derivative or not.  
 
-Since addition and multiplication globally have non-zero derivatives with respect to both of their inputs, 
+Since addition, multiplication and division globally have non-zero derivatives with respect to both of their inputs, 
 the index sets of their inputs are accumulated and propagated. 
 The sign function has a zero-valued derivatives for any input value. 
 It therefore doesn't propagate the index set of its input. 
 Instead, it returns an empty set.
 
-*TODO: switch to multivariate function, quickly discuss resulting Jacobian.*
-<!-- TODO -->
+The resulting sparsity pattern matches the analytic Jacobian
 
-<!-- Coloring techniques? -->
+$$ J_f(x) = \begin{bmatrix}
+x_2 & x_1 & 0 & 0\\
+  0 &   0 & 0 & \frac{\text{sgn}(x_3)}{2}
+\end{bmatrix} \, .
+$$
+
 ## Coloring
 
 Once we have detected a sparsity pattern, our next goal is to figure out how to group the columns (or rows) of the Jacobian.
