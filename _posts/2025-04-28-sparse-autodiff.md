@@ -568,14 +568,26 @@ Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set 
 such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
-<aside class="l-body box-note" markdown="1">
-<!-- TODO -->
-There are more efficient representations, e.g. *TODO*
-</aside>
+<div class="row mt-3">
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_matrix.svg" class="img-fluid" %}
+    </div>
+    <div class="col-sm mt-3 mt-md-0">
+        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
+    </div>
+</div>
+<div class="caption">
+    Figure X: Sparse matrix and corresponding graph representation of orthogonal rows.
+</div>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
 This constraint ensures that columns in the same color group are indeed orthogonal.
 If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
+
+<aside class="l-body box-note" markdown="1">
+<!-- TODO -->
+There are more efficient representations, e.g. *TODO*
+</aside>
 
 ### Greedy algorithm
 
