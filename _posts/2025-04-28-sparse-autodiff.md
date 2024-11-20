@@ -347,10 +347,12 @@ for which the Jacobian is the identity matrix.
 
 For now, we assume that the sparsity pattern of the Jacobian is always the same, regardless of the input, and that we know it ahead of time.
 We say that two columns or rows of the Jacobian matrix are orthogonal if, for every index, at most one of them has a nonzero coefficient.
-In other words, their sparsity patterns are orthogonal vectors.
+
+In other words, the vectors representing their sparsity patterns are structurally orthogonal.
+The dot product between these vectors is always zero, regardless of their values.
 
 **The core idea of ASD is that we can materialize multiple orthogonal columns (or rows) in a single product evaluation.**
-Since linear maps are additive, it always holds that for a set of basis vectors,
+Since linear maps are additive, it always holds that for a set of basis vectors (columns of the identity matrix),
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
 = \underbrace{\Dfc(\vbc{i})}_{\left( \Jfc \right)_\colorv{i,:}} 
@@ -561,17 +563,26 @@ x_2 & x_1 & 0 & 0\\
 \end{bmatrix} \, .
 $$
 
+### Advantage of partial separability
+
+When we know in advance that the function has partial separability, the sparsity pattern detection becomes significantly more efficient.
+Partial separability means that the function can be decomposed into independent or weakly dependent subcomponents, often corresponding to blocks in the Jacobian matrix.
+This structure allows the sparsity pattern to be identified separately for each block, rather than considering the full Jacobian matrix as a whole.
+
 ## Coloring
 
 Once we have detected a sparsity pattern, our next goal is to figure out how to group the columns (or rows) of the Jacobian.
-The columns (or rows) in each group will be evaluated simultaneously with a single JVP (or VJP).
+The columns (or rows) in each group will be evaluated simultaneously with a single JVP (or VJP), where the vector is a linear combination of basis vectors called a **seed**.
 If they are mutually orthogonal, then this gives all the necessary information to retrieve every nonzero coefficient of the matrix.
+
+The optimal solution is known only for specific patterns, such as banded matrices.
+Otherwise, graph coloring is required.
 
 ### Graph formulation
 
 Luckily, this can be reformulated as a graph coloring problem, which is very well studied.
 Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set $\mathcal{V}$ and edge set $\mathcal{E}$, 
-such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
+such that each column is a vertex of the graph, and two vertices are connected if and only if their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
@@ -593,6 +604,9 @@ We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent 
 This constraint ensures that columns in the same color group are indeed orthogonal.
 If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
 
+If we perform column coloring, forward-mode AD is required, while reverse-mode AD is needed for row coloring.
+Note that more advanced coloring techniques could use both modes, such as **bicoloring**.
+
 <aside class="l-body box-note" markdown="1">
 <!-- TODO -->
 There are more efficient representations, e.g. *TODO*
@@ -601,10 +615,10 @@ There are more efficient representations, e.g. *TODO*
 ### Greedy algorithm
 
 Unfortunately, the graph coloring problem is NP-hard, meaning that there is (probably) no way to solve it polynomially for every instance.
-But there are efficient heuristics which generate good enough solutions in reasonable time.
-The most widely used is the greedy algorithm, which considers vertices one after the other.
-This algorithm assigns to each vertex the smallest color that is not present among its neighbors, and never backtracks.
-A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed. 
+However, efficient heuristics exist that generate good enough solutions in reasonable time.
+The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
+This algorithm assigns to each vertex the smallest color that is not already present among its neighbors, and it never backtracks.
+A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed.
 
 ## Second order
 
