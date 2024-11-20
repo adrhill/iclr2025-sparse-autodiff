@@ -619,27 +619,37 @@ By incorporating second-order information, optimization algorithms converge more
 This is especially useful in **nonlinear optimization problems**.
 
 In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
-An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the pushforward of the gradient, itself computed via a pullback.
-It's quite common to say that HVPs are computed with forward over reverse AD.
+The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
 
-The Hessian has a **symmetric** structure, which means it does not have separate row and column variants, this specifity can be exploited in the sparsity detection as well as in the coloring phase.
+$$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
+
+An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient (a gradient which is itself computed via a VJP of $f$):
+
+$$ \nabla^2 f(x) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
+
+Thus it is quite common to say that HVPs are computed with "forward over reverse" AD.
+The complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
+
+The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
+This specifity can be exploited in the sparsity detection as well as in the coloring phase.
 
 #### Pattern detection
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
-
-<!-- Guillaume / Adrian -- Do you want to add more details? -->
+```suggestion
+For instance, if $f(x)$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. On the otherhand, a term $x_1 x_2$ will yield two equal non-zero coefficients, one at position $(1, 2)$ and one at position $(2, 1)$.
+Thus, the abstract interpretation system used for detection needs a finer classification of operators, to distinguish between locally linear ones (sum, max) and locally nonlinear ones (product, exp).
 
 ### Symmetric coloring
 
 When it comes to **graph coloring** for the Hessian, the process can be more efficient than those for the Jacobian due to its **symmetry**.
 Even if two columns in the Hessian are not orthogonal, missing coefficients can be recovered by leveraging the corresponding rows instead of relying solely on the columns.
+In other words, if $H_{ij}$ is lost during compression because of colliding nonzero coefficients, there is still a chance to retrieve it through $H_{ji}$.
 This symmetry enables **colorings with fewer colors**, reducing the complexity of the AD part compared to traditional row or column coloring.
 
 While the **decompression** step for symmetric coloring is more computationally expensive, this cost is typically negligible compared to the overhead of computing HVPs.
 Moreover, symmetric coloring becomes especially advantageous when the Hessian needs to be recomputed for multiple values of $x$, as the reduced number of colors amortizes the initial expense.
 
-All non-zero entries of the Hessian can be efficiently recovered with a limited number of HVPs as long as it is sparse.
 
 ## Demonstration
