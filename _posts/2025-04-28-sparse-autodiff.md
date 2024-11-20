@@ -347,10 +347,12 @@ for which the Jacobian is the identity matrix.
 
 For now, we assume that the sparsity pattern of the Jacobian is always the same, regardless of the input, and that we know it ahead of time.
 We say that two columns or rows of the Jacobian matrix are orthogonal if, for every index, at most one of them has a nonzero coefficient.
-In other words, their sparsity patterns are orthogonal vectors.
+
+In other words, the vectors representing their sparsity patterns are structurally orthogonal.
+The dot product between these vectors is always zero, regardless of their values.
 
 **The core idea of ASD is that we can materialize multiple orthogonal columns (or rows) in a single product evaluation.**
-Since linear maps are additive, it always holds that for a set of basis vectors,
+Since linear maps are additive, it always holds that for a set of basis vectors (columns of the identity matrix),
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
 = \underbrace{\Dfc(\vbc{i})}_{\left( \Jfc \right)_\colorv{i,:}} 
@@ -517,46 +519,24 @@ This idea is visualized in Figure 13.
     Figure 13: Propagating an index set through a linear map to obtain a sparsity pattern.  
 </div>
 
-### Alternative evaluation
+### Abstract interpretation
 
 Instead of going into implementation details,
 we want to provide some intuition on the second key ingredient of our forward-mode sparsity detection: 
-**alternative function evaluation**.
+**abstract interpretation**.
 
 We will demonstrate this on a second toy example, the function
 
-$$ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) .$$
+$$ f(\vx) = \begin{bmatrix}
+x_1 x_2 + \text{sgn}(x_3)\\
+\text{sgn}(x_3) \frac{x_4}{2}
+\end{bmatrix} \, .$$
 
 The corresponding computational graph is shown in Figure 14,
 where circular nodes correspond to elementary operators,
 in this case addition, multiplication and the sign function.
 
-{% mermaid %}
-flowchart LR
-
-    subgraph Inputs
-        X1["$$x_1$$"]
-        X2["$$x_2$$"]
-        X3["$$x_3$$"]
-        X4["$$x_4$$"]
-    end
-
-    PLUS(("$$+$$"))
-    TIMES(("$$\times$$"))
-    SIGN((sgn))
-    PLUS2(("$$+$$"))
-
-    X1 --> |"$$\{1\}$$"| PLUS
-    X2 --> |"$$\{2\}$$"| TIMES
-    X3 --> |"$$\{3\}$$"| TIMES
-    X4 --> |"$$\{4\}$$"| SIGN
-    TIMES  --> |"$$\{2,3\}$$"| PLUS
-    PLUS --> |"$$\{1,2,3\}$$"| PLUS2
-    SIGN --> |"$$\{\}"$$| PLUS2
-
-    PLUS2 --> |"$$\{1,2,3\}$$"| RES["$$y=f(x)$$"]
-{% endmermaid %}
-
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.svg" class="img-fluid" %}
 <div class="caption">
     Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
@@ -564,49 +544,65 @@ flowchart LR
 As discussed in the previous section,
 all inputs are seeded with their respective input index sets.
 Figure 14 annotates these index sets on the edges of the computational graph.
-Our system for sparsity detection must now perform an **alternative evaluation of our computational graph**.
+Our system for sparsity detection must now perform **abstract interpretation of our computational graph**.
 Instead of computing the original function, 
 each operator must correctly propagate and accumulate the index sets of its inputs, 
 depending on whether an operator has a non-zero derivative or not.  
 
-Since addition and multiplication globally have non-zero derivatives with respect to both of their inputs, 
+Since addition, multiplication and division globally have non-zero derivatives with respect to both of their inputs, 
 the index sets of their inputs are accumulated and propagated. 
 The sign function has a zero-valued derivatives for any input value. 
 It therefore doesn't propagate the index set of its input. 
 Instead, it returns an empty set.
 
-*TODO: switch to multivariate function, quickly discuss resulting Jacobian.*
-<!-- TODO -->
+The resulting sparsity pattern matches the analytic Jacobian
 
-<!-- Coloring techniques? -->
+$$ J_f(x) = \begin{bmatrix}
+x_2 & x_1 & 0 & 0\\
+  0 &   0 & 0 & \frac{\text{sgn}(x_3)}{2}
+\end{bmatrix} \, .
+$$
+
+### Advantage of partial separability
+
+When we know in advance that the function has partial separability, the sparsity pattern detection becomes significantly more efficient.
+Partial separability means that the function can be decomposed into independent or weakly dependent subcomponents, often corresponding to blocks in the Jacobian matrix.
+This structure allows the sparsity pattern to be identified separately for each block, rather than considering the full Jacobian matrix as a whole.
+
 ## Coloring
 
 Once we have detected a sparsity pattern, our next goal is to figure out how to group the columns (or rows) of the Jacobian.
-The columns (or rows) in each group will be evaluated simultaneously with a single JVP (or VJP).
+The columns (or rows) in each group will be evaluated simultaneously with a single JVP (or VJP), where the vector is a linear combination of basis vectors called a **seed**.
 If they are mutually orthogonal, then this gives all the necessary information to retrieve every nonzero coefficient of the matrix.
 
 ### Graph formulation
 
 Luckily, this can be reformulated as a graph coloring problem, which is very well studied.
 Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set $\mathcal{V}$ and edge set $\mathcal{E}$, 
-such that each column is a vertex of the graph, and two vertices are connected iff their respective columns share a non-zero index.
+such that each column is a vertex of the graph, and two vertices are connected if and only if their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_matrix.svg" class="img-fluid" %}
-    </div>
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
-    </div>
-</div>
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Sparse matrix and corresponding graph representation of orthogonal rows.
+    Figure X: Optimal graph coloring.
+</div>
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
+<div class="caption">
+    Figure X: Suboptimal graph coloring. Node 1 could be colored in yellow, leading to redundant computations of matrix-vector products.
+</div>
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}
+<div class="caption">
+    Figure X: Infeasible graph coloring. Nodes 2 and 4 on the graph are adjacent, but share a color. This results in overlapping columns.
 </div>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
 This constraint ensures that columns in the same color group are indeed orthogonal.
 If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
+
+If we perform column coloring, forward-mode AD is required, while reverse-mode AD is needed for row coloring.
+Note that more advanced coloring techniques could use both modes, such as **bicoloring**.
 
 <aside class="l-body box-note" markdown="1">
 <!-- TODO -->
@@ -616,11 +612,57 @@ There are more efficient representations, e.g. *TODO*
 ### Greedy algorithm
 
 Unfortunately, the graph coloring problem is NP-hard, meaning that there is (probably) no way to solve it polynomially for every instance.
-But there are efficient heuristics which generate good enough solutions in reasonable time.
-The most widely used is the greedy algorithm, which considers vertices one after the other.
-This algorithm assigns to each vertex the smallest color that is not present among its neighbors, and never backtracks.
-A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed. 
+The optimal solution is known only for specific patterns, such as banded matrices.
+However, efficient heuristics exist that generate good enough solutions in reasonable time.
+The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
+This algorithm assigns to each vertex the smallest color that is not already present among its neighbors, and it never backtracks.
+A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed.
 
 ## Second order
+
+While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, second-order AD extends this by involving the **Hessian**.
+
+### Hessians
+
+The **Hessian** contains second-order partial derivatives of a scalar function, essentially capturing the curvature of the function at a point.
+This is particularly relevant in **optimization**, where the Hessian provides crucial information about the nature of the function's local behavior.
+Specifically, the Hessian allows us to distinguish between local minima, maxima, and saddle points.
+By incorporating second-order information, optimization algorithms converge more robustly in cases where the gradient alone doesn't provide enough information for effective search directions.
+This is especially useful in **nonlinear optimization problems**.
+
+### HVPs
+
+In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
+The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
+
+$$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
+
+An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient (a gradient which is itself computed via a VJP of $f$):
+
+$$ \nabla^2 f(x) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
+
+Thus it is quite common to say that HVPs are computed with "forward over reverse" AD.
+The complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
+
+The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
+This specifity can be exploited in the sparsity detection as well as in the coloring phase.
+
+### Pattern detection
+
+Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
+This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
+For instance, if $f(x)$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. On the otherhand, a term $x_1 x_2$ will yield two equal non-zero coefficients, one at position $(1, 2)$ and one at position $(2, 1)$.
+Thus, the abstract interpretation system used for detection needs a finer classification of operators, to distinguish between locally linear ones (sum, max) and locally nonlinear ones (product, exp).
+
+### Symmetric coloring
+
+When it comes to **graph coloring** for the Hessian, the process can be more efficient than those for the Jacobian due to its **symmetry**.
+Even if two columns in the Hessian are not orthogonal, missing coefficients can be recovered by leveraging the corresponding rows instead of relying solely on the columns.
+In other words, if $H_{ij}$ is lost during compression because of colliding nonzero coefficients, there is still a chance to retrieve it through $H_{ji}$.
+This symmetry enables **colorings with fewer colors**, reducing the complexity of the AD part compared to traditional row or column coloring.
+
+While the **decompression** step for symmetric coloring is more computationally expensive, this cost is typically negligible compared to the overhead of computing HVPs.
+Moreover, symmetric coloring becomes especially advantageous when the Hessian needs to be recomputed for multiple values of $x$, as the reduced number of colors amortizes the initial expense.
+
 
 ## Demonstration
