@@ -47,21 +47,29 @@ toc:
     - name: AD is matrix-free
     - name: Forward-mode AD
     - name: Reverse-mode AD
+    - name: From linear maps back to Jacobians
   - name: Automatic sparse differentiation
     subsections:
     - name: Sparse matrices
     - name: Leveraging sparsity
-    - name: Pattern detection and coloring
+    - name: Sparsity pattern detection and coloring
   - name: Pattern detection
     subsections:
     - name: Index sets
     - name: Efficient propagation
-    - name: Operator overloading
+    - name: Abstract interpretation
+    - name: Local and global patterns
+    - name: Partial separability
   - name: Coloring
     subsections:
     - name: Graph formulation
     - name: Greedy algorithm
   - name: Second order
+    subsections:
+    - name: Hessians
+    - name: Hessian-vector products
+    - name: Pattern detection
+    - name: Symmetric coloring
   - name: Demonstration
 
 # Below is an example of injecting additional post-specific styles.
@@ -316,7 +324,7 @@ This makes it the method of choice for machine learners,
 who typically refer to reverse-mode AD as *backpropagation*.
 </aside>
 
-## Sparse automatic differentiation
+## Automatic sparse differentiation
 
 ### Sparse matrices
 
@@ -652,7 +660,7 @@ Specifically, the Hessian allows us to distinguish between local minima, maxima,
 By incorporating second-order information, optimization algorithms converge more robustly in cases where the gradient alone doesn't provide enough information for effective search directions.
 This is especially useful in **nonlinear optimization problems**.
 
-### HVPs
+### Hessian-vector products
 
 In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
 The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
