@@ -610,13 +610,15 @@ A crucial hyperparameter is the choice of ordering, for which various criteria h
 
 While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, second-order AD extends this by involving the **Hessian**.
 
-### HVP and Hessians
+### Hessians
 
 The **Hessian** contains second-order partial derivatives of a scalar function, essentially capturing the curvature of the function at a point.
 This is particularly relevant in **optimization**, where the Hessian provides crucial information about the nature of the function's local behavior.
 Specifically, the Hessian allows us to distinguish between local minima, maxima, and saddle points.
 By incorporating second-order information, optimization algorithms converge more robustly in cases where the gradient alone doesn't provide enough information for effective search directions.
 This is especially useful in **nonlinear optimization problems**.
+
+### HVPs
 
 In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
 The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
@@ -633,7 +635,7 @@ The complexity of a single HVP scales roughly with the complexity of the functio
 The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
 This specifity can be exploited in the sparsity detection as well as in the coloring phase.
 
-#### Pattern detection
+### Pattern detection
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
