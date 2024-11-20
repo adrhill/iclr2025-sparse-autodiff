@@ -688,9 +688,8 @@ We also use a few other packages for visualization.
 As with any language, the first step is importing the dependencies.
 
 ```julia
-using DifferentiationInterface  # no prefix necessary
-import SparseConnectivityTracer  # requires prefix
-import SparseMatrixColorings
+using DifferentiationInterface
+using SparseConnectivityTracer, SparseMatrixColorings
 import ForwardDiff
 ```
 
@@ -698,39 +697,22 @@ import ForwardDiff
 
 As our test function, we choose a very simple iterated difference operator.
 It takes a vector $\mathbf{x} \in \mathbb{R}^n$ and outputs a slightly shorter vector $y \in \mathbb{R}^{n-k}$ depending on the number of iterations $k$.
-In pure Julia, this is written as follows:
+In pure Julia, this is written as follows (using the built-in `diff` recursively):
 
 ```julia
-
-function differences(x)
-    n = length(x)
-    y = similar(x, n - 1)
-    for i in 1:(n - 1)
-        y[i] = x[i + 1] - x[i]
-    end
-    return y
-end
-
-function iterated_differences(x, k)
-    if k == 0
-        return x
-    else
-        y = iterated_differences(x, k - 1)
-        return differences(y)
-    end
-end
+iter_diff(x, k) = k == 0 ? x : diff(iter_diff(x, k-1))
 ```
 
 Let us check that the function returns what we expect:
 
 ```julia
-julia> iterated_differences([1, 4, 9, 16], 1)
+julia> iter_diff([1, 4, 9, 16], 1)
 3-element Vector{Int64}:
  3
  5
  7
 
-julia> iterated_differences([1, 4, 9, 16], 2)
+julia> iter_diff([1, 4, 9, 16], 2)
 2-element Vector{Int64}:
  2
  2
@@ -738,30 +720,28 @@ julia> iterated_differences([1, 4, 9, 16], 2)
 
 ### Dense Jacobian
 
-The key concept behind DifferentiationInterface.jl is that of "backend".
-There are several AD systems in Julia, with different features and tradeoff, but we access them through a common API.
-Here, we use ForwardDiff.jl as our dense backend:
+The key concept behind DifferentiationInterface.jl is that of *backends*.
+There are several AD systems in Julia, each with different features and tradeoff, that can be accessed them through a common API.
+Here, we use ForwardDiff.jl as our AD backend:
 
 ```julia
-dense_backend = DI.AutoForwardDiff()
+dense_backend = AutoForwardDiff()
 ```
 
 To build a sparse backend, we bring together three ingredients corresponding to the various phases of ASD:
 
 ```julia
-sparse_backend = DI.AutoSparse(
-    dense_backend;  # to compute JVPs
-    sparsity_detector=SCT.TracerSparsityDetector(),
-    coloring_algorithm=SMC.GreedyColoringAlgorithm(),
-)
+sparsity_detector = TracerSparsityDetector()  # from SparseConnectivityTracer
+coloring_algorithm = GreedyColoringAlgorithm()  # from SparseMatrixColorings
+sparse_backend = AutoSparse(dense_backend; sparsity_detector, coloring_algorithm)
 ```
 
-We can now obtain the Jacobian of `iterated_differences` (with respect to $\mathbf{x}$) using either backend, and compare the results:
+We can now obtain the Jacobian of `iter_diff` (with respect to $\mathbf{x}$) using either backend, and compare the results:
 
 ```julia
 julia> x, k = rand(10), 3;
 
-julia> DI.jacobian(iterated_differences, dense_backend, x, DI.Constant(k))
+julia> jacobian(iter_diff, dense_backend, x, Constant(k))
 7×10 Matrix{Float64}:
  -1.0   3.0  -3.0   1.0   0.0   0.0   0.0   0.0   0.0  0.0
   0.0  -1.0   3.0  -3.0   1.0   0.0   0.0   0.0   0.0  0.0
@@ -771,7 +751,7 @@ julia> DI.jacobian(iterated_differences, dense_backend, x, DI.Constant(k))
   0.0   0.0   0.0   0.0   0.0  -1.0   3.0  -3.0   1.0  0.0
   0.0   0.0   0.0   0.0   0.0   0.0  -1.0   3.0  -3.0  1.0
 
-julia> DI.jacobian(iterated_differences, sparse_backend, x, DI.Constant(k))
+julia> jacobian(iter_diff, sparse_backend, x, Constant(k))
 7×10 SparseArrays.SparseMatrixCSC{Float64, Int64} with 28 stored entries:
  -1.0   3.0  -3.0   1.0    ⋅     ⋅     ⋅     ⋅     ⋅    ⋅ 
    ⋅   -1.0   3.0  -3.0   1.0    ⋅     ⋅     ⋅     ⋅    ⋅ 
@@ -793,30 +773,19 @@ Sparsity pattern detection and matrix coloring are performed in a so-called "pre
 Thus, to extract more performance, we can create this object once
 
 ```julia
-prep = DI.prepare_jacobian(
-    iterated_differences,
-    sparse_backend,
-    x,
-    DI.Constant(k)
-)
+prep = prepare_jacobian(iter_diff, sparse_backend, x, Constant(k));
 ```
 
-and then reuse it as much as possible, for instance inside the loop of an iterative algorithm:
+and then reuse it as much as possible, for instance inside the loop of an iterative algorithm (note the additional `prep` argument):
 
 ```julia
-DI.jacobian(
-    iterated_differences,
-    prep,  # note the preparation result
-    sparse_backend,
-    x,
-    DI.Constant(k),
-)
+jacobian(iter_diff, prep, sparse_backend, x, Constant(k))
 ```
 
 Inside the preparation result, we find the result of sparsity pattern detection
 
 ```julia
-julia> SMC.sparsity_pattern(prep)
+julia> sparsity_pattern(prep)
 7×10 SparseArrays.SparseMatrixCSC{Bool, Int64} with 28 stored entries:
  1  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
  ⋅  1  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅
@@ -830,7 +799,7 @@ julia> SMC.sparsity_pattern(prep)
 and the coloring of the columns:
 
 ```julia
-julia> SMC.column_colors(prep)
+julia> column_colors(prep)
 10-element Vector{Int64}:
  1
  2
@@ -845,7 +814,14 @@ julia> SMC.column_colors(prep)
 ```
 
 Note that it uses only $c = 4$ different colors, which means we need $4$ JVPs instead of the initial $n = 10$ to reconstruct the Jacobian.
+
+```julia
+julia> ncolors(prep)
+4
+```
+
 This discrepancy typically gets larger as the input grows: it is not rare for the number of columns to be a constant that does not depend on $n$.
+It is the key driver of ASD performance.
 
 ### Performance benefits
 
@@ -853,12 +829,9 @@ Here we present a benchmark for a slightly larger input, $n = 1000$ and $k = 10$
 It can be obtained with the following code:
 
 ```julia
-import DifferentiationInterfaceTest as DIT
-
-scen = DIT.Scenario{:jacobian,:out}(
-    iterated_differences, rand(1000); contexts=(DI.Constant(10),)
-)
-data = DIT.benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
+using DifferentiationInterfaceTest
+scen = Scenario{:jacobian,:out}(iter_diff, rand(1000); contexts=(Constant(10),))
+data = benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
 ```
 
 In the table below:
