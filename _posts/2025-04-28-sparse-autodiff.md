@@ -575,9 +575,6 @@ Once we have detected a sparsity pattern, our next goal is to figure out how to 
 The columns (or rows) in each group will be evaluated simultaneously with a single JVP (or VJP), where the vector is a linear combination of basis vectors called a **seed**.
 If they are mutually orthogonal, then this gives all the necessary information to retrieve every nonzero coefficient of the matrix.
 
-The optimal solution is known only for specific patterns, such as banded matrices.
-Otherwise, graph coloring is required.
-
 ### Graph formulation
 
 Luckily, this can be reformulated as a graph coloring problem, which is very well studied.
@@ -615,6 +612,7 @@ There are more efficient representations, e.g. *TODO*
 ### Greedy algorithm
 
 Unfortunately, the graph coloring problem is NP-hard, meaning that there is (probably) no way to solve it polynomially for every instance.
+The optimal solution is known only for specific patterns, such as banded matrices.
 However, efficient heuristics exist that generate good enough solutions in reasonable time.
 The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
 This algorithm assigns to each vertex the smallest color that is not already present among its neighbors, and it never backtracks.
