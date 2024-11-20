@@ -522,7 +522,7 @@ This idea is visualized in Figure 13.
 ### Abstract interpretation
 
 Instead of going into implementation details,
-we want to provide some intuition on the second key ingredient of our forward-mode sparsity detection: 
+we want to provide some intuition on the second key ingredient of our forward-mode sparsity detection system: 
 **abstract interpretation**.
 
 We will demonstrate this on a second toy example, the function
@@ -534,28 +534,31 @@ x_1 x_2 + \text{sgn}(x_3)\\
 
 The corresponding computational graph is shown in Figure 14,
 where circular nodes correspond to elementary operators,
-in this case addition, multiplication and the sign function.
+in this case addition, multiplication, division and the sign function.
+Scalar inputs $x_i$ and outputs $y_j$ are shown in rectangular nodes.
+Instead of evaluating the original compute graph for a given input $\mathbf{x}$,
+<!-- (also called *primal computation*) -->
+all inputs are seeded with their respective input index sets.
+Figure 14 annotates these index sets on the edges of the computational graph.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.svg" class="img-fluid" %}
 <div class="caption">
     Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
 
-As discussed in the previous section,
-all inputs are seeded with their respective input index sets.
-Figure 14 annotates these index sets on the edges of the computational graph.
-Our system for sparsity detection must now perform **abstract interpretation of our computational graph**.
+Our sparsity detection system must now perform **abstract interpretation** of our computational graph.
 Instead of computing the original function, 
 each operator must correctly propagate and accumulate the index sets of its inputs, 
-depending on whether an operator has a non-zero derivative or not.  
+depending on whether an operator globally has a non-zero derivative or not.  
 
-Since addition, multiplication and division globally have non-zero derivatives with respect to both of their inputs, 
+Since addition, multiplication and division globally have non-zero derivatives with respect to both of their inputs,
 the index sets of their inputs are accumulated and propagated. 
-The sign function has a zero-valued derivatives for any input value. 
+The sign function has a zero-valued derivative for any input value. 
 It therefore doesn't propagate the index set of its input. 
 Instead, it returns an empty set.
 
-The resulting sparsity pattern matches the analytic Jacobian
+Figure 14 shows the resulting output index sets $\\{1, 2\\}$ and $\\{4\\}$ for outputs 1 and 2 respectively.
+These match the analytic Jacobian
 
 $$ J_f(x) = \begin{bmatrix}
 x_2 & x_1 & 0 & 0\\
@@ -563,9 +566,28 @@ x_2 & x_1 & 0 & 0\\
 \end{bmatrix} \, .
 $$
 
-### Advantage of partial separability
+### Local and global patterns
 
-When we know in advance that the function has partial separability, the sparsity pattern detection becomes significantly more efficient.
+The type of abstract interpretation shown above corresponds to *global sparsity detection*,
+computing index sets 
+
+$$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0,\, x \in \sR^{n} \right\} $$
+
+over the entire input domain.
+Another type of abstract interpretation can be implemented, 
+in which the original *primal computation* is propagated alongside index sets, computing 
+
+$$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0 \right\} $$
+
+for a given input $\mathbf{x}$. 
+These *local sparsity patterns* are strict subsets of global sparisty patterns,
+and can therefore result in fewer colors.
+However, they need to be recomputed when changing the input.
+
+### Partial separability
+
+When we know in advance that the function has partial separability,
+sparsity pattern detection becomes significantly more efficient.
 Partial separability means that the function can be decomposed into independent or weakly dependent subcomponents, often corresponding to blocks in the Jacobian matrix.
 This structure allows the sparsity pattern to be identified separately for each block, rather than considering the full Jacobian matrix as a whole.
 
