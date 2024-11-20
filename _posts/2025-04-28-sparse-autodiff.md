@@ -637,7 +637,6 @@ This specifity can be exploited in the sparsity detection as well as in the colo
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
-```suggestion
 For instance, if $f(x)$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. On the otherhand, a term $x_1 x_2$ will yield two equal non-zero coefficients, one at position $(1, 2)$ and one at position $(2, 1)$.
 Thus, the abstract interpretation system used for detection needs a finer classification of operators, to distinguish between locally linear ones (sum, max) and locally nonlinear ones (product, exp).
 
