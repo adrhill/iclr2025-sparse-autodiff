@@ -664,5 +664,222 @@ This symmetry enables **colorings with fewer colors**, reducing the complexity o
 While the **decompression** step for symmetric coloring is more computationally expensive, this cost is typically negligible compared to the overhead of computing HVPs.
 Moreover, symmetric coloring becomes especially advantageous when the Hessian needs to be recomputed for multiple values of $x$, as the reduced number of colors amortizes the initial expense.
 
-
 ## Demonstration
+
+We conclude this blog post with a demonstration of automatic sparse differentiation in a high-level programming language, namely the [Julia language](https://julialang.org/).
+While still at an early stage of development, we hope that such an example of unified pipeline for sparse Jacobians and Hessians can inspire developers in other languages to revisit ASD.
+
+<aside class="l-body box-note" markdown="1">
+The authors of this blog post are all developers of the ASD ecosystem in Julia. We are not aware of a similar ecosystem in Python or R, which is why we chose Julia to present it.
+</aside>
+
+### Necessary packages
+
+Here are the packages we will use for this demonstration.
+We also use a few other packages for visualization.
+
+| Package | Purpose |
+|---|---|
+| [SparseConnectivityTracer.jl](https://github.com/adrhill/SparseConnectivityTracer.jl) | Sparsity pattern detection with operator overloading. |
+| [SparseMatrixColorings.jl](https://github.com/gdalle/SparseMatrixColorings.jl) | Greedy algorithms for colorings, decompression utilities. |
+| [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) | Forward-mode AD and computation of JVPs. |
+| [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) | High-level interface bringing all of these together. |
+
+As with any language, the first step is importing the dependencies.
+
+```julia
+using DifferentiationInterface  # no prefix necessary
+import SparseConnectivityTracer  # requires prefix
+import SparseMatrixColorings
+import ForwardDiff
+```
+
+### Test function
+
+As our test function, we choose a very simple iterated difference operator.
+It takes a vector $\mathbf{x} \in \mathbb{R}^n$ and outputs a slightly shorter vector $y \in \mathbb{R}^{n-k}$ depending on the number of iterations $k$.
+In pure Julia, this is written as follows:
+
+```julia
+
+function differences(x)
+    n = length(x)
+    y = similar(x, n - 1)
+    for i in 1:(n - 1)
+        y[i] = x[i + 1] - x[i]
+    end
+    return y
+end
+
+function iterated_differences(x, k)
+    if k == 0
+        return x
+    else
+        y = iterated_differences(x, k - 1)
+        return differences(y)
+    end
+end
+```
+
+Let us check that the function returns what we expect:
+
+```julia
+julia> iterated_differences([1, 4, 9, 16], 1)
+3-element Vector{Int64}:
+ 3
+ 5
+ 7
+
+julia> iterated_differences([1, 4, 9, 16], 2)
+2-element Vector{Int64}:
+ 2
+ 2
+```
+
+### Dense Jacobian
+
+The key concept behind DifferentiationInterface.jl is that of "backend".
+There are several AD systems in Julia, with different features and tradeoff, but we access them through a common API.
+Here, we use ForwardDiff.jl as our dense backend:
+
+```julia
+dense_backend = DI.AutoForwardDiff()
+```
+
+To build a sparse backend, we bring together three ingredients corresponding to the various phases of ASD:
+
+```julia
+sparse_backend = DI.AutoSparse(
+    dense_backend;  # to compute JVPs
+    sparsity_detector=SCT.TracerSparsityDetector(),
+    coloring_algorithm=SMC.GreedyColoringAlgorithm(),
+)
+```
+
+We can now obtain the Jacobian of `iterated_differences` (with respect to $\mathbf{x}$) using either backend, and compare the results:
+
+```julia
+julia> x, k = rand(10), 3;
+
+julia> DI.jacobian(iterated_differences, dense_backend, x, DI.Constant(k))
+7×10 Matrix{Float64}:
+ -1.0   3.0  -3.0   1.0   0.0   0.0   0.0   0.0   0.0  0.0
+  0.0  -1.0   3.0  -3.0   1.0   0.0   0.0   0.0   0.0  0.0
+  0.0   0.0  -1.0   3.0  -3.0   1.0   0.0   0.0   0.0  0.0
+  0.0   0.0   0.0  -1.0   3.0  -3.0   1.0   0.0   0.0  0.0
+  0.0   0.0   0.0   0.0  -1.0   3.0  -3.0   1.0   0.0  0.0
+  0.0   0.0   0.0   0.0   0.0  -1.0   3.0  -3.0   1.0  0.0
+  0.0   0.0   0.0   0.0   0.0   0.0  -1.0   3.0  -3.0  1.0
+
+julia> DI.jacobian(iterated_differences, sparse_backend, x, DI.Constant(k))
+7×10 SparseArrays.SparseMatrixCSC{Float64, Int64} with 28 stored entries:
+ -1.0   3.0  -3.0   1.0    ⋅     ⋅     ⋅     ⋅     ⋅    ⋅ 
+   ⋅   -1.0   3.0  -3.0   1.0    ⋅     ⋅     ⋅     ⋅    ⋅ 
+   ⋅     ⋅   -1.0   3.0  -3.0   1.0    ⋅     ⋅     ⋅    ⋅ 
+   ⋅     ⋅     ⋅   -1.0   3.0  -3.0   1.0    ⋅     ⋅    ⋅ 
+   ⋅     ⋅     ⋅     ⋅   -1.0   3.0  -3.0   1.0    ⋅    ⋅ 
+   ⋅     ⋅     ⋅     ⋅     ⋅   -1.0   3.0  -3.0   1.0   ⋅ 
+   ⋅     ⋅     ⋅     ⋅     ⋅     ⋅   -1.0   3.0  -3.0  1.0
+```
+
+In one case, we get a dense matrix, in the other it is sparse.
+Note that in Julia, linear algebra operations are optimized for sparse matrices, which means this format can be beneficial for downstream use.
+We now show that sparsity also unlocks faster computation of the Jacobian itself.
+
+### Preparation
+
+Sparsity pattern detection and matrix coloring are performed in a so-called "preparation step", whose output can be reused across several calls to `jacobian` (as long as the pattern stays the same).
+
+Thus, to extract more performance, we can create this object once
+
+```julia
+prep = DI.prepare_jacobian(
+    iterated_differences,
+    sparse_backend,
+    x,
+    DI.Constant(k)
+)
+```
+
+and then reuse it as much as possible, for instance inside the loop of an iterative algorithm:
+
+```julia
+DI.jacobian(
+    iterated_differences,
+    prep,  # note the preparation result
+    sparse_backend,
+    x,
+    DI.Constant(k),
+)
+```
+
+Inside the preparation result, we find the result of sparsity pattern detection
+
+```julia
+julia> SMC.sparsity_pattern(prep)
+7×10 SparseArrays.SparseMatrixCSC{Bool, Int64} with 28 stored entries:
+ 1  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  1  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  1  1  1  1  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  1  1  1  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  1  1  1  1  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  1  1  1  1  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  1  1  1
+```
+
+and the coloring of the columns:
+
+```julia
+julia> SMC.column_colors(prep)
+10-element Vector{Int64}:
+ 1
+ 2
+ 3
+ 4
+ 1
+ 2
+ 3
+ 4
+ 1
+ 2
+```
+
+Note that it uses only $c = 4$ different colors, which means we need $4$ JVPs instead of the initial $n = 10$ to reconstruct the Jacobian.
+This discrepancy typically gets larger as the input grows: it is not rare for the number of columns to be a constant that does not depend on $n$.
+
+### Performance benefits
+
+Here we present a benchmark for a slightly larger input, $n = 1000$ and $k = 10$.
+It can be obtained with the following code:
+
+```julia
+import DifferentiationInterfaceTest as DIT
+
+scen = DIT.Scenario{:jacobian,:out}(
+    iterated_differences, rand(1000); contexts=(DI.Constant(10),)
+)
+data = DIT.benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
+```
+
+In the table below:
+
+- the column "sparse" tells us which backend we are using
+- the column "prepared" tells us whether or not preparation is included in the measurements (for dense AD preparation is essentially trivial)
+- the column "time" contains the execution time in seconds
+- the column "bytes" contains the allocated memory in bytes
+
+| **sparse** | **prepared** | **time**  | **bytes** |
+|-----------:|-------------:|----------:|----------:|
+| false      | true         | 2.732e-02 | 1.679e+08 |
+| false      | false        | 2.183e-02 | 1.679e+08 |
+| true       | true         | 1.923e-04 | 1.943e+06 |
+| true       | false        | 2.995e-03 | 1.323e+07 |
+
+As you can see, even when we include the overhead of pattern detection and coloring, the sparse backend is around $5 \times$ faster than the dense backend.
+The speedup becomes $100 \times$ once we discard this overhead, which can be amortized over several `jacobian` computations.
+
+### Coloring visualization
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
+
+<!-- TODO: add comments -->
