@@ -608,4 +608,38 @@ A crucial hyperparameter is the choice of ordering, for which various criteria h
 
 ## Second order
 
+While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, second-order AD extends this by involving the **Hessian**.
+
+### HVP and Hessians
+
+The **Hessian** contains second-order partial derivatives of a scalar function, essentially capturing the curvature of the function at a point.
+This is particularly relevant in **optimization**, where the Hessian provides crucial information about the nature of the function's local behavior.
+Specifically, the Hessian allows us to distinguish between local minima, maxima, and saddle points.
+By incorporating second-order information, optimization algorithms converge more robustly in cases where the gradient alone doesn't provide enough information for effective search directions.
+This is especially useful in **nonlinear optimization problems**.
+
+In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
+An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the pushforward of the gradient, itself computed via a pullback.
+It's quite common to say that HVPs are computed with forward over reverse AD.
+
+The Hessian has a **symmetric** structure, which means it does not have separate row and column variants, this specifity can be exploited in the sparsity detection as well as in the coloring phase.
+
+#### Pattern detection
+
+Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
+This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
+
+<!-- Guillaume / Adrian -- Do you want to add more details? -->
+
+### Symmetric coloring
+
+When it comes to **graph coloring** for the Hessian, the process can be more efficient than those for the Jacobian due to its **symmetry**.
+Even if two columns in the Hessian are not orthogonal, missing coefficients can be recovered by leveraging the corresponding rows instead of relying solely on the columns.
+This symmetry enables **colorings with fewer colors**, reducing the complexity of the AD part compared to traditional row or column coloring.
+
+While the **decompression** step for symmetric coloring is more computationally expensive, this cost is typically negligible compared to the overhead of computing HVPs.
+Moreover, symmetric coloring becomes especially advantageous when the Hessian needs to be recomputed for multiple values of $x$, as the reduced number of colors amortizes the initial expense.
+
+All non-zero entries of the Hessian can be efficiently recovered with a limited number of HVPs as long as it is sparse.
+
 ## Demonstration
