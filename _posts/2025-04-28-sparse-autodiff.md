@@ -541,7 +541,7 @@ Instead of evaluating the original compute graph for a given input $\mathbf{x}$,
 all inputs are seeded with their respective input index sets.
 Figure 14 annotates these index sets on the edges of the computational graph.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-fluid" %}
 <div class="caption">
     Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
