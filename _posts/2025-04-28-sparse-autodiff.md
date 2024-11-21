@@ -335,7 +335,7 @@ who typically refer to reverse-mode AD as *backpropagation*.
 ### Sparse matrices
 
 Sparse matrices are matrices in which most elements are zero.
-We refer to linear maps as "sparse linear maps" if they materialize to sparse matrices.
+As shown in Figure 8, we refer to linear maps as "sparse linear maps" if they materialize to sparse matrices.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -379,16 +379,19 @@ If these columns are known to be **orthogonal**,
 the sum can be uniquely decomposed into its components, a process known as **decompression**.
 Thus, a single JVP is enough to compute the nonzero coefficients of several columns at once.
 
+This specific example using JVPs corresponds to sparse forward-mode AD 
+and is visualized in Figure 9, where all orthogonal columns have been colored in matching hues.
+By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
+we materialize the sum of the first, second and fifth column of our Jacobian.
+
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
 <div class="caption">
     Figure 9: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
 </div>
 
-This specific example using JVPs corresponds to sparse forward-mode AD 
-and is visualized in Figure 9, where all orthogonal columns have been colored in matching hues.
-By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
-we materialize the sum of the first, second and fifth column of our Jacobian.
-Then, we assign the values in the resulting vector back to the appropriate Jacobian entries.
+
+A second JVP with the vector  $\mathbf{e}_3 + \mathbf{e}_4$ materializes the sum of the remaining columns. 
+We the assign the values in the resulting vectors back to the appropriate Jacobian entries.
 This final decompression step is shown in Figure 10.
 
 <div class="row mt-3">
