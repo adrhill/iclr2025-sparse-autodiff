@@ -259,13 +259,13 @@ linear maps are best thought of as black-box functions.
 
 Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating **materialized vectors** through them.
 
+Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
+Since we propagate in the order of the original function evaluation, this is called **forward-mode AD**.
+
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_eval.svg" class="img-fluid" %}
 <div class="caption">
     Figure 4: Evaluating linear maps in forward-mode.
 </div>
-
-Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
-Since we propagate in the order of the original function evaluation, this is called **forward-mode AD**.
 
 In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
 Since this operation by definition corresponds to 
@@ -389,7 +389,7 @@ and is visualized in Figure 9, where all orthogonal columns have been colored in
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we materialize the sum of the first, second and fifth column of our Jacobian.
 Then, we assign the values in the resulting vector back to the appropriate Jacobian entries.
-This final decompression step is shown in Figure X.
+This final decompression step is shown in Figure 10.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -400,10 +400,10 @@ This final decompression step is shown in Figure X.
     </div>
 </div>
 <div class="caption">
-    Figure X: Materializing a Jacobian with forward-mode ASD: (a) compressed evaluation of orthogonal columns (b) decompression to Jacobian matrix
+    Figure 10: Materializing a Jacobian with forward-mode ASD: (a) compressed evaluation of orthogonal columns (b) decompression to Jacobian matrix
 </div>
 
-The same idea can also be applied to reverse mode AD, as shown in Figure Y.
+The same idea can also be applied to reverse mode AD, as shown in Figure 11.
 Instead of leveraging orthogonal columns, we rely on orthogonal rows.
 We can then materialize multiple rows in a single VJP.
 
@@ -416,7 +416,7 @@ We can then materialize multiple rows in a single VJP.
     </div>
 </div>
 <div class="caption">
-    Figure Y: Materializing a Jacobian with reverse-mode ASD: (a) compressed evaluation of orthogonal rows (b) decompression to Jacobian matrix
+    Figure 11: Materializing a Jacobian with reverse-mode ASD: (a) compressed evaluation of orthogonal rows (b) decompression to Jacobian matrix
 </div>
 
 ### Sparsity pattern detection and coloring
@@ -427,12 +427,12 @@ the structure of the Jacobian is completely unknown.
 In other words, **we cannot tell which rows and columns are orthogonal without first materializing a Jacobian matrix.**
 But if we fully materialize a Jacobian via traditional AD, ASD isn't needed at all.
 
-The solution to this problem is shown in Figure 10 (a):
+The solution to this problem is shown in Figure 12 (a):
 in order to find orthogonal columns (or rows), we don't need to materialize the full Jacobian.
 Instead, it is enough to **detect the sparsity pattern** of the Jacobian.
 This binary-valued pattern contains enough information to deduce orthogonality.
 From there, we use a **coloring algorithm** to group mutually orthogonal columns (or rows) together.
-Such a coloring can be visualized on Figure 10 (b), 
+Such a coloring can be visualized on Figure 12 (b), 
 where the yellow columns will be evaluated together (first JVP) 
 and the light blue ones will be evaluated together (second JVP), 
 for a total of 2 JVPs instead of 5.
@@ -446,7 +446,7 @@ for a total of 2 JVPs instead of 5.
     </div>
 </div>
 <div class="caption">
-    Figure 10: The first two steps of ASD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
+    Figure 12: The first two steps of ASD: (a) sparsity pattern detection, (b) coloring of the sparsity pattern.
 </div>
 
 To sum up, ASD consists of four steps:
@@ -500,24 +500,24 @@ we can instead represent the sparsity pattern of the $i$-th column of a Jacobian
 
 $$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} . $$
 
-These equivalent sparsity pattern representations are illustrated in Figure 11.
+These equivalent sparsity pattern representations are illustrated in Figure 13.
 Each row index set tells us **which inputs influenced a given output**, at the first-order. For instance, output $i=2$ was influenced by inputs $j=4$ and $j=5$.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparsity_pattern_representations.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 11: Sparsity pattern representations: (a) original matrix, (b) binary pattern, (c) row index sets.
+    Figure 13: Sparsity pattern representations: (a) original matrix, (b) binary pattern, (c) row index sets.
 </div>
 
 ### Efficient propagation
 
-Figure 12 shows the traditional forward-AD pass we want to avoid:
+Figure 14 shows the traditional forward-AD pass we want to avoid:
 propagating a full identity matrix through a linear map would materialize the Jacobian of $f$, 
 but also all intermediate linear maps.
 As previously discussed, this is not a viable option due to its inefficiency and high memory requirements.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 12: Materializing a Jacobian forward-mode. 
+    Figure 14: Materializing a Jacobian forward-mode. 
     Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
 </div>
 
@@ -526,11 +526,11 @@ An alternative view on this vector is that it corresponds to the index set repre
 
 Our goal is to propagate this index set such that we get an output vector of index sets 
 that corresponds to the Jacobian sparsity pattern.
-This idea is visualized in Figure 13.
+This idea is visualized in Figure 15.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 13: Propagating an index set through a linear map to obtain a sparsity pattern.  
+    Figure 15: Propagating an index set through a linear map to obtain a sparsity pattern.  
 </div>
 
 ### Abstract interpretation
@@ -546,18 +546,18 @@ x_1 x_2 + \text{sgn}(x_3)\\
 \text{sgn}(x_3) \frac{x_4}{2}
 \end{bmatrix} \, .$$
 
-The corresponding computational graph is shown in Figure 14,
+The corresponding computational graph is shown in Figure 16,
 where circular nodes correspond to elementary operators,
 in this case addition, multiplication, division and the sign function.
 Scalar inputs $x_i$ and outputs $y_j$ are shown in rectangular nodes.
 Instead of evaluating the original compute graph for a given input $\mathbf{x}$,
 <!-- (also called *primal computation*) -->
 all inputs are seeded with their respective input index sets.
-Figure 14 annotates these index sets on the edges of the computational graph.
+Figure 16 annotates these index sets on the edges of the computational graph.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-fluid" %}
 <div class="caption">
-    Figure 14: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
+    Figure 16: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
 
 Our sparsity detection system must now perform **abstract interpretation** of our computational graph.
@@ -571,7 +571,7 @@ The sign function has a zero-valued derivative for any input value.
 It therefore doesn't propagate the index set of its input. 
 Instead, it returns an empty set.
 
-Figure 14 shows the resulting output index sets $\\{1, 2\\}$ and $\\{4\\}$ for outputs 1 and 2 respectively.
+Figure 16 shows the resulting output index sets $\\{1, 2\\}$ and $\\{4\\}$ for outputs 1 and 2 respectively.
 These match the analytic Jacobian
 
 $$ J_f(x) = \begin{bmatrix}
@@ -620,17 +620,17 @@ Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Optimal graph coloring.
+    Figure 17: Optimal graph coloring.
 </div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Suboptimal graph coloring. Node 1 could be colored in yellow, leading to redundant computations of matrix-vector products.
+    Figure 18: Suboptimal graph coloring. Node 1 could be colored in yellow.
 </div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}
 <div class="caption">
-    Figure X: Infeasible graph coloring. Nodes 2 and 4 on the graph are adjacent, but share a color. This results in overlapping columns.
+    Figure 19: Infeasible graph coloring. Nodes 2 and 4 are adjacent on the graph, but share a color.
 </div>
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
