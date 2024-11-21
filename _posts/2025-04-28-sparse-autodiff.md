@@ -651,7 +651,7 @@ There are more efficient representations, e.g. *TODO*
 
 ### Greedy algorithm
 
-Unfortunately, the graph coloring problem is NP-hard, meaning that there is (probably) no way to solve it polynomially for every instance.
+Unfortunately, the graph coloring problem is NP-hard, meaning that there currently is no way to solve it polynomially for every instance.
 The optimal solution is known only for specific patterns, such as banded matrices.
 However, efficient heuristics exist that generate good enough solutions in reasonable time.
 The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
