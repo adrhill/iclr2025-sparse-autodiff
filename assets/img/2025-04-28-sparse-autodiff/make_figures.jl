@@ -278,7 +278,7 @@ function draw!(M::DrawBiMatrix, center::Point)
 
     # Apply offset
     xcenter, ycenter = center
-    # Compute upper left edge of matrix
+    # Compute top left edge of matrix
     x0 =
         xcenter - (cols / 2) * (cellsize + padding_inner) + padding_inner / 2 -
         padding_outer
@@ -293,30 +293,52 @@ function draw!(M::DrawBiMatrix, center::Point)
             x = x0 + (j - 1) * (cellsize + padding_inner) + padding_outer
             y = y0 + (i - 1) * (cellsize + padding_inner) + padding_outer
 
+            tl = Point(x, y)
+            tr = Point(x + cellsize, y)
+            bl = Point(x, y + cellsize)
+            br = Point(x + cellsize, y + cellsize)
+
+            ## Column coloring (lower triangle)
+
             # Calculate color based on normalized value
             val = mat[i, j]
             cell_color = convert(HSL, colors_cols[i, j])
             (; h, s, l) = cell_color
-            cell_color_background = cell_bg_color(cell_color, val, absmax)
+            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.4)
 
-            # Draw rectangle
+            # Draw triangle
             setcolor(cell_color_background)
-            rect(Point(x, y), cellsize, cellsize, :fill)
+            poly([tl, tr, br], :fill)
 
             # Draw border
             setline(border_inner)
             setcolor(cell_color)
             iszero(val) && setcolor("lightgray")
-            rect(Point(x, y), cellsize, cellsize, :stroke)
+            poly([tl, tr, br], :stroke)
 
-            # Add text showing matrix value
+            ## Row coloring (upper triangle)
+
+            # Calculate color based on normalized value
+            val = mat[i, j]
+            cell_color = convert(HSL, colors_rows[i, j])
+            (; h, s, l) = cell_color
+            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.4)
+
+            # Draw triangle
+            setcolor(cell_color_background)
+            poly([tl, bl, br], :fill)
+
+            # Draw border
+            setline(border_inner)
+            setcolor(cell_color)
+            iszero(val) && setcolor("lightgray")
+            poly([tl, bl, br], :stroke)
+
+            ## Add text showing matrix value
+
             if show_text
                 fontsize(min(cellsize ÷ 3, 14))
-                if luma(cell_color_background) > 0.6
-                    setcolor(HSL(h, s, 0.15)) # dark
-                else
-                    setcolor(HSL(h, s, 0.95)) # bright
-                end
+                setcolor(HSL(h, s, 0.15)) # dark
                 iszero(val) && setcolor("lightgray")
                 text(
                     mat_text[i, j],
@@ -1220,15 +1242,18 @@ end
 
 function bicoloring()
     setup!()
-    B = zeros(m, n)
-    B[1, :] .= randn(StableRNG(123), n)
-    B[:, 1] .= randn(StableRNG(1234), m)
+    B = [
+        0.519495 0.666885 -1.25661 -0.4849956 1.294274
+        0.90514 0.0 0.0 0.0 0.0
+        1.47566 0.0 0.0 0.0 0.0
+        -1.29473 0.0 0.0 0.0 0.0
+    ]
 
     # All colors:
     # blue, orange, green, purple, lightblue, vermillion, yellow
     colors_rows =
-        repeat(reshape([blue, orange, green, purple, yellow], 1, n), inner = (m, 1))
-    colors_cols = repeat(reshape([purple, green, orange, blue], m, 1), inner = (1, n))
+        repeat(reshape([blue, orange, green, vermillion, lightblue], 1, n), inner = (m, 1))
+    colors_cols = repeat(reshape([purple, orange, green, vermillion], m, 1), inner = (1, n))
 
     DB = DrawBiMatrix(;
         mat = B,
