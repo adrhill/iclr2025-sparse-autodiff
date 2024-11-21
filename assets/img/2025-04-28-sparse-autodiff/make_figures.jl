@@ -181,8 +181,7 @@ function draw!(M::DrawMatrix, center::Point)
             val = mat[i, j]
             cell_color = convert(HSL, mat_colors[i, j])
             (; h, s, l) = cell_color
-            l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.65, 0.65)
-            cell_color_background = HSL(h, s, l_new)
+            cell_color_background = cell_bg_color(cell_color, val, absmax)
 
             # Draw rectangle
             setcolor(cell_color_background)
@@ -220,6 +219,12 @@ function draw!(M::DrawMatrix, center::Point)
     setlinejoin("miter")
     rect(Point(x0, y0), width, height, :stroke)
     return setdash("solid")
+end
+
+function cell_bg_color(cell_color::HSL, val, absmax)
+    (; h, s, l) = cell_color
+    l_new = iszero(val) ? 1.0 : l * scale(abs(val), 0, absmax, 1.65, 0.65)
+    return HSL(h, s, l_new)
 end
 
 luma(c::Colorant) = luma(convert(RGB, c))
@@ -362,6 +367,7 @@ DFdn = DrawMatrix(; mat = F, color = color_F, dashed = true, show_text = true)
 DEq = DrawText(; text = "=")
 DTimes = DrawText(; text = "⋅")
 DCirc = DrawText(; text = "∘")
+DArrow = DrawText(; text = "→")
 
 DJF = DrawOverlay(; text = L"J_{f}(x)", color = color_F)
 DJG = DrawOverlay(; text = L"J_{g}(x)", color = color_G)
@@ -883,7 +889,6 @@ function sparse_ad_forward_decompression()
         show_text = true,
         mat_colors = fill(mc2, m, 1),
     )
-    DArrow = DrawText(; text = "→")
 
     ## Position drawables
     drawables = [DSv1, DSv2, DEq, DS]
@@ -985,7 +990,6 @@ function sparse_ad_reverse_decompression()
         show_text = true,
         mat_colors = fill(mc2, 1, n),
     )
-    DArrow = DrawText(; text = "→")
 
     ## Position drawables
     drawables = [DSv1, DEq, DS]
@@ -1064,13 +1068,6 @@ function forward_mode_sparse()
     for obj in (PFd, PI, PEq1, PFj, PEq2, PP, PDF)
         draw!(obj)
     end
-end
-
-
-function colored_matrix()
-    setup!()
-
-
 end
 
 function colored_graph(column_colors)
