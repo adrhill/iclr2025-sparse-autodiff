@@ -906,5 +906,8 @@ The speedup becomes $100 \times$ once we discard this overhead, which can be amo
 ### Coloring visualization
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
+<div class="caption">
+    Figure 20: Colored Jacobian sparsity patterns of the iterated difference toy problem over growing input dimension $n$ and iterations $k$. 
+</div>
 
 <!-- TODO: add comments -->
