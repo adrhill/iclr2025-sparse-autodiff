@@ -691,7 +691,7 @@ $$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
 
 An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient (a gradient which is itself computed via a VJP of $f$):
 
-$$ \nabla^2 f(x) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
+$$ \nabla^2 f(\mathbf{x}) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
 
 Thus it is quite common to say that HVPs are computed with "forward over reverse" AD.
 The complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
@@ -703,7 +703,7 @@ This specificity can be exploited in the sparsity detection as well as in the co
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
-For instance, if $f(x)$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. 
+For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. 
 On the other hand, a term $x_1 x_2$ will yield two equal non-zero coefficients, one at position $(1, 2)$ and one at position $(2, 1)$.
 Thus, the abstract interpretation system used for detection needs a finer classification of operators, to distinguish between locally linear ones (sum, max) and locally nonlinear ones (product, exp).
 
