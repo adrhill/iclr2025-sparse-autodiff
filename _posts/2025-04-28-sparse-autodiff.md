@@ -729,7 +729,14 @@ It takes a vector $\mathbf{x} \in \mathbb{R}^n$ and outputs a slightly shorter v
 In pure Julia, this is written as follows (using the built-in `diff` recursively):
 
 ```julia
-iter_diff(x, k) = k == 0 ? x : diff(iter_diff(x, k-1))
+function iter_diff(x, k)
+    if k == 0
+        return x
+    else
+        y = iter_diff(x, k - 1)
+        return diff(y)
+    end
+end
 ```
 
 Let us check that the function returns what we expect:
@@ -747,7 +754,7 @@ julia> iter_diff([1, 4, 9, 16], 2)
  2
 ```
 
-### Dense Jacobian
+### Backend switch
 
 The key concept behind DifferentiationInterface.jl is that of *backends*.
 There are several AD systems in Julia, each with different features and tradeoff, that can be accessed them through a common API.
@@ -849,41 +856,55 @@ julia> ncolors(prep)
 4
 ```
 
-This discrepancy typically gets larger as the input grows: it is not rare for the number of columns to be a constant that does not depend on $n$.
-It is the key driver of ASD performance.
+### Coloring visualization
+
+We just saw that there is a discrepancy between the number of different colors $c$ and the input size $n$.
+This discrepancy typically gets larger as the input grows.
+The larger the ratio $n / c$, the more useful ASD will be.
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
+<div class="caption">
+    Figure ??: Coloring numbers are often agnostic to the input size.  
+</div>
+
+On Figure ??, we see the Jacobians of `iter_diff` for several values of $n$ and $k$.
+The main takeaway is that the number of colors does not depend on the dimension $n$, only on the number of iterations $k$.
+In fact, `iter_diff` with $k$ iterations gives rise to a banded Jacobian with $k+1$ bands, for which we know that the optimal coloring uses as many colors as bands.
+For this particular case, the greedy coloring finds the optimal solution.
 
 ### Performance benefits
 
-Here we present a benchmark for a slightly larger input, $n = 1000$ and $k = 10$.
-It can be obtained with the following code:
+Here we present a benchmark for the Jacobian of `iter_diff` with varying $n$ and fixed $k$.
+Our goal is to find out when ASD becomes more advantageous than standard AD.
+
+Benchmark data can be generated with the following code:
 
 ```julia
 using DifferentiationInterfaceTest
-scen = Scenario{:jacobian,:out}(iter_diff, rand(1000); contexts=(Constant(10),))
-data = benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
+scenarios = [
+    Scenario{:jacobian, :out}(iter_diff, rand(n); contexts=(Constant(k),))
+    for n in round.(Int, 10 .^ (0:0.3:4))
+]
+data = benchmark_differentiation(
+    [dense_backend, sparse_backend],
+    scenarios;
+    benchmark=:full
+)
 ```
 
-In the table below:
+It gives rise to the following performance curves (lower is better):
 
-- the column "sparse" tells us which backend we are using
-- the column "prepared" tells us whether or not preparation is included in the measurements (for dense AD preparation is essentially trivial)
-- the column "time" contains the execution time in seconds
-- the column "bytes" contains the allocated memory in bytes
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/benchmark.png" class="img-fluid" %}
+<div class="caption">
+    Figure ??: Performance benefits of sparsity  
+</div>
 
-| **sparse** | **prepared** | **time**  | **bytes** |
-|-----------:|-------------:|----------:|----------:|
-| false      | true         | 2.732e-02 | 1.679e+08 |
-| false      | false        | 2.183e-02 | 1.679e+08 |
-| true       | true         | 1.923e-04 | 1.943e+06 |
-| true       | false        | 2.995e-03 | 1.323e+07 |
+As we can see on Figure ??, there are three main regimes:
 
-<!-- TODO: update benchmarks to new function (re-run Pluto) -->
+1. For very small inputs, we gain nothing by leveraging sparsity.
+2. For medium-sized inputs, sparsity handling is only useful if we can amortize the cost of detection and coloring.
+3. For very large inputs, even the overhead of detection and coloring does not prevent a large speedup.
 
-As you can see, even when we include the overhead of pattern detection and coloring, the sparse backend is around $5 \times$ faster than the dense backend.
-The speedup becomes $100 \times$ once we discard this overhead, which can be amortized over several `jacobian` computations.
-
-### Coloring visualization
-
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
+Although the specific thresholds between regimes are problem-dependent, these conclusions hold in general.
 
 <!-- TODO: add comments -->
