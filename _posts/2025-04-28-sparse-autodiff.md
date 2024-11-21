@@ -860,7 +860,7 @@ julia> ncolors(prep)
 
 We just saw that there is a discrepancy between the number of different colors $c$ and the input size $n$.
 This discrepancy typically gets larger as the input grows.
-The larger the ratio $n / c$, the more useful ASD will be.
+The larger the ratio $n / c$, the more useful it will be to leverage sparsity.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
 <div class="caption">
@@ -875,7 +875,7 @@ For this particular case, the greedy coloring finds the optimal solution.
 ### Performance benefits
 
 Here we present a benchmark for the Jacobian of `iter_diff` with varying $n$ and fixed $k$.
-Our goal is to find out when ASD becomes more advantageous than standard AD.
+Our goal is to find out when sparse differentiation becomes relevant.
 
 Benchmark data can be generated with the following code:
 
@@ -906,5 +906,10 @@ As we can see on Figure ??, there are three main regimes:
 3. For very large inputs, even the overhead of detection and coloring does not prevent a large speedup.
 
 Although the specific thresholds between regimes are problem-dependent, these conclusions hold in general.
+
+Importantly, sparsity can yield an asymptotic speedup and not just a constant one.
+Indeed, the cost of a JVP for `iter_diff` scales with $kn$.
+Sparse differentiation requires $c$ JVPs instead of $n$, so its total cost scales as $\Theta(k^2 n)$ instead of $\Theta(k n^2)$.
+That explains why, on the log-log plot of Figure ??, the sparse curve (without detection) has a slope of $1$ while the standard curve has a slope of $2$.
 
 <!-- TODO: add comments -->

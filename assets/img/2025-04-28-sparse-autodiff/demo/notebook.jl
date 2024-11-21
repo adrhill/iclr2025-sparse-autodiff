@@ -49,6 +49,7 @@ sparse_backend = AutoSparse(dense_backend; sparsity_detector, coloring_algorithm
 
 # ╔═╡ bdee9467-d648-445b-a094-e50fa70e8a22
 function iter_diff(x, k)
+	@assert length(x) >= k
     if k == 0
         return x
     else
@@ -122,7 +123,7 @@ data = let
 	k = 10
 	scens = [
 		Scenario{:jacobian, :out}(iter_diff, rand(n); contexts=(Constant(k),))
-		for n in round.(Int, 10 .^ (0:0.3:4))
+		for n in round.(Int, 10 .^ (1:0.3:4))
 	]
 	data = benchmark_differentiation([dense_backend, sparse_backend], scens; benchmark=:full)
 	data = @chain data begin
