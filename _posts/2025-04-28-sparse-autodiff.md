@@ -727,7 +727,7 @@ We also use a few other packages for visualization.
 - [SparseConnectivityTracer.jl](https://github.com/adrhill/SparseConnectivityTracer.jl) <d-cite key="hillSparseConnectivityTracerjl2024"></d-cite>: Sparsity pattern detection with operator overloading.
 - [SparseMatrixColorings.jl](https://github.com/gdalle/SparseMatrixColorings.jl) <d-cite key="dalleGdalleSparseMatrixColoringsjlV04102024"></d-cite>: Greedy algorithms for colorings, decompression utilities. 
 - [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) <d-cite key="revelsForwardModeAutomaticDifferentiation2016"></d-cite>: Forward-mode AD and computation of JVPs.
-| [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) <d-cite key="dalleJuliaDiffDifferentiationInterfacejlDifferentiationInterfacev06232024"></d-cite>: High-level interface bringing all of these together.
+- [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) <d-cite key="dalleJuliaDiffDifferentiationInterfacejlDifferentiationInterfacev06232024"></d-cite>: High-level interface bringing all of these together.
 
 This modular pipeline comes as a replacement and extension of a previous ASD system in Julia <d-cite key="gowdaSparsityProgrammingAutomated2019"></d-cite>.
 
