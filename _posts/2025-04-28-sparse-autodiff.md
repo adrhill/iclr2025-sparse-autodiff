@@ -27,7 +27,6 @@ hidden: false
 # TODO before submission:
 # - revert CI workflows
 # - check correct figure caption numbering and references
-# - check accessibility – color-blindness
 # - check correct rendering of SVGs on multiple browsers
 
 authors:
@@ -71,6 +70,14 @@ toc:
     - name: Pattern detection
     - name: Symmetric coloring
   - name: Demonstration
+    subsections:
+    - name: Necessary packages
+    - name: Test function
+    - name: Dense Jacobian
+    - name: Preparation
+    - name: Performance benefits
+    - name: Coloring visualization
+
 
 # Below is an example of injecting additional post-specific styles.
 # This is used in the 'Layouts' section of this post.
