@@ -1,9 +1,7 @@
 ---
 layout: distill
 title: An Illustrated Guide to Automatic Sparse Differentiation
-description: Your blog post's abstract.
-  Please add your abstract or summary here and not in the main body of your text. 
-  Do not include math/latex or hyperlinks.
+description: While traditional AD is well-integrated into high-level programming languages, automatic sparse differentiation (ASD) remains underutilized due to its origins in low-level programming research and graph theory. This post demystifies ASD by explaining its key components, such as sparsity pattern detection, matrix coloring, and their roles in the computation of both sparse Jacobians and Hessians. We conclude with a practical demonstration showcasing the performance benefits of ASD.
 date: 2025-04-28
 future: true
 htmlwidgets: true
@@ -73,10 +71,10 @@ toc:
     subsections:
     - name: Necessary packages
     - name: Test function
-    - name: Dense Jacobian
+    - name: Backend switch
     - name: Preparation
-    - name: Performance benefits
     - name: Coloring visualization
+    - name: Performance benefits
 
 
 # Below is an example of injecting additional post-specific styles.
@@ -151,8 +149,8 @@ The intuitive reason is that large gradients are cheap, whereas large Hessian ma
 Luckily, in numerous applications of ML to science or engineering, **Hessians and Jacobians exhibit sparsity**:
 most of their coefficients are known to be zero.
 Leveraging this sparsity can vastly **accelerate Automatic Differentiation** (AD) for Hessians and Jacobians,
-while decreasing its memory requirements.
-Yet, while traditional AD is available in many high-level programming languages,
+while decreasing its memory requirements <d-cite key="griewankEvaluatingDerivativesPrinciples2008"></d-cite>.
+Yet, while traditional AD is available in many high-level programming languages like Python <d-cite key="paszkePyTorchImperativeStyle2019"></d-cite> <d-cite key="bradburyJAXComposableTransformations2018"></d-cite> or Julia <d-cite key="sapienzaDifferentiableProgrammingDifferential2024"></d-cite>,
 **automatic sparse differentiation (ASD) is not as widely used**.
 One reason is that the underlying theory was developed outside of the ML research ecosystem,
 by people more familiar with low-level programming languages.
@@ -171,6 +169,7 @@ providing performance benchmarks and guidance on when to use ASD over AD.
 ## Automatic Differentiation
 
 Let us start by covering the fundamentals of traditional AD.
+The reader can find more details in the recent book by Blondel and Roulet <d-cite key="blondelElementsDifferentiableProgramming2024"></d-cite>.
 
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
 To make things simple, we will mainly look at a differentiable function $f$
@@ -184,7 +183,7 @@ For ease of visualization, we work in small dimension, but the real benefits of 
 For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
 the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, such that the $(i,j)$-th entry is
 
-$$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \quad . $$
+$$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR . $$
 
 For a composed function 
 
@@ -192,7 +191,7 @@ $$ \colorf{f} = \colorh{h} \circ \colorg{g}, $$
 
 the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
 
-$$ \Jfc = \Jhc \cdot \Jgc \quad .$$
+$$ \Jfc = \Jhc \cdot \Jgc .$$
 
 Figure 1 illustrates this for $n=5$, $m=4$ and $p=3$.
 We will keep using these dimensions in following illustrations.
@@ -324,7 +323,7 @@ this requires one VJP with each of the $m$ standard basis vectors of the **outpu
 
 <aside class="l-body box-note" markdown="1">
 Since neural networks are usually trained using scalar loss functions,
-reverse-mode AD only requires the evaluation of a single VJP to compute a gradient.
+reverse-mode AD only requires the evaluation of a single VJP to compute a gradient, which is rather cheap (as highlighted by Baur and Strassen <d-cite key="baurComplexityPartialDerivatives1983"></d-cite>).
 This makes it the method of choice for machine learners,
 who typically refer to reverse-mode AD as *backpropagation*.
 </aside>
@@ -360,11 +359,11 @@ for which the Jacobian is the identity matrix.
 
 For now, we assume that the sparsity pattern of the Jacobian is always the same, regardless of the input, and that we know it ahead of time.
 We say that two columns or rows of the Jacobian matrix are orthogonal if, for every index, at most one of them has a nonzero coefficient.
-
 In other words, the vectors representing their sparsity patterns are structurally orthogonal.
 The dot product between these vectors is always zero, regardless of their values.
 
 **The core idea of ASD is that we can materialize multiple orthogonal columns (or rows) in a single product evaluation.**
+This trick was first suggested in 1974 by Curtis, Powell and Reid <d-cite key="curtisEstimationSparseJacobian1974"></d-cite>.
 Since linear maps are additive, it always holds that for a set of basis vectors (columns of the identity matrix),
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
@@ -458,26 +457,25 @@ To sum up, ASD consists of four steps:
 3. Compressed AD
 4. Decompression
 
-We now describe the first two steps in more detail.
-Usually, these steps are much slower than a single call to the function $f$, but much faster than a full computation of the Jacobian with AD.
+This compression-based pipeline is described at length by Gebremedhin, Manne and Pothen <d-cite key="gebremedhinWhatColorYour2005"></d-cite> in their landmark survey, or in Chapter 8 of the book by Griewank and Walther <d-cite key="griewankEvaluatingDerivativesPrinciples2008"></d-cite>.
+An alternative, direct pipeline is presented in Chapter 7 of the same book.
+
+We now discuss the first two steps in more detail.
+These steps can be much slower than a single call to the function $f$, but they are usually much faster than a full computation of the Jacobian with AD.
 This makes the sparse procedure worth it even for moderately large matrices.
 Additionally, if we need to compute Jacobians multiple times (for different inputs) and are able to reuse the sparsity pattern and the coloring result, 
 the cost of this prelude can be amortized over time.
 
 ## Pattern detection
 
-Sparsity pattern detection can be thought of as a binary version of AD.
 Mirroring the diversity of existing approaches to AD,
 there are also many possible approaches to sparsity pattern detection,
 each with their own advantages and tradeoffs.
+The work of Dixon <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> in the 1990's was the first of many papers on this subject, most of which can be classified into operator overloading or source transformation techniques.
+There are also ways to detect a sparsity pattern by probing the Jacobian with standard AD<d-cite key="griewankDetectingJacobianSparsity2002"></d-cite> but we do not linger on them here.
 
-The method we will present here corresponds to a binary forward-mode AD system. 
+The method we present corresponds to a binary version of a forward-mode AD system, similar in spirit to <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> and <d-cite key="bischofEfficientComputationGradients1996"></d-cite>,
 in which performance is gained by representing matrix rows as index sets.
-
-<aside class="l-body box-note" markdown="1">
-<!-- TODO: cite a wide list of approaches here -->
-Alternatives include Bayesian probing, ... *TODO* 
-</aside>
 
 ### Index sets
 
@@ -600,13 +598,6 @@ These *local sparsity patterns* are strict subsets of global sparsity patterns,
 and can therefore result in fewer colors.
 However, they need to be recomputed when changing the input.
 
-### Partial separability
-
-When we know in advance that the function has partial separability,
-sparsity pattern detection becomes significantly more efficient.
-Partial separability means that the function can be decomposed into independent or weakly dependent subcomponents, often corresponding to blocks in the Jacobian matrix.
-This structure allows the sparsity pattern to be identified separately for each block, rather than considering the full Jacobian matrix as a whole.
-
 ## Coloring
 
 Once we have detected a sparsity pattern, our next goal is to figure out how to group the columns (or rows) of the Jacobian.
@@ -619,6 +610,7 @@ Luckily, this can be reformulated as a graph coloring problem, which is very wel
 Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set $\mathcal{V}$ and edge set $\mathcal{E}$, 
 such that each column is a vertex of the graph, and two vertices are connected if and only if their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
+There are more efficient graph representations <d-cite key="gebremedhinWhatColorYour2005"></d-cite> but here we pick the simplest one.
 
 We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
 This constraint ensures that columns in the same color group are indeed orthogonal.
@@ -646,11 +638,6 @@ Figure 19 shows an infeasible graph coloring: Nodes 2 and 4 on the graph are adj
 
 If we perform column coloring, forward-mode AD is required, while reverse-mode AD is needed for row coloring.
 
-<aside class="l-body box-note" markdown="1">
-<!-- TODO -->
-There are more efficient representations, e.g. *TODO*
-</aside>
-
 ### Greedy algorithm
 
 Unfortunately, the graph coloring problem is NP-hard, meaning that there currently is no way to solve it polynomially for every instance.
@@ -658,14 +645,13 @@ The optimal solution is known only for specific patterns, such as banded matrice
 However, efficient heuristics exist that generate good enough solutions in reasonable time.
 The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
 This algorithm assigns to each vertex the smallest color that is not already present among its neighbors, and it never backtracks.
-A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed.
-
+A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
 
 ### Bicoloring
 
-More advanced coloring techniques can use both modes, such as **bicoloring**.
+A more advanced coloring technique called **bicoloring** allows combining forward and reverse modes, because the recovery of the Jacobian leverages both columns (JVPs) and rows (VJPs) <d-cite key="hossainComputingSparseJacobian1998"></d-cite> <d-cite key="colemanEfficientComputationSparse1998"></d-cite>.
 
-<!-- TODO -->
+<!-- TODO: this will be Figure 20 -->
 *TODO*
 
 
@@ -683,16 +669,18 @@ This is especially useful in **nonlinear optimization problems**.
 ### Hessian-vector products
 
 In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
-The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
+The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient operator $\nabla f(\mathbf{x})$:
 
 $$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
 
-An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient (a gradient which is itself computed via a VJP of $f$):
+An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient (a gradient which is itself computed via a VJP of $f$).
 
 $$ \nabla^2 f(\mathbf{x}) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
 
-Thus it is quite common to say that HVPs are computed with "forward over reverse" AD.
-The complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
+HVPs are generally computed with "forward over reverse" AD for speed.
+Note that other combinations are possible, such as "forward over forward", which have a higher complexity but are less expensive in terms of storage.
+In most combinations, the complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
+Efficient HVPs were first considered by Pearlmutter <d-cite key="pearlmutterFastExactMultiplication1994"></d-cite> and recently revisited in a 2024 ICLR blog post <d-cite key="dagreouHowComputeHessianvector2024"></d-cite>.
 
 The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
 This specificity can be exploited in the sparsity detection as well as in the coloring phase.
@@ -701,6 +689,7 @@ This specificity can be exploited in the sparsity detection as well as in the co
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** in the compute graph.
+The operator overloading method of Walther <d-cite key="waltherComputingSparseHessians2008"></d-cite> was a pioneering effort towards Hessian sparsity detection, but more efficient alternatives quickly emerged <d-cite key="gowerNewFrameworkComputation2012">.
 
 For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian.
 However, we cannot ignore this term, since multiplying it with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
@@ -715,17 +704,19 @@ When it comes to **graph coloring** for the Hessian, the process can be more eff
 Even if two columns in the Hessian are not orthogonal, missing coefficients can be recovered by leveraging the corresponding rows instead of relying solely on the columns.
 In other words, if $H_{ij}$ is lost during compression because of colliding nonzero coefficients, there is still a chance to retrieve it through $H_{ji}$.
 This symmetry enables **colorings with fewer colors**, reducing the complexity of the AD part compared to traditional row or column coloring.
+Powell and Toint <d-cite key="powellEstimationSparseHessian1979"></d-cite> were the first to notice symmetry-related optimizations, before Coleman and Moré <d-cite key="colemanEstimationSparseHessian1984"></d-cite> made the connection to graph coloring explicit.
 
 While the **decompression** step for symmetric coloring is more computationally expensive, this cost is typically negligible compared to the overhead of computing HVPs.
 Moreover, symmetric coloring becomes especially advantageous when the Hessian needs to be recomputed for multiple values of $x$, as the reduced number of colors amortizes the initial expense.
 
 ## Demonstration
 
-We conclude this blog post with a demonstration of automatic sparse differentiation in a high-level programming language, namely the [Julia language](https://julialang.org/).
+We conclude this blog post with a demonstration of automatic sparse differentiation in a high-level programming language, namely the [Julia language](https://julialang.org/) <d-cite key="bezansonJuliaFreshApproach2017"></d-cite>.
 While still at an early stage of development, we hope that such an example of unified pipeline for sparse Jacobians and Hessians can inspire developers in other languages to revisit ASD.
 
 <aside class="l-body box-note" markdown="1">
 The authors of this blog post are all developers of the ASD ecosystem in Julia. We are not aware of a similar ecosystem in Python or R, which is why we chose Julia to present it.
+The closest counterpart we know is coded in C, namely the combination of ADOL-C <d-cite key="waltherGettingStartedADOLC2009"></d-cite> and ColPack <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
 </aside>
 
 ### Necessary packages
@@ -733,12 +724,12 @@ The authors of this blog post are all developers of the ASD ecosystem in Julia. 
 Here are the packages we will use for this demonstration.
 We also use a few other packages for visualization.
 
-| Package | Purpose |
-|---|---|
-| [SparseConnectivityTracer.jl](https://github.com/adrhill/SparseConnectivityTracer.jl) | Sparsity pattern detection with operator overloading. |
-| [SparseMatrixColorings.jl](https://github.com/gdalle/SparseMatrixColorings.jl) | Greedy algorithms for colorings, decompression utilities. |
-| [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) | Forward-mode AD and computation of JVPs. |
-| [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) | High-level interface bringing all of these together. |
+- [SparseConnectivityTracer.jl](https://github.com/adrhill/SparseConnectivityTracer.jl) <d-cite key="hillSparseConnectivityTracerjl2024"></d-cite>: Sparsity pattern detection with operator overloading.
+- [SparseMatrixColorings.jl](https://github.com/gdalle/SparseMatrixColorings.jl) <d-cite key="dalleGdalleSparseMatrixColoringsjlV04102024"></d-cite>: Greedy algorithms for colorings, decompression utilities. 
+- [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) <d-cite key="revelsForwardModeAutomaticDifferentiation2016"></d-cite>: Forward-mode AD and computation of JVPs.
+- [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) <d-cite key="dalleJuliaDiffDifferentiationInterfacejlDifferentiationInterfacev06232024"></d-cite>: High-level interface bringing all of these together.
+
+This modular pipeline comes as a replacement and extension of a previous ASD system in Julia <d-cite key="gowdaSparsityProgrammingAutomated2019"></d-cite>.
 
 As with any language, the first step is importing the dependencies.
 
@@ -755,11 +746,12 @@ It takes a vector $\mathbf{x} \in \mathbb{R}^n$ and outputs a slightly shorter v
 In pure Julia, this is written as follows (using the built-in `diff` recursively):
 
 ```julia
-function iter_diff(x, k) 
-    if k == 0 
-        return x 
+function iter_diff(x, k)
+    if k == 0
+        return x
     else
-        return diff(iter_diff(x, k-1))
+        y = iter_diff(x, k - 1)
+        return diff(y)
     end
 end
 ```
@@ -779,9 +771,9 @@ julia> iter_diff([1, 4, 9, 16], 2)
  2
 ```
 
-### Dense Jacobian
+### Backend switch
 
-The key concept behind DifferentiationInterface.jl is that of *backends*.
+The key concept behind DifferentiationInterface.jl is that of **backends**.
 There are several AD systems in Julia, each with different features and tradeoff, that can be accessed them through a common API.
 Here, we use ForwardDiff.jl as our AD backend:
 
@@ -829,12 +821,12 @@ We now show that sparsity also unlocks faster computation of the Jacobian itself
 
 ### Preparation
 
-Sparsity pattern detection and matrix coloring are performed in a so-called "preparation step", whose output can be reused across several calls to `jacobian` (as long as the pattern stays the same).
+Sparsity pattern detection and matrix coloring are performed in a so-called "preparation step", whose output can be **reused across several calls** to `jacobian` (as long as the pattern stays the same).
 
 Thus, to extract more performance, we can create this object once
 
 ```julia
-prep = prepare_jacobian(iter_diff, sparse_backend, x, Constant(k));
+prep = prepare_jacobian(iter_diff, sparse_backend, x, Constant(k))
 ```
 
 and then reuse it as much as possible, for instance inside the loop of an iterative algorithm (note the additional `prep` argument):
@@ -881,44 +873,70 @@ julia> ncolors(prep)
 4
 ```
 
-This discrepancy typically gets larger as the input grows: it is not rare for the number of columns to be a constant that does not depend on $n$.
-It is the key driver of ASD performance.
-
-### Performance benefits
-
-Here we present a benchmark for a slightly larger input, $n = 1000$ and $k = 10$.
-It can be obtained with the following code:
-
-```julia
-using DifferentiationInterfaceTest
-scen = Scenario{:jacobian,:out}(iter_diff, rand(1000); contexts=(Constant(10),))
-data = benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
-```
-
-In the table below:
-
-- the column "sparse" tells us which backend we are using
-- the column "prepared" tells us whether or not preparation is included in the measurements (for dense AD preparation is essentially trivial)
-- the column "time" contains the execution time in seconds
-- the column "bytes" contains the allocated memory in bytes
-
-| **sparse** | **prepared** | **time**  | **bytes** |
-|-----------:|-------------:|----------:|----------:|
-| false      | true         | 2.732e-02 | 1.679e+08 |
-| false      | false        | 2.183e-02 | 1.679e+08 |
-| true       | true         | 1.923e-04 | 1.943e+06 |
-| true       | false        | 2.995e-03 | 1.323e+07 |
-
-<!-- TODO: update benchmarks to new function (re-run Pluto) -->
-
-As shown in the table, even when we include the overhead of pattern detection and coloring, the sparse backend is around $5 \times$ faster than the dense backend.
-The speedup becomes $100 \times$ once we discard this overhead, which can be amortized over several `jacobian` computations.
-
 ### Coloring visualization
+
+We just saw that there is a discrepancy between the number of different colors $c$ and the input size $n$.
+This ratio $n / c$ typically gets larger as the input grows, which makes sparse differentiation more and more competitive.
+
+We illustrate this with the Jacobians of `iter_diff` for several values of $n$ and $k$:
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/banded.png" class="img-fluid" %}
 <div class="caption">
-    Figure 20: Colored Jacobian sparsity patterns of the iterated difference toy problem over growing input dimension $n$ and iterations $k$. 
+    Figure 21: Coloring numbers are often agnostic to the input size.  
 </div>
 
-<!-- TODO: add comments -->
+The main takeaway of Figure 21 is that **the number of colors does not depend on the dimension** $n$, only on the number of iterations $k$.
+In fact, `iter_diff` with $k$ iterations gives rise to a banded Jacobian with $k+1$ bands, for which we can easily verify that the optimal coloring uses as many colors as bands, i.e. $c = k+1$.
+For this particular case, the greedy coloring happens to find the optimal solution.
+
+### Performance benefits
+
+Here we present a benchmark for the Jacobian of `iter_diff` with varying $n$ and fixed $k$.
+Our goal is to find out when sparse differentiation becomes relevant.
+Benchmark data can be generated with the following code:
+
+```julia
+using DifferentiationInterfaceTest
+scenarios = [
+    Scenario{:jacobian, :out}(iter_diff, rand(n); contexts=(Constant(k),))
+    for n in round.(Int, 10 .^ (0:0.3:4))
+]
+data = benchmark_differentiation(
+    [dense_backend, sparse_backend],
+    scenarios;
+    benchmark=:full
+)
+```
+
+It gives rise to the following performance curves (lower is better):
+
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/benchmark.png" class="img-fluid" %}
+<div class="caption">
+    Figure 22: Performance benefits of sparsity  
+</div>
+
+As we can see on Figure 22, there are three main regimes:
+
+1. For very small inputs, we gain nothing by leveraging sparsity.
+2. For medium-sized inputs, sparsity handling is only useful if we can amortize the cost of detection and coloring.
+3. For very large inputs, even the overhead of detection and coloring is worth paying as part of a sparse Jacobian computation.
+
+Importantly, sparsity can yield an **asymptotic speedup** and not just a constant one.
+Indeed, the cost of a JVP for `iter_diff` scales with $kn$.
+Sparse differentiation requires $c$ JVPs instead of $n$, so with $c = k+1$ here its total cost scales as $\Theta(k^2 n)$ instead of $\Theta(k n^2)$.
+Thus, on the log-log plot of Figure 22, the sparse curve (without detection) has a slope of $1$ while the standard curve has a slope of $2$.
+
+Although the specific thresholds between regimes are problem-dependent, our conclusions hold in general.
+
+## Conclusion
+
+*TODO*
+
+When to use sparse AD? List of criteria.
+
+...
+
+Another importand aspect is the sparsity pattern of the matrix at hand, which directly influences the cost of detection, coloring and compressed differentiation.
+While it may be hard to get an exaxt estimate in realistic cases, concepts such as **partial separability** provide simple scenarios where the asymptotic complexity can be controlled explicitly <d-cite key="gowerComputingSparsityPattern2014"></d-cite>.
+
+...

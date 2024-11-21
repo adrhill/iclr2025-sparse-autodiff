@@ -42,20 +42,20 @@ sparsity_detector = TracerSparsityDetector()
 coloring_algorithm = GreedyColoringAlgorithm(NaturalOrder())
 
 # ╔═╡ 7a0eff2b-3ec0-4b68-8266-d421a5340281
-dense_backend = AutoForwardDiff(; chunksize=1)
+dense_backend = AutoForwardDiff()
 
 # ╔═╡ 4642cb88-b9f7-4600-977f-afbc2b72cf00
 sparse_backend = AutoSparse(dense_backend; sparsity_detector, coloring_algorithm)
 
-# ╔═╡ 7ec5ba2c-791b-4af1-9bfd-18c19420e60d
-md"""
-## Example
-"""
-
 # ╔═╡ bdee9467-d648-445b-a094-e50fa70e8a22
-begin
-	iterated_diff_aux(x, n) = n == 0 ? x : diff(iterated_diff_aux(x, n-1))
-	iterated_diff(n) = Base.Fix2(iterated_diff_aux, n)
+function iter_diff(x, k)
+	@assert length(x) >= k
+    if k == 0
+        return x
+    else
+        y = iter_diff(x, k - 1)
+        return diff(y)
+    end
 end
 
 # ╔═╡ 37ab0095-b368-4307-bc96-7e948d3998ba
@@ -64,30 +64,45 @@ md"""
 """
 
 # ╔═╡ faf3766b-d6a1-435e-b830-19509209376f
-function visualize_diff(d, n)
-	prep = prepare_jacobian(iterated_diff(d), sparse_backend, rand(n))
+function visualize_diff(k, n)
+	prep = prepare_jacobian(iter_diff, sparse_backend, rand(n), Constant(k))
 	result = prep.coloring_result
 	colorscheme = get(ColorSchemes.rainbow, range(0.0, 1.0, length=ncolors(result)))
 	A_img, B_img = show_colors(prep.coloring_result; colorscheme, scale=20, pad=2)
-	return A_img
+	return result, A_img, B_img
 end
 
 # ╔═╡ 7dc403b3-dce7-43ac-911b-a022f81c9bd3
-visualize_diff(3, 10)
+visualize_diff(3, 10)[2]
 
 # ╔═╡ 8197f7fb-e02f-4c61-b94c-3409629988ec
 fig = let
-	fig = Figure()
-	d_vals = (3, 10, 20)
-	n_vals = (10, 20, 50)
-	for (i, d) in enumerate(d_vals), (j, n) in enumerate(n_vals)
-		if d < n
-			ax = Axis(fig[i, j], title=L"k=%$d ~~~ n=%$n")
+	fig = Figure(size=(600, 600))
+	k_vals = (2, 4, 6)
+	n_vals = (10, 20, 40)
+	Label(fig[0, 1:length(n_vals)], L"\text{Colored Jacobians of iterated finite differences}", tellwidth=false)
+	Label(fig[length(k_vals)+2, 1:length(n_vals)], L"\text{Input dimension}", tellwidth=false)
+	Label(fig[1:length(k_vals),-1], L"\text{Fnite difference iterations}", tellheight=false, rotation=π/2)
+	for (i, k) in enumerate(k_vals)
+		Label(fig[i, 0], L"k=%$k", tellheight=false, rotation=π/2)
+	end
+	for (j, n) in enumerate(n_vals)
+		Label(fig[length(k_vals)+1,j], L"n=%$n", tellwidth=false)
+	end
+	axes = Dict()
+	for (j, n) in enumerate(n_vals)
+		for (i, k) in enumerate(k_vals)
+			k < n || continue
+			result, A_img, B_img = visualize_diff(k, n)
+			c = ncolors(result)
+			ax = Axis(fig[i, j], aspect=n / (n-k))
 			hidedecorations!(ax)
-			img = visualize_diff(d, n)
-			a, b = size(img)
-			img_rot = [img[1 + a - i, j] for j in 1:b, i in 1:a]
+			axes[n, k] = ax
+			linkxaxes!(ax, axes[n, minimum(k_vals)])
+			a, b = size(A_img)
+			img_rot = [A_img[1 + a - i, j] for j in 1:b, i in 1:a]
 			image!(ax, img_rot)
+			text!(ax, size(img_rot, 1) / 100, size(img_rot, 1) / 100, text=L"c=%$c")
 		end
 	end
 	save("banded.png", fig)
@@ -99,53 +114,40 @@ md"""
 ## Benchmark
 """
 
+# ╔═╡ 829df251-5fae-44f1-b3fd-fad814c3d752
+
+
 # ╔═╡ 51f9cf6b-1323-44e6-9654-c6818f5684b3
 # ╠═╡ show_logs = false
-prep_data, jac_data = let
-	scen = Scenario{:jacobian, :out}(iterated_diff(10), rand(1000))
-	data = benchmark_differentiation([dense_backend, sparse_backend], [scen]; benchmark=:full)
-	@rtransform!(data, :sparse = isa(:backend, AutoSparse))
-	select!(data, [:sparse, :operator, :prepared, :time, :bytes])
-	prep_data = @chain data begin
-		@rsubset(string(:operator) == "prepare_jacobian")
-		select([:sparse, :time, :bytes])
+data = let
+	k = 10
+	scens = [
+		Scenario{:jacobian, :out}(iter_diff, rand(n); contexts=(Constant(k),))
+		for n in round.(Int, 10 .^ (1:0.3:4))
+	]
+	data = benchmark_differentiation([dense_backend, sparse_backend], scens; benchmark=:full)
+	data = @chain data begin
+		@rsubset(:operator == Symbol("jacobian"))
+		@rtransform!(:sparse = isa(:backend, AutoSparse))
+		@rtransform(:n = length(getfield(:scenario, Symbol("x"))))
+		@orderby(:n)
 	end
-	jac_data = @chain data begin
-		@rsubset(string(:operator) == "jacobian")
-		select([:sparse, :prepared, :time, :bytes])
-	end
-	prep_data, jac_data
-end;
-
-# ╔═╡ 1c17d37a-9923-40e2-9c14-3a40b1e611b6
-prep_data
-
-# ╔═╡ e8c1b1df-7cda-4552-b38f-3ec9f54f89ec
-jac_data
-
-# ╔═╡ feca89b4-8e42-4a66-826e-73a2b95c78f2
-formatter = ft_printf("%5.3f")
-
-# ╔═╡ f1ff0ee8-c863-4bf6-8753-f53727d77c9a
-open("prep_benchmark.md", "w") do io
-	pretty_table(
-		io,
-		prep_data;
-		backend=Val(:markdown),
-		header=names(prep_data),
-		formatters=ft_printf("%.3e", [2, 3]),
-	)
+	data
 end
 
-# ╔═╡ 0b1eb745-5b95-4c85-ac36-9b9f0deba2c6
-open("jac_benchmark.md", "w") do io
-	pretty_table(
-		io,
-		jac_data;
-		backend=Val(:markdown),
-		header=names(jac_data),
-		formatters=ft_printf("%.3e", [3, 4]),
-	)
+# ╔═╡ 2b332332-0104-4749-b06b-3cc1789e60bd
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1], xlabel=L"Input dimension $n$, with constant $k=10$", ylabel=L"\text{Execution time (s)}", xscale=log10, yscale=log10)
+	sparse_prep = @rsubset(data, :sparse && :prepared)
+	sparse_noprep = @rsubset(data, :sparse && !:prepared)
+	dense = @rsubset(data, !:sparse && :prepared)
+	scatterlines!(ax, dense[!, :n], dense[!, :time], linewidth=2, label=L"\text{standard}")
+	scatterlines!(ax, sparse_noprep[!, :n], sparse_noprep[!, :time], linestyle=:dash, linewidth=2, label=L"\text{sparse (including detection and coloring)}")
+	scatterlines!(ax, sparse_prep[!, :n], sparse_prep[!, :time], linestyle=:dot, linewidth=2, label=L"\text{sparse (excluding detection and coloring)}")
+	axislegend(position=:lt)
+	save("benchmark.png", fig)
+	fig
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2440,18 +2442,14 @@ version = "3.6.0+0"
 # ╠═6712cd6a-f07d-40de-a2ed-d2f6a35e8861
 # ╠═7a0eff2b-3ec0-4b68-8266-d421a5340281
 # ╠═4642cb88-b9f7-4600-977f-afbc2b72cf00
-# ╟─7ec5ba2c-791b-4af1-9bfd-18c19420e60d
 # ╠═bdee9467-d648-445b-a094-e50fa70e8a22
 # ╟─37ab0095-b368-4307-bc96-7e948d3998ba
 # ╠═faf3766b-d6a1-435e-b830-19509209376f
 # ╠═7dc403b3-dce7-43ac-911b-a022f81c9bd3
 # ╠═8197f7fb-e02f-4c61-b94c-3409629988ec
 # ╟─e0c0f329-83f9-4485-9937-73afc110511c
+# ╠═829df251-5fae-44f1-b3fd-fad814c3d752
 # ╠═51f9cf6b-1323-44e6-9654-c6818f5684b3
-# ╠═1c17d37a-9923-40e2-9c14-3a40b1e611b6
-# ╠═e8c1b1df-7cda-4552-b38f-3ec9f54f89ec
-# ╠═feca89b4-8e42-4a66-826e-73a2b95c78f2
-# ╠═f1ff0ee8-c863-4bf6-8753-f53727d77c9a
-# ╠═0b1eb745-5b95-4c85-ac36-9b9f0deba2c6
+# ╠═2b332332-0104-4749-b06b-3cc1789e60bd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

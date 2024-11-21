@@ -2,7 +2,19 @@ using DifferentiationInterface
 using SparseConnectivityTracer, SparseMatrixColorings
 using ForwardDiff: ForwardDiff
 
-iter_diff(x, k) = k == 0 ? x : diff(iter_diff(x, k - 1))
+function iter_diff(x, k)
+    if k == 0
+        return x
+    else
+        y = iter_diff(x, k - 1)
+        return diff(y)
+    end
+end
+
+iter_diff([1, 4, 9, 16], 1)
+iter_diff([1, 4, 9, 16], 2)
+iter_diff([1, 4, 9, 16], 3)
+iter_diff([1, 4, 9, 16], 4)
 
 dense_backend = AutoForwardDiff()
 
