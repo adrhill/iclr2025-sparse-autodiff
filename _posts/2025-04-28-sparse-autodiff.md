@@ -651,9 +651,14 @@ A crucial hyperparameter is the choice of ordering, for which various criteria h
 
 A more advanced coloring technique called **bicoloring** allows combining forward and reverse modes, because the recovery of the Jacobian leverages both columns (JVPs) and rows (VJPs) <d-cite key="hossainComputingSparseJacobian1998"></d-cite> <d-cite key="colemanEfficientComputationSparse1998"></d-cite>.
 
-<!-- TODO: this will be Figure 20 -->
-*TODO*
+Figure 19 shows bicoloring on a toy example in which all rows and columns are non-orthogonal.
+Materializing the Jacobian would either take $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
+Using ASD and bicoloring, we can recover the full Jacobian by computing only one JVP and one VJP.   
 
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-fluid" %}
+<div class="caption">
+    Figure 19: Bicoloring on a toy example with non-orthogonal rows and columns.
+</div>
 
 ## Second order
 

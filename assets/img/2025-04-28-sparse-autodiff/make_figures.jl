@@ -304,25 +304,7 @@ function draw!(M::DrawBiMatrix, center::Point)
             val = mat[i, j]
             cell_color = convert(HSL, colors_cols[i, j])
             (; h, s, l) = cell_color
-            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.4)
-
-            # Draw triangle
-            setcolor(cell_color_background)
-            poly([tl, tr, br], :fill)
-
-            # Draw border
-            setline(border_inner)
-            setcolor(cell_color)
-            iszero(val) && setcolor("lightgray")
-            poly([tl, tr, br], :stroke)
-
-            ## Row coloring (upper triangle)
-
-            # Calculate color based on normalized value
-            val = mat[i, j]
-            cell_color = convert(HSL, colors_rows[i, j])
-            (; h, s, l) = cell_color
-            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.4)
+            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.3)
 
             # Draw triangle
             setcolor(cell_color_background)
@@ -333,6 +315,24 @@ function draw!(M::DrawBiMatrix, center::Point)
             setcolor(cell_color)
             iszero(val) && setcolor("lightgray")
             poly([tl, bl, br], :stroke)
+
+            ## Row coloring (upper triangle)
+
+            # Calculate color based on normalized value
+            val = mat[i, j]
+            cell_color = convert(HSL, colors_rows[i, j])
+            (; h, s, l) = cell_color
+            cell_color_background = HSL(h, s, iszero(val) ? 1.0 : l * 1.3)
+
+            # Draw triangle
+            setcolor(cell_color_background)
+            poly([tl, tr, br], :fill)
+
+            # Draw border
+            setline(border_inner)
+            setcolor(cell_color)
+            iszero(val) && setcolor("lightgray")
+            poly([tl, tr, br], :stroke)
 
             ## Add text showing matrix value
 
@@ -1251,9 +1251,18 @@ function bicoloring()
 
     # All colors:
     # blue, orange, green, purple, lightblue, vermillion, yellow
-    colors_rows =
-        repeat(reshape([blue, orange, green, vermillion, lightblue], 1, n), inner = (m, 1))
-    colors_cols = repeat(reshape([purple, orange, green, vermillion], m, 1), inner = (1, n))
+    colors_cols = [
+        mc1 mc1 mc1 mc1 mc1
+        mc2 mc2 mc2 mc2 mc2
+        mc2 mc2 mc2 mc2 mc2
+        mc2 mc2 mc2 mc2 mc2
+    ]
+    colors_rows = [
+        mc2 mc1 mc1 mc1 mc1
+        mc2 mc1 mc1 mc1 mc1
+        mc2 mc1 mc1 mc1 mc1
+        mc2 mc1 mc1 mc1 mc1
+    ]
 
     DB = DrawBiMatrix(;
         mat = B,
