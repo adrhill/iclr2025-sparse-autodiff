@@ -828,7 +828,7 @@ We now show that sparsity also unlocks faster computation of the Jacobian itself
 
 ### Preparation
 
-Sparsity pattern detection and matrix coloring are performed in a so-called "preparation step", whose output can be r**eused across several calls** to `jacobian` (as long as the pattern stays the same).
+Sparsity pattern detection and matrix coloring are performed in a so-called "preparation step", whose output can be **reused across several calls** to `jacobian` (as long as the pattern stays the same).
 
 Thus, to extract more performance, we can create this object once
 
