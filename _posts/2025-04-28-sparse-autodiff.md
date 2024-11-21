@@ -66,9 +66,8 @@ toc:
     - name: Bicoloring
   - name: Second order
     subsections:
-    - name: Hessians
     - name: Hessian-vector products
-    - name: Pattern detection
+    - name: Second order pattern detection
     - name: Symmetric coloring
   - name: Demonstration
     subsections:
@@ -149,7 +148,7 @@ _styles: >
 
 First-order optimization is ubiquitous in Machine Learning (ML) but second-order optimization is much less common.
 The intuitive reason is that large gradients are cheap, whereas large Hessian matrices are expensive.
-Luckily, in numerous applications of ML to science or engineering, **Hessians (and Jacobians) exhibit sparsity**:
+Luckily, in numerous applications of ML to science or engineering, **Hessians and Jacobians exhibit sparsity**:
 most of their coefficients are known to be zero.
 Leveraging this sparsity can vastly **accelerate Automatic Differentiation** (AD) for Hessians and Jacobians,
 while decreasing its memory requirements.
@@ -672,9 +671,8 @@ More advanced coloring techniques can use both modes, such as **bicoloring**.
 
 ## Second order
 
-While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, second-order AD extends this by involving the **Hessian**.
-
-### Hessians
+While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, 
+second-order AD extends this by involving the **Hessian**.
 
 The **Hessian** contains second-order partial derivatives of a scalar function, essentially capturing the curvature of the function at a point.
 This is particularly relevant in **optimization**, where the Hessian provides crucial information about the nature of the function's local behavior.
@@ -699,13 +697,16 @@ The complexity of a single HVP scales roughly with the complexity of the functio
 The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
 This specificity can be exploited in the sparsity detection as well as in the coloring phase.
 
-### Pattern detection
+### Second order pattern detection
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
-This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** between every pair of coefficients.
-For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not affect the Hessian. 
-On the other hand, a term $x_1 x_2$ will yield two equal non-zero coefficients, one at position $(1, 2)$ and one at position $(2, 1)$.
-Thus, the abstract interpretation system used for detection needs a finer classification of operators, to distinguish between locally linear ones (sum, max) and locally nonlinear ones (product, exp).
+This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** in the compute graph.
+
+For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian. 
+On the other hand, multiplying this term with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
+will yield non-zero coefficients at position $(1, 3)$, $(3, 1)$, $(2, 3)$ and $(3, 2)$.
+Thus, the abstract interpretation system used for detection needs a finer classification of operators, 
+distinguishing between locally constant, locally linear, and locally nonlinear behavior in each directional derivative. 
 
 ### Symmetric coloring
 
