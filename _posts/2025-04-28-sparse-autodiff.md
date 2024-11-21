@@ -216,10 +216,9 @@ We consider a convolutional filter of size $5 \times 5$, a single input channel 
 An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
 All the white coefficients are **structural zeros**.
 
-If we materialize the entire Jacobian as a dense matrix:
-
-- we waste time computing coefficients which are mostly zero;
-- we waste memory storing those zero coefficients.
+If we materialize the entire Jacobian as a dense matrix, 
+we waste time computing coefficients which are mostly zero
+and memory storing those zero coefficients.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-fluid" %}
 <div class="caption">
@@ -228,7 +227,8 @@ If we materialize the entire Jacobian as a dense matrix:
 
 In modern neural network architectures, which can contain over one trillion parameters,
 computing intermediate Jacobians is not only inefficient: it exceeds available memory.
-AD circumvents this limitation using **linear maps**, lazy operators that act exactly like matrices but without materializing them.
+AD circumvents this limitation by using **linear maps**, 
+lazy operators that act exactly like matrices but without materializing them.
 
 The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
