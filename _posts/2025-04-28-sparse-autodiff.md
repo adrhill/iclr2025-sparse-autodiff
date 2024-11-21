@@ -879,7 +879,7 @@ In the table below:
 
 <!-- TODO: update benchmarks to new function (re-run Pluto) -->
 
-As you can see, even when we include the overhead of pattern detection and coloring, the sparse backend is around $5 \times$ faster than the dense backend.
+As shown in the table, even when we include the overhead of pattern detection and coloring, the sparse backend is around $5 \times$ faster than the dense backend.
 The speedup becomes $100 \times$ once we discard this overhead, which can be amortized over several `jacobian` computations.
 
 ### Coloring visualization
