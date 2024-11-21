@@ -1,9 +1,7 @@
 ---
 layout: distill
 title: An Illustrated Guide to Automatic Sparse Differentiation
-description: Your blog post's abstract.
-  Please add your abstract or summary here and not in the main body of your text. 
-  Do not include math/latex or hyperlinks.
+description: While traditional AD is well-integrated into high-level programming languages, automatic sparse differentiation (ASD) remains underutilized due to its origins in low-level programming research and graph theory. This post demystifies ASD by explaining its key components, such as sparsity pattern detection, matrix coloring, and their roles in the computation of both sparse Jacobians and Hessians. We conclude with a practical demonstration showcasing the performance benefits of ASD.
 date: 2025-04-28
 future: true
 htmlwidgets: true
