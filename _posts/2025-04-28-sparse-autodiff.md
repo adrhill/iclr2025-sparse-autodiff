@@ -685,7 +685,7 @@ This is especially useful in **nonlinear optimization problems**.
 ### Hessian-vector products
 
 In the context of automatic differentiation, the key operation is **Hessian-vector product (HVP)**.
-The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient $\nabla f$:
+The Hessian $\nabla^2 f(\mathbf{x})$ is the Jacobian matrix of the gradient operator $\nabla f(\mathbf{x})$:
 
 $$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
 
@@ -693,8 +693,9 @@ An HVP computes the product of the Hessian matrix with a vector, which can be vi
 
 $$ \nabla^2 f(\mathbf{x}) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
 
-Thus it is quite common to say that HVPs are computed with "forward over reverse" AD.
-The complexity of a single HVP scales roughly with the complexity of the function $f$ itself.
+HVPs are generally computed with "forward over reverse" AD for speed.
+The complexity of a single HVP scales roughly with the complexity of the function $f$ itself in that case.
+Note that other combinations are possible, such as "forward over forward", which have a higher complexity but are less expensive in terms of storage.
 
 The Hessian has a **symmetric** structure (equal to its transpose), which means that matrix-vector products and vector-matrix products coincide.
 This specificity can be exploited in the sparsity detection as well as in the coloring phase.
