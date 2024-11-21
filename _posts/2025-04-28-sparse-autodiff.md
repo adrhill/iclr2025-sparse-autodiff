@@ -702,11 +702,12 @@ This specificity can be exploited in the sparsity detection as well as in the co
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** in the compute graph.
 
-For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian. 
-On the other hand, multiplying this term with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
-will yield non-zero coefficients at position $(1, 3)$, $(3, 1)$, $(2, 3)$ and $(3, 2)$.
+For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian.
+However, we cannot ignore this term, since multiplying it with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
+will yield non-zero coefficients at positions $(1, 3)$, $(3, 1)$, $(2, 3)$ and $(3, 2)$.
 Thus, the abstract interpretation system used for detection needs a finer classification of operators, 
-distinguishing between locally constant, locally linear, and locally nonlinear behavior in each directional derivative. 
+distinguishing between locally constant, locally linear, and locally nonlinear behavior.
+To further complicate things, an operator may be linear with respect to one argument and nonlinear with respect to another (e.g. division $(x, y) \mapsto x / y$). 
 
 ### Symmetric coloring
 
