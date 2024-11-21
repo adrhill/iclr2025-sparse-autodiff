@@ -74,10 +74,10 @@ toc:
     subsections:
     - name: Necessary packages
     - name: Test function
-    - name: Dense Jacobian
+    - name: Backend switch
     - name: Preparation
-    - name: Performance benefits
     - name: Coloring visualization
+    - name: Performance benefits
 
 
 # Below is an example of injecting additional post-specific styles.
