@@ -753,7 +753,13 @@ It takes a vector $\mathbf{x} \in \mathbb{R}^n$ and outputs a slightly shorter v
 In pure Julia, this is written as follows (using the built-in `diff` recursively):
 
 ```julia
-iter_diff(x, k) = k == 0 ? x : diff(iter_diff(x, k-1))
+function iter_diff(x, k) 
+    if k == 0 
+        return x 
+    else
+        return diff(iter_diff(x, k-1))
+    end
+end
 ```
 
 Let us check that the function returns what we expect:
