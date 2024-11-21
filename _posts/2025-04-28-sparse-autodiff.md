@@ -618,6 +618,15 @@ Let us build a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ with vertex set 
 such that each column is a vertex of the graph, and two vertices are connected if and only if their respective columns share a non-zero index.
 Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_1$ and $j_2$ are not orthogonal.
 
+We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
+This constraint ensures that columns in the same color group are indeed orthogonal.
+If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
+
+Figure 17 shows an optimal coloring using two colors, 
+whereas Figure 18 uses a suboptimal third color, requiring an extra JVP to materialize the Jacobian 
+and therefore increasing the computational cost of ASD.
+Figure 19 shows an infeasible graph coloring: Nodes 2 and 4 on the graph are adjacent, but share a color. This results in overlapping columns.
+
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
 <div class="caption">
     Figure 17: Optimal graph coloring.
@@ -633,12 +642,7 @@ Put differently, an edge between vertices $j_1$ and $j_2$ means that columns $j_
     Figure 19: Infeasible graph coloring. Nodes 2 and 4 are adjacent on the graph, but share a color.
 </div>
 
-We want to assign to each vertex $j$ a color $c(j)$, such that any two adjacent vertices $(j_1, j_2) \in \mathcal{E}$ have different colors $c(j_1) \neq c(j_2)$.
-This constraint ensures that columns in the same color group are indeed orthogonal.
-If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
-
 If we perform column coloring, forward-mode AD is required, while reverse-mode AD is needed for row coloring.
-Note that more advanced coloring techniques could use both modes, such as **bicoloring**.
 
 <aside class="l-body box-note" markdown="1">
 <!-- TODO -->
