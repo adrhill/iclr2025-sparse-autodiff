@@ -705,9 +705,9 @@ This is because, in addition to the usual linear dependencies, we now have to ac
 For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian.
 However, we cannot ignore this term, since multiplying it with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
 will yield non-zero coefficients at positions $(1, 3)$, $(3, 1)$, $(2, 3)$ and $(3, 2)$.
-Thus, the abstract interpretation system used for detection needs a finer classification of operators, 
-distinguishing between locally constant, locally linear, and locally nonlinear behavior.
-To further complicate things, an operator may be linear with respect to one argument and nonlinear with respect to another (e.g. division $(x, y) \mapsto x / y$). 
+Thus, the abstract interpretation system used for second-order pattern detection needs a finer classification of operators,
+distinguishing between locally constant, locally linear, and locally nonlinear behavior in each argument, 
+as well as distinguishing between zero and non-zero cross-derivatives.
 
 ### Symmetric coloring
 
