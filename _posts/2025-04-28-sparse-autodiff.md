@@ -63,6 +63,7 @@ toc:
     subsections:
     - name: Graph formulation
     - name: Greedy algorithm
+    - name: Bicoloring
   - name: Second order
     subsections:
     - name: Hessians
@@ -652,6 +653,15 @@ However, efficient heuristics exist that generate good enough solutions in reaso
 The most widely used heuristic is the greedy algorithm, which processes vertices one after the other.
 This algorithm assigns to each vertex the smallest color that is not already present among its neighbors, and it never backtracks.
 A crucial hyperparameter is the choice of ordering, for which various criteria have been proposed.
+
+
+### Bicoloring
+
+More advanced coloring techniques can use both modes, such as **bicoloring**.
+
+<!-- TODO -->
+*TODO*
+
 
 ## Second order
 
