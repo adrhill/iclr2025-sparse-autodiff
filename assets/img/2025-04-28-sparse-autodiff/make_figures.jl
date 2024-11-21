@@ -230,6 +230,113 @@ end
 luma(c::Colorant) = luma(convert(RGB, c))
 luma(c::RGB) = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b # using BT. 709 coefficients
 
+#==================#
+# Bicolored Matrix #
+#==================#
+
+Base.@kwdef struct DrawBiMatrix <: Drawable
+    mat::Matrix{Float64}
+    color::HSL{Float64} = color_black
+    cellsize::Float64 = CELLSIZE
+    padding_inner::Float64 = PADDING
+    padding_outer::Float64 = 1.75 * PADDING
+    border_inner::Float64 = 0.75
+    border_outer::Float64 = 2.0
+    dashed::Bool = false
+    show_text::Bool = false
+    mat_text::Matrix{String} = map(default_cell_text, mat)
+    colors_rows = fill(color, size(mat))
+    colors_cols = fill(color, size(mat))
+    absmax::Float64 = maximum(abs, mat)
+    height::Float64 =
+        size(mat, 1) * (cellsize + padding_inner) - padding_inner + 2 * padding_outer
+    width::Float64 =
+        size(mat, 2) * (cellsize + padding_inner) - padding_inner + 2 * padding_outer
+end
+
+function draw!(M::DrawBiMatrix, center::Point)
+    # Destructure DrawMatrix for convenience
+    (;
+        mat,
+        color,
+        cellsize,
+        padding_inner,
+        padding_outer,
+        border_inner,
+        border_outer,
+        dashed,
+        show_text,
+        mat_text,
+        colors_rows,
+        colors_cols,
+        absmax,
+        height,
+        width,
+    ) = M
+
+    rows, cols = size(mat)
+
+    # Apply offset
+    xcenter, ycenter = center
+    # Compute upper left edge of matrix
+    x0 =
+        xcenter - (cols / 2) * (cellsize + padding_inner) + padding_inner / 2 -
+        padding_outer
+    y0 =
+        ycenter - (rows / 2) * (cellsize + padding_inner) + padding_inner / 2 -
+        padding_outer
+
+    setline(1)
+    for i = 1:rows
+        for j = 1:cols
+            # Calculate cell position (corner of matrix entry)
+            x = x0 + (j - 1) * (cellsize + padding_inner) + padding_outer
+            y = y0 + (i - 1) * (cellsize + padding_inner) + padding_outer
+
+            # Calculate color based on normalized value
+            val = mat[i, j]
+            cell_color = convert(HSL, colors_cols[i, j])
+            (; h, s, l) = cell_color
+            cell_color_background = cell_bg_color(cell_color, val, absmax)
+
+            # Draw rectangle
+            setcolor(cell_color_background)
+            rect(Point(x, y), cellsize, cellsize, :fill)
+
+            # Draw border
+            setline(border_inner)
+            setcolor(cell_color)
+            iszero(val) && setcolor("lightgray")
+            rect(Point(x, y), cellsize, cellsize, :stroke)
+
+            # Add text showing matrix value
+            if show_text
+                fontsize(min(cellsize ÷ 3, 14))
+                if luma(cell_color_background) > 0.6
+                    setcolor(HSL(h, s, 0.15)) # dark
+                else
+                    setcolor(HSL(h, s, 0.95)) # bright
+                end
+                iszero(val) && setcolor("lightgray")
+                text(
+                    mat_text[i, j],
+                    Point(x + cellsize / 2, y + cellsize / 2);
+                    halign = :center,
+                    valign = :middle,
+                )
+            end
+        end
+    end
+
+    # Draw border
+    setline(border_outer)
+    setcolor(color)
+    dashed && setdash([7.0, 4.0])
+    setlinejoin("miter")
+    rect(Point(x0, y0), width, height, :stroke)
+    return setdash("solid")
+end
+
 #==========#
 # Operator #
 #==========#
@@ -1111,6 +1218,28 @@ function colored_graph(column_colors)
     draw!(Position(DS, Point(80, 0)))
 end
 
+function bicoloring()
+    setup!()
+    B = zeros(m, n)
+    B[1, :] .= randn(StableRNG(123), n)
+    B[:, 1] .= randn(StableRNG(1234), m)
+
+    # All colors:
+    # blue, orange, green, purple, lightblue, vermillion, yellow
+    colors_rows =
+        repeat(reshape([blue, orange, green, purple, yellow], 1, n), inner = (m, 1))
+    colors_cols = repeat(reshape([purple, green, orange, blue], m, 1), inner = (1, n))
+
+    DB = DrawBiMatrix(;
+        mat = B,
+        color = color_F,
+        dashed = true,
+        show_text = true,
+        colors_rows,
+        colors_cols,
+    )
+    draw!(Position(DB, Point(0, 0)))
+end
 
 # This one is huge, avoid SVG and PDF:
 @png big_conv_jacobian() 1600 1200 joinpath(@__DIR__, "big_conv_jacobian")
@@ -1168,3 +1297,5 @@ var"@save" = var"@svg" # var"@pdf"
     @__DIR__,
     "colored_graph_suboptimal",
 )
+
+@save bicoloring() 120 100 joinpath(@__DIR__, "bicoloring")
