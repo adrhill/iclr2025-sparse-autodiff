@@ -363,7 +363,7 @@ In other words, the vectors representing their sparsity patterns are structurall
 The dot product between these vectors is always zero, regardless of their values.
 
 **The core idea of ASD is that we can materialize multiple orthogonal columns (or rows) in a single product evaluation.**
-This trick was first suggested 50 years ago by Curtis, Powell and Reid <d-cite key="curtisEstimationSparseJacobian1974"></d-cite>.
+This trick was first suggested in 1974 by Curtis, Powell and Reid <d-cite key="curtisEstimationSparseJacobian1974"></d-cite>.
 Since linear maps are additive, it always holds that for a set of basis vectors (columns of the identity matrix),
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
