@@ -55,6 +55,7 @@ toc:
     - name: Necessary packages
     - name: Test function
     - name: Backend switch
+    - name: Jacobian computation
     - name: Preparation
     - name: Coloring visualization
     - name: Performance benefits
@@ -783,7 +784,11 @@ coloring_algorithm = GreedyColoringAlgorithm()  # from SparseMatrixColorings
 asd = AutoSparse(ad; sparsity_detector, coloring_algorithm)
 ```
 
-We can now compute the Jacobian of `iter_diff` (with respect to $\mathbf{x}$) using either backend, and compare the results:
+### Jacobian computation
+
+We can now compute the Jacobian of `iter_diff` (with respect to $\mathbf{x}$) using either backend, and compare the results.
+Just like AD, ASD is fully automatic.
+It doesn't require the user to change any code besides specifying a backend:
 
 ```julia
 julia> x, k = rand(10), 3;
