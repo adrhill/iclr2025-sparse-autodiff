@@ -146,8 +146,7 @@ We start out with a short introduction to traditional AD,
 covering the computation of Jacobians in both forward and reverse mode.
 We then dive into the two primary components of ASD:
 **sparsity pattern detection** and **matrix coloring**.
-Having described the computation of sparse Jacobians,
-we move on to sparse Hessians.  
+Having described the computation of sparse Jacobians, we move on to sparse Hessians.  
 We conclude with a practical demonstration of ASD,
 providing performance benchmarks and guidance on when to use ASD over AD.
 
@@ -457,7 +456,7 @@ there are also many possible approaches to sparsity pattern detection,
 each with its own advantages and tradeoffs.
 The work of Dixon <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> in the 1990's was among the first of many papers on this subject,
 most of which can be classified into operator overloading or source transformation techniques.
-There are also ways to detect a sparsity pattern by probing the Jacobian coefficients with AD<d-cite key="griewankDetectingJacobianSparsity2002"></d-cite> but we do not linger on them here.
+There are also ways to detect a sparsity pattern by probing the Jacobian coefficients with AD<d-cite key="griewankDetectingJacobianSparsity2002"></d-cite>, but we do not linger on them here.
 
 The method we present corresponds to a binary version of a forward-mode AD system, similar in spirit to <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> and <d-cite key="bischofEfficientComputationGradients1996"></d-cite>,
 in which performance is gained by representing matrix rows as index sets.
@@ -496,7 +495,7 @@ For instance, output $i=2$ was influenced by inputs $j=4$ and $j=5$.
 
 ### Efficient propagation
 
-Figure 14 shows the traditional forward-AD pass we want to avoid:
+Figure 14 shows the traditional forward mode pass we want to avoid:
 propagating a full identity matrix through a linear map would compute the Jacobian matrix of $f$, 
 but also all intermediate linear maps.
 As previously discussed, this is not a viable option due to its inefficiency and high memory requirements.
