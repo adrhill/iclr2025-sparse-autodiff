@@ -16,19 +16,19 @@ iter_diff([1, 4, 9, 16], 2)
 iter_diff([1, 4, 9, 16], 3)
 iter_diff([1, 4, 9, 16], 4)
 
-dense_backend = AutoForwardDiff()
+ad = AutoForwardDiff()
 
 sparsity_detector = TracerSparsityDetector()
 coloring_algorithm = GreedyColoringAlgorithm()
-sparse_backend = AutoSparse(dense_backend; sparsity_detector, coloring_algorithm)
+asd = AutoSparse(ad; sparsity_detector, coloring_algorithm)
 
 x, k = rand(10), 3;
-jacobian(iter_diff, dense_backend, x, Constant(k))
-jacobian(iter_diff, sparse_backend, x, Constant(k))
+jacobian(iter_diff, ad, x, Constant(k))
+jacobian(iter_diff, asd, x, Constant(k))
 
-prep = prepare_jacobian(iter_diff, sparse_backend, x, Constant(k));
+prep = prepare_jacobian(iter_diff, asd, x, Constant(k));
 
-jacobian(iter_diff, prep, sparse_backend, x, Constant(k))
+jacobian(iter_diff, prep, asd, x, Constant(k))
 
 ncolors(prep)
 sparsity_pattern(prep)

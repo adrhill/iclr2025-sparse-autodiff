@@ -6,7 +6,6 @@ using InteractiveUtils
 
 # ╔═╡ 31708e0c-a6a4-11ef-0dbe-95a43772b0ae
 begin
-	using BenchmarkTools
 	using CairoMakie
 	using ColorSchemes
 	using DifferentiationInterface
@@ -15,11 +14,9 @@ begin
 	using DataFramesMeta
 	import ForwardDiff
 	import Images
-	using ImageTransformations
 	using LaTeXStrings
 	using Makie
 	using PlutoUI
-	using PrettyTables
 	using SparseConnectivityTracer
 	using SparseMatrixColorings
 	using SparseMatrixColorings: show_colors
@@ -142,9 +139,9 @@ let
 	sparse_prep = @rsubset(data, :sparse && :prepared)
 	sparse_noprep = @rsubset(data, :sparse && !:prepared)
 	dense = @rsubset(data, !:sparse && :prepared)
-	scatterlines!(ax, dense[!, :n], dense[!, :time], linewidth=2, label=L"\text{standard}")
-	scatterlines!(ax, sparse_noprep[!, :n], sparse_noprep[!, :time], linestyle=:dash, linewidth=2, label=L"\text{sparse (including detection and coloring)}")
-	scatterlines!(ax, sparse_prep[!, :n], sparse_prep[!, :time], linestyle=:dot, linewidth=2, label=L"\text{sparse (excluding detection and coloring)}")
+	scatterlines!(ax, dense[!, :n], dense[!, :time], linewidth=2, label=L"\text{AD}")
+	scatterlines!(ax, sparse_noprep[!, :n], sparse_noprep[!, :time], linestyle=:dash, linewidth=2, label=L"\text{ASD}")
+	scatterlines!(ax, sparse_prep[!, :n], sparse_prep[!, :time], linestyle=:dot, linewidth=2, label=L"\text{ASD (excluding detection and coloring)}")
 	axislegend(position=:lt)
 	save("benchmark.png", fig)
 	fig
@@ -153,7 +150,6 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -161,17 +157,14 @@ DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 DifferentiationInterfaceTest = "a82114a7-5aa3-49a8-9643-716bb13727a3"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-ImageTransformations = "02fcd773-0e25-5acc-982a-7f6622650795"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
 SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
 
 [compat]
-BenchmarkTools = "~1.5.0"
 CairoMakie = "~0.12.16"
 ColorSchemes = "~3.27.1"
 DataFrames = "~1.7.0"
@@ -179,12 +172,10 @@ DataFramesMeta = "~0.15.2"
 DifferentiationInterface = "~0.6.22"
 DifferentiationInterfaceTest = "~0.8.4"
 ForwardDiff = "~0.10.38"
-ImageTransformations = "~0.10.1"
 Images = "~0.26.1"
 LaTeXStrings = "~1.4.0"
 Makie = "~0.21.16"
 PlutoUI = "~0.7.60"
-PrettyTables = "~2.4.0"
 SparseConnectivityTracer = "~0.6.8"
 SparseMatrixColorings = "~0.4.10"
 """
@@ -195,7 +186,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "dacd5aca75a715dbd99752fb6ac4b558a28b9957"
+project_hash = "bf21a6204ea72281dc6c55a4fe2051f00ef6224c"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "30bb95a372787af850addf28ac937f1be7b79173"
@@ -334,12 +325,6 @@ version = "0.4.7"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 version = "1.11.0"
-
-[[deps.BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "f1dff6729bc61f4d49e140da1af55dcd1ac97b2f"
-uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.5.0"
 
 [[deps.BitTwiddlingConvenienceFunctions]]
 deps = ["Static"]
@@ -1764,10 +1749,6 @@ version = "2.4.0"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-version = "1.11.0"
-
-[[deps.Profile]]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 version = "1.11.0"
 
 [[deps.ProgressMeter]]
