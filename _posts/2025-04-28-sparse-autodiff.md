@@ -211,7 +211,7 @@ computing intermediate Jacobians is not only inefficient: it exceeds available m
 AD circumvents this limitation by using **linear maps**, 
 lazy operators that act exactly like matrices but without explicitly storing every coefficient in memory.
 
-The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\vx$.
+The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
 $$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc .$$
@@ -254,7 +254,7 @@ Since this operation by definition corresponds to
 $$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p ,$$
 
 it is commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
-The resulting vector $\vv_2$ is then used to compute the subsequent JVP 
+The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
 
 $$ \vvc{3} = \Dhc(\vvc{2}) = \Jhc \cdot \vvc{2} \;\in \sR^m ,$$
 
@@ -542,7 +542,7 @@ Figure 16 annotates these index sets on the edges of the computational graph.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-fluid" %}
 <div class="caption">
-    Figure 16: Computational graph of the function $ f(\vx) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
+    Figure 16: Computational graph of the function $ f(\mathbf{x}) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
 
 Abstract interpretation means that we imbue the computational graph with a different meaning.
