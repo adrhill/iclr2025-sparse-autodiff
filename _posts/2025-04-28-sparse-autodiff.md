@@ -1,31 +1,15 @@
 ---
 layout: distill
 title: An Illustrated Guide to Automatic Sparse Differentiation
-description: While automatic differentiation (AD) is well-integrated into high-level programming languages, automatic sparse differentiation (ASD) remains underutilized due to its origins in low-level programming research and graph theory. This post demystifies ASD by explaining its key components, such as sparsity pattern detection and matrix coloring, and their roles in the computation of both sparse Jacobians and Hessians. We conclude with a practical demonstration showcasing the performance benefits of ASD.
+description: In numerous applications of machine learning, Hessians and Jacobians exhibit sparsity, a property that can be leveraged to vastly accelerate their computation. While the usage of automatic differentiation (AD) in machine learning is ubiquitous, automatic sparse differentiation (ASD) remains largely unknown. This post demystifies ASD by explaining its key components and their roles in the computation of both sparse Jacobians and Hessians. We conclude with a practical demonstration showcasing the performance benefits of ASD.
 date: 2025-04-28
 future: true
 htmlwidgets: true
 hidden: false
 
-# Build page via 
-# ```bash
-# rbenv init
-# rbenv install 3.3.0
-# rbenv local 3.3.0
-# bundle install
-# bundle exec jekyll serve --future --open-url /blog/sparse-autodiff/ --livereload
-# ```
-#
-# Then navigate to `/blog/sparse-autodiff/`
-
 # Anonymize when submitting
 # authors:
 #   - name: Anonymous
-
-# TODO before submission:
-# - revert CI workflows
-# - check correct figure caption numbering and references
-# - check correct rendering of SVGs on multiple browsers
 
 authors:
   - name: Anonymous
@@ -150,13 +134,13 @@ Luckily, in numerous applications of ML to science or engineering, **Hessians an
 most of their coefficients are known to be zero.
 Leveraging this sparsity can vastly **accelerate automatic differentiation** (AD) for Hessians and Jacobians,
 while decreasing its memory requirements <d-cite key="griewankEvaluatingDerivativesPrinciples2008"></d-cite>.
-Yet, while traditional AD is available in many high-level programming languages like Python <d-cite key="paszkePyTorchImperativeStyle2019"></d-cite> <d-cite key="bradburyJAXComposableTransformations2018"></d-cite> or Julia <d-cite key="sapienzaDifferentiableProgrammingDifferential2024"></d-cite>,
+Yet, while traditional AD is available in many high-level programming languages like Python <d-cite key="paszkePyTorchImperativeStyle2019"></d-cite> <d-cite key="bradburyJAXComposableTransformations2018"></d-cite> and Julia <d-cite key="sapienzaDifferentiableProgrammingDifferential2024"></d-cite>,
 **automatic sparse differentiation (ASD) is not as widely used**.
 One reason is that the underlying theory was developed outside of the ML research ecosystem,
 by people more familiar with low-level programming languages.
 
-With this blog post, we aim to shed light on the inner workings of ASD,
-thus bridging the gap between the ML and AD communities.
+With this blog post, we aim to shed light on the inner workings of ASD, 
+bridging the gap between the ML and AD communities by presenting well established techniques from the latter field.
 We start out with a short introduction to traditional AD,
 covering the computation of Jacobians in both forward and reverse mode.
 We then dive into the two primary components of ASD:
@@ -166,14 +150,10 @@ we move on to sparse Hessians.
 We conclude with a practical demonstration of ASD,
 providing performance benchmarks and guidance on when to use ASD over AD.
 
-<aside class="l-body box-note" markdown="1">
-None of the theoretical or algorithmic aspects described in this blog post are new contributions by the authors.
-</aside>
-
 ## Automatic differentiation
 
 Let us start by covering the fundamentals of traditional AD.
-The reader can find more details in the recent book by Blondel and Roulet <d-cite key="blondelElementsDifferentiableProgramming2024"></d-cite>.
+The reader can find more details in the recent book by Blondel and Roulet <d-cite key="blondelElementsDifferentiableProgramming2024"></d-cite>, as well as Griewank and Walther <d-cite key="griewankEvaluatingDerivativesPrinciples2008"></d-cite>.
 
 AD makes use of the **compositional structure** of mathematical functions like deep neural networks.
 To make things simple, we will mainly look at a differentiable function $f$
