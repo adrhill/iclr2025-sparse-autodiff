@@ -49,14 +49,13 @@ toc:
     subsections:
     - name: Sparse matrices
     - name: Leveraging sparsity
-    - name: Sparsity pattern detection and coloring
+    - name: Pattern detection and coloring
   - name: Pattern detection
     subsections:
     - name: Index sets
     - name: Efficient propagation
     - name: Abstract interpretation
     - name: Local and global patterns
-    - name: Partial separability
   - name: Coloring
     subsections:
     - name: Graph formulation
@@ -75,6 +74,7 @@ toc:
     - name: Preparation
     - name: Coloring visualization
     - name: Performance benefits
+  - name: Conclusion
 
 
 # Below is an example of injecting additional post-specific styles.
@@ -423,7 +423,7 @@ We can then compute multiple rows in a single VJP.
     Figure 11: Computing a Jacobian with reverse-mode ASD: (a) compressed evaluation of orthogonal rows (b) decompression to Jacobian matrix
 </div>
 
-### Sparsity pattern detection and coloring
+### Pattern detection and coloring
 
 Unfortunately, our initial assumption had a major flaw.
 Since AD only gives us a composition of linear maps and linear maps are black-box functions,
