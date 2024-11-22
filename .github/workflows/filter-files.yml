@@ -1,9 +1,9 @@
 name: filter-files
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
+on:
+  pull_request:
+    branches:
+      - main
 
 # hack for https://github.com/actions/cache/issues/810#issuecomment-1222550359
 #env:
