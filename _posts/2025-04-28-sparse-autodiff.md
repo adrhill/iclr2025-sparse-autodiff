@@ -167,11 +167,11 @@ The insights gained from this toy example should translate directly to more deep
 For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
 the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, whose $(i,j)$-th entry is
 
-$$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR . $$
+$$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \, . $$
 
 For a composed function 
 
-$$ \colorf{f} = \colorh{h} \circ \colorg{g}, $$
+$$ \colorf{f} = \colorh{h} \circ \colorg{g} \, , $$
 
 the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
 
@@ -214,7 +214,7 @@ lazy operators that act exactly like matrices but without explicitly storing eve
 The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
 We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
 
-$$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc .$$
+$$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc \, .$$
 
 Note that all terms in this formulation of the chain rule are linear maps.
 A new visualization for our toy example can be found in Figure 3b.
@@ -251,16 +251,16 @@ Since we propagate in the order of the original function evaluation ($g$ then $h
 In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
 Since this operation by definition corresponds to 
 
-$$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p ,$$
+$$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p \, ,$$
 
 it is commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
 The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
 
-$$ \vvc{3} = \Dhc(\vvc{2}) = \Jhc \cdot \vvc{2} \;\in \sR^m ,$$
+$$ \vvc{3} = \Dhc(\vvc{2}) = \Jhc \cdot \vvc{2} \;\in \sR^m \, ,$$
 
 which in accordance with the chain rule is equivalent to 
 
-$$ \vvc{3} = \Dfc(\vvc{1}) = \Jfc \cdot \vvc{1} ,$$
+$$ \vvc{3} = \Dfc(\vvc{1}) = \Jfc \cdot \vvc{1} \, ,$$
 
 the JVP of our composed function $f$.
 
@@ -354,7 +354,7 @@ $$ \Dfc(\vbc{i}+\ldots+\vbc{j})
 = \underbrace{\Dfc(\vbc{i})}_{\left( \Jfc \right)_\colorv{i,:}} 
 + \ldots
 + \underbrace{\Dfc(\vbc{j})}_{\left( \Jfc \right)_\colorv{j,:}} 
-. $$
+\, . $$
 
 The components of the sum on the right-hand side each correspond to a column of the Jacobian.
 If these columns are known to be structurally orthogonal,
@@ -474,16 +474,16 @@ $$ \big( \Jf \big)_{i,:}
     \dfdx{i}{1} &
     \ldots      &
     \dfdx{i}{n}
-\end{bmatrix} .
+\end{bmatrix} \, .
 $$
 
 However, since we are only interested in the binary pattern 
 
-$$ \left[\dfdx{i}{j} \neq 0\right]_{1 \le j \le n} , $$
+$$ \left[\dfdx{i}{j} \neq 0\right]_{1 \le j \le n} \, , $$
 
 we can instead represent the sparsity pattern of the $i$-th row of a Jacobian by the corresponding **index set of non-zero values**
 
-$$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} . $$
+$$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} \, . $$
 
 These equivalent sparsity pattern representations are illustrated in Figure 13.
 Each row index set tells us **which inputs influenced a given output**, at the first-order.
