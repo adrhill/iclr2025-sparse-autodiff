@@ -333,9 +333,12 @@ this requires one VJP with each of the $m$ standard basis vectors of the **outpu
     Figure 7: Reverse-mode AD materializes Jacobians row-by-row.
 </div>
 
+These processes of materialization are computationally expensive due the fact that each JVP and VJP costs approximately as much as the evaluation of the function $f$ itself.
+Note that both forward and reverse mode materialize the Jacobian of the composed function **without materializing any intermediate Jacobians**. 
+
 <aside class="l-body box-note" markdown="1">
 Since neural networks are usually trained using scalar loss functions,
-reverse-mode AD only requires the evaluation of a single VJP to compute a gradient, which is rather cheap (see Baur and Strassen <d-cite key="baurComplexityPartialDerivatives1983"></d-cite>).
+reverse-mode AD only requires the evaluation of a single VJP to materialize a gradient, which is rather cheap (see Baur and Strassen <d-cite key="baurComplexityPartialDerivatives1983"></d-cite>).
 This makes reverse-mode AD the method of choice for machine learners,
 who typically use the term backpropagation.
 </aside>
