@@ -503,8 +503,7 @@ As previously discussed, this is not a viable option due to its inefficiency and
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 14: Computation of a full Jacobian matrix in forward mode. 
-    Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
+    Figure 14: Propagating an identity matrix in forward mode to obtain the Jacobian.
 </div>
 
 Instead, we initialize an input vector with index sets corresponding to the identity matrix. 
