@@ -723,10 +723,9 @@ Here are the packages we will use for this demonstration.
 - [DifferentiationInterface.jl](https://github.com/JuliaDiff/DifferentiationInterface.jl) <d-cite key="dalleJuliaDiffDifferentiationInterfacejlDifferentiationInterfacev06232024"></d-cite>: High-level interface bringing all of these together, originally inspired by <d-cite key="schaferAbstractDifferentiationjlBackendAgnosticDifferentiable2022"></d-cite>.
 
 This modular pipeline comes as a replacement and extension of a previous ASD system in Julia <d-cite key="gowdaSparsityProgrammingAutomated2019"></d-cite>.
-
 We also use a few other packages for data manipulation <d-cite key="bouchet-valatDataFramesjlFlexibleFast2023"></d-cite> and visualization <d-cite key="danischMakiejlFlexibleHighperformance2021"></d-cite>.
 
-Like in any other language, the first step is importing the dependencies.
+Like in any other language, the first step is importing the dependencies:
 
 ```julia
 using DifferentiationInterface
@@ -931,7 +930,7 @@ By now, the reader should have a better understanding of how sparsity can be use
 
 But should it always be used? Here are a list of criteria to consider when choosing between AD and ASD:
 
-- **Which derivative is needed?** In a purely gradient-based algorithm, sparsity will be useless: it can only speed up derivatives like the Jacobian and Hessian which have a matrix form.
+- **Which derivative is needed?** When computing gradients of scalar functions using reverse mode, sparsity can't be leveraged, as only a single VJP is required. In practice, ASD only speeds up derivatives like the Jacobian and Hessian which have a matrix form.
 - **What operations will be performed on the derivative matrix?** For a single matrix-vector product $J \mathbf{v}$, the linear map will always be faster. But if we want to solve linear systems $J \mathbf{v} = \mathbf{y}$, then it may be useful to compute the full matrix first to leverage sparse factorization routines.
 - **How expensive is the function at hand?** This directly impacts the cost of a JVP, VJP or HVP, which scales with the cost of one function evaluation.
 - **How sparse would the matrix be?** This dictates the efficiency of sparsity detection and coloring, as well as the number of matrix-vector products necessary. While it may be hard to get an exact estimate, concepts like partial separability can help provide upper bounds <d-cite key="gowerComputingSparsityPattern2014"></d-cite>. In general, the relation between the number of colors $c$ and the dimension $n$ is among the most crucial quantities to analyze.
