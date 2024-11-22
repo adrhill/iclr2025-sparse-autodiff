@@ -80,6 +80,34 @@ _styles: >
         text-align: center;
         font-size: 16px;
     }
+    .img-90 {
+        max-width: 90%;
+        height: auto;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .img-80 {
+        max-width: 80%;
+        height: auto;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .img-70 {
+        max-width: 70%;
+        height: auto;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .img-60 {
+        max-width: 60%;
+        height: auto;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
     /* Adapted from Andreas Kirsch https://github.com/iclr-blogposts/2024/blob/c111fe06039524fcb60a76c1e9bed26667d30fcf/_posts/2024-05-07-dpi-fsvi.md  */
     .box-note {
         font-size: 14px;
@@ -200,7 +228,7 @@ If we represent the Jacobian of each convolutional layer as a dense matrix,
 we waste time computing coefficients which are mostly zero,
 and we waste memory storing those zero coefficients.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/big_conv_jacobian.png" class="img-70" %}
 <div class="caption">
     Figure 2: Structure of the Jacobian of a tiny convolutional layer.
 </div>
@@ -365,7 +393,7 @@ and is visualized in Figure 9, where all structurally orthogonal columns have be
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we obtain the sum of the first, second and fifth column of our Jacobian.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-80" %}
 <div class="caption">
     Figure 9: Computing structurally orthogonal columns of a Jacobian in forward mode.
 </div>
@@ -539,7 +567,7 @@ Instead of evaluating the original compute graph for a given input $\mathbf{x}$,
 all inputs are seeded with their respective input index sets.
 Figure 16 annotates these index sets on the edges of the computational graph.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-90" %}
 <div class="caption">
     Figure 16: Computational graph of the function $ f(\mathbf{x}) = x_1 + x_2x_3 + \text{sgn}(x_4) $, annotated with corresponding index sets.  
 </div>
@@ -606,17 +634,17 @@ and therefore increasing the computational cost of ASD.
 Figure 19 shows an infeasible coloring: vertices 2 and 4 on the graph are adjacent, but share a color.
 This results in overlapping columns.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph.svg" class="img-80" %}
 <div class="caption">
     Figure 17: Optimal graph coloring.
 </div>
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-80" %}
 <div class="caption">
     Figure 18: Suboptimal graph coloring (vertex 1 could be colored in yellow).
 </div>
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-80" %}
 <div class="caption">
     Figure 19: Infeasible graph coloring (vertices 2 and 4 are adjacent on the graph, but share a color).
 </div>
@@ -640,7 +668,7 @@ Figure 19 shows bicoloring on a toy example in which no pair of columns or rows 
 Even with ASD, the Jacobian computation would require $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
 However, if we use both modes simultaneously, we can recover the full Jacobian by computing only $1$ JVP and $1$ VJP.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-60" %}
 <div class="caption">
     Figure 19: Bicoloring on a toy example with a dense row and a dense column.
 </div>
@@ -904,7 +932,7 @@ data = benchmark_differentiation(
 
 It gives rise to the following performance curves (lower is better):
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/benchmark.png" class="img-fluid" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/demo/benchmark.png" class="img-90" %}
 <div class="caption">
     Figure 22: Performance benefits of sparsity  
 </div>
