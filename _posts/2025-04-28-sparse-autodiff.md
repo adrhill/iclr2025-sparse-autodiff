@@ -635,12 +635,12 @@ This results in overlapping columns.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_suboptimal.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 18: Suboptimal graph coloring (node 1 could be colored in yellow).
+    Figure 18: Suboptimal graph coloring (vertex 1 could be colored in yellow).
 </div>
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/colored_graph_infeasible.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 19: Infeasible graph coloring (nodes 2 and 4 are adjacent on the graph, but share a color).
+    Figure 19: Infeasible graph coloring (vertices 2 and 4 are adjacent on the graph, but share a color).
 </div>
 
 If we perform column coloring, forward-mode AD is required, while reverse-mode AD is needed for row coloring.
