@@ -101,8 +101,8 @@ _styles: >
         margin-left: auto;
         margin-right: auto;
     }
-    .img-60 {
-        max-width: 60%;
+    .img-50 {
+        max-width: 50%;
         height: auto;
         display: block;
         margin-left: auto;
@@ -664,13 +664,13 @@ A crucial hyperparameter is the choice of ordering, for which various criteria h
 
 A more advanced coloring technique called **bicoloring** allows combining forward and reverse modes, because the recovery of the Jacobian leverages both columns (JVPs) and rows (VJPs) <d-cite key="hossainComputingSparseJacobian1998"></d-cite> <d-cite key="colemanEfficientComputationSparse1998"></d-cite>.
 
-Figure 19 shows bicoloring on a toy example in which no pair of columns or rows is structurally orthogonal.
+Figure 20 shows bicoloring on a toy example in which no pair of columns or rows is structurally orthogonal.
 Even with ASD, the Jacobian computation would require $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
 However, if we use both modes simultaneously, we can recover the full Jacobian by computing only $1$ JVP and $1$ VJP.
 
-{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-60" %}
+{% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-50" %}
 <div class="caption">
-    Figure 19: Bicoloring on a toy example with a dense row and a dense column.
+    Figure 20: Bicoloring on a toy example with a dense row and a dense column.
 </div>
 
 ## Second order
