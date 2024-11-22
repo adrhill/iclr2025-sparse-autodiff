@@ -638,7 +638,7 @@ A more advanced coloring technique called **bicoloring** allows combining forwar
 
 Figure 19 shows bicoloring on a toy example in which no pair of columns or rows is structurally orthogonal.
 Even with ASD, the Jacobian computation would require $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
-If we use both modes simultaneously, we can recover the full Jacobian by computing only $1$ JVP and $1$ VJP.
+However, if we use both modes simultaneously, we can recover the full Jacobian by computing only $1$ JVP and $1$ VJP.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-fluid" %}
 <div class="caption">
@@ -650,7 +650,7 @@ If we use both modes simultaneously, we can recover the full Jacobian by computi
 While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, 
 second-order AD extends the same ideas to the **Hessian** matrix
 
-$$ \nabla^2 f (\mathbf{x}) = \left(\frac{\partial^2 f(\mathbf{x})}{\partial x_i ~ \partial x_j} \right)_{i,j} $$
+$$ \nabla^2 f (\mathbf{x}) = \left(\frac{\partial^2 f(\mathbf{x})}{\partial x_i ~ \partial x_j} \right)_{i,j} \, .$$
 
 The Hessian contains second-order partial derivatives of a scalar function, essentially capturing the curvature of the function at a point.
 This is particularly relevant in **optimization**, where the Hessian provides crucial information about the function's local behavior.
@@ -662,7 +662,7 @@ By incorporating second-order information, optimization algorithms converge more
 For second-order AD, the key subroutine is the **Hessian-vector product (HVP)**.
 The Hessian is the Jacobian matrix of the gradient function $\nabla f: \mathbf{x} \mapsto \nabla f(\mathbf{x})$, that is,
 
-$$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) $$
+$$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) \, .$$
 
 An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient function.
 
@@ -682,7 +682,7 @@ This specificity can be exploited in the sparsity detection as well as in the co
 
 Detecting the sparsity pattern of the Hessian is more complicated than for the Jacobian.
 This is because, in addition to the usual linear dependencies, we now have to account for **nonlinear interactions** in the computational graph.
-The operator overloading method of Walther <d-cite key="waltherComputingSparseHessians2008"></d-cite> was a pioneering effort towards Hessian sparsity detection, although more efficient alternatives quickly emerged <d-cite key="gowerNewFrameworkComputation2012">.
+The operator overloading method of Walther <d-cite key="waltherComputingSparseHessians2008"></d-cite> was a pioneering effort towards Hessian sparsity detection, although more efficient alternatives quickly emerged <d-cite key="gowerNewFrameworkComputation2012"></d-cite>.
 
 For instance, if $f(\mathbf{x})$ involves a term of the form $x_1 + x_2$, it will not directly affect the Hessian.
 However, we cannot ignore this term, since multiplying it with $x_3$ to obtain an output $f(\mathbf{x}) = (x_1 + x_2)\,x_3$ 
