@@ -291,6 +291,7 @@ $$ \vvc{3} = \Dfc(\vvc{1}) = \Jfc \cdot \vvc{1} \, ,$$
 
 the JVP of our composed function $f$.
 
+The computational cost of one JVP of $f$ is approximately the same as the cost of one evaluation of $f$. 
 **Note that we did not compute intermediate Jacobian matrices at any point** – we only propagated vectors through linear maps.
 
 ### Reverse-mode AD
@@ -304,20 +305,22 @@ resulting in **reverse-mode AD**, shown in Figure 5.
 </div>
 
 This is commonly called a **vector-Jacobian product** (VJP) or **pullback**.
-Just like forward mode, reverse mode is also matrix-free: **no intermediate Jacobians are computed at any point**.
+Just like forward mode, the cost of one VJP of $f$ is approximately the same as the cost of one evaluation of $f$. 
+Reverse mode is also matrix-free: **no intermediate Jacobians are computed at any point**.
 
 ### From linear maps back to Jacobians
 
-The linear map formulation allows us to avoid intermediate Jacobian matrices in long chains of matrix-vector products.
-This machinery can be used to turn linear maps (lazy matrix representations) into dense matrices in a computationally expensive process we call **materialization**.
+This machinery can be used to turn a composed linear map (lazy matrix representation) 
+into a dense matrix in a computationally expensive process we call **materialization**.
+Counterintuitively, this process does not **materialize any intermediate Jacobians**.
 
 Figure 6 demonstrates how to **materialize Jacobians column by column** in forward mode.
-Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_f(\mathbf{x})$:
+Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_{f}(\mathbf{x})$:
 
 $$ \Dfc(\vbc{i}) = \left( \Jfc \right)_\colorv{i,:} $$
 
 Thus, recovering the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
-Once again, we distinguish between linear maps and materialized matrices and by using dashed and solid lines respectively:
+Once again, we distinguish between linear maps and materialized matrices by using dashed and solid lines respectively:
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
@@ -334,7 +337,6 @@ this requires one VJP with each of the $m$ standard basis vectors of the **outpu
 </div>
 
 These processes of materialization are computationally expensive due the fact that each JVP and VJP costs approximately as much as the evaluation of the function $f$ itself.
-Note that both forward and reverse mode materialize the Jacobian of the composed function **without materializing any intermediate Jacobians**. 
 
 <aside class="l-body box-note" markdown="1">
 Since neural networks are usually trained using scalar loss functions,
