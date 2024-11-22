@@ -257,7 +257,7 @@ linear maps are best thought of as black-box operators.
 
 ### Forward-mode AD
 
-Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating materialized vectors through them, one layer at a time.
+Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating vectors through them, one layer at a time.
 
 Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
 Since we propagate in the order of the original function evaluation ($g$ then $h$), this is called **forward-mode AD**.
@@ -312,7 +312,7 @@ Thus, recovering the full $m \times n$ Jacobian requires one JVP with each of th
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 6: Forward-mode AD materializes Jacobians column-by-column.
+    Figure 6: Forward-mode AD reconstructs Jacobians column-by-column.
 </div>
 
 As illustrated in Figure 7, we can also **compute Jacobians row by row** in reverse mode.
@@ -321,7 +321,7 @@ this requires one VJP with each of the $m$ standard basis vectors of the **outpu
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 7: Reverse-mode AD materializes Jacobians row-by-row.
+    Figure 7: Reverse-mode AD reconstructs Jacobians row-by-row.
 </div>
 
 <aside class="l-body box-note" markdown="1">
@@ -483,7 +483,7 @@ in which performance is gained by representing matrix rows as index sets.
 
 ### Index sets
 
-Our goal with sparsity pattern detection is to quickly materialize the binary pattern of the Jacobian.
+Our goal with sparsity pattern detection is to quickly compute the binary pattern of the Jacobian.
 One way to achieve better performance than traditional AD is to encode row sparsity patterns as index sets.
 The $i$-th row of the Jacobian is given by 
 
@@ -623,7 +623,7 @@ This constraint ensures that columns in the same color group are indeed structur
 If we can find a coloring which uses the smallest possible number of distinct colors, it will minimize the number of groups, and thus the computational cost of the AD step.
 
 Figure 17 shows an optimal coloring using two colors, 
-whereas Figure 18 uses a suboptimal third color, requiring an extra JVP to materialize the Jacobian 
+whereas Figure 18 uses a suboptimal third color, requiring an extra JVP to compute the Jacobian 
 and therefore increasing the computational cost of ASD.
 Figure 19 shows an infeasible coloring: vertices 2 and 4 on the graph are adjacent, but share a color.
 This results in overlapping columns.
