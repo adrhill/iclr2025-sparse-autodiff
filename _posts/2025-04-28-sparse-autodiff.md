@@ -381,13 +381,13 @@ the sum can be uniquely decomposed into its components, a process known as **dec
 Thus, a single JVP is enough to retrieve the nonzero coefficients of several columns at once.
 
 This specific example using JVPs corresponds to forward-mode ASD 
-and is visualized in Figure 9, where all orthogonal columns have been colored in matching hues.
+and is visualized in Figure 9, where all structurally orthogonal columns have been colored in matching hues.
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
 we obtain the sum of the first, second and fifth column of our Jacobian.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 9: Materializing multiple orthogonal columns of a Jacobian in forward-mode.
+    Figure 9: Computing structurally orthogonal columns of a Jacobian in forward mode.
 </div>
 
 
@@ -432,10 +432,10 @@ In other words, **we cannot tell which rows and columns form structurally orthog
 But if we compute this Jacobian via traditional AD, then ASD isn't necessary anymore.
 
 The solution to this problem is shown in Figure 12 (a):
-in order to find orthogonal columns (or rows), we don't need to calculate every coefficient in the Jacobian.
+in order to find structurally orthogonal columns (or rows), we don't need to calculate every coefficient in the Jacobian.
 Instead, it is enough to **detect the sparsity pattern** of the Jacobian.
 This binary-valued pattern contains enough information to deduce structural orthogonality.
-From there, we use a **coloring algorithm** to group structurally orthogonal columns (or rows) together.
+From there, we use a **coloring algorithm** to group orthogonal columns (or rows) together.
 Such a coloring can be visualized on Figure 12 (b), 
 where the yellow columns will be evaluated together (first JVP) 
 and the light blue ones will be evaluated together (second JVP), 
@@ -522,7 +522,7 @@ As previously discussed, this is not a viable option due to its inefficiency and
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 14: Materializing a Jacobian forward-mode. 
+    Figure 14: Propagation of a full matrix in forward mode. 
     Due to high memory requirements for intermediate Jacobians, this approach is inefficient or impossible.  
 </div>
 
