@@ -389,7 +389,7 @@ we materialize the sum of the first, second and fifth column of our Jacobian.
 
 
 A second JVP with the vector  $\mathbf{e}_3 + \mathbf{e}_4$ materializes the sum of the remaining columns. 
-We the assign the values in the resulting vectors back to the appropriate Jacobian entries.
+We then assign the values in the resulting vectors back to the appropriate Jacobian entries.
 This final decompression step is shown in Figure 10.
 
 <div class="row mt-3">
