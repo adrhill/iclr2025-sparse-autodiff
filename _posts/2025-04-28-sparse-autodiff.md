@@ -852,13 +852,13 @@ Sparsity pattern detection and matrix coloring are performed in a so-called "pre
 Thus, to extract more performance, we can create this object only once
 
 ```julia
-prep = prepare_jacobian(iter_diff, sparse_backend, x, Constant(k))
+prep = prepare_jacobian(iter_diff, asd, x, Constant(k))
 ```
 
 and then reuse it as much as possible, for instance inside the loop of an iterative algorithm (note the additional `prep` argument):
 
 ```julia
-jacobian(iter_diff, prep, sparse_backend, x, Constant(k))
+jacobian(iter_diff, prep, asd, x, Constant(k))
 ```
 
 Inside the preparation result, we find the output of sparsity pattern detection
