@@ -315,7 +315,8 @@ Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector m
 $$ \Dfc(\vbc{i}) = \left( \Jfc \right)_\colorv{i,:} $$
 
 Thus, recovering the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
-Once again, we distinguish between linear maps and materialized matrices by using dashed and solid lines respectively:
+Once again, we distinguish between linear maps and materialized matrices by using dashed and solid lines respectively.
+While we put numbers into the linear maps for illustrative purposes, they are best thought of as black-box operators:
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
