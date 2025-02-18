@@ -161,8 +161,7 @@ Leveraging this sparsity can vastly **accelerate automatic differentiation** (AD
 while decreasing its memory requirements <d-cite key="griewankEvaluatingDerivativesPrinciples2008"></d-cite>.
 Yet, while traditional AD is available in many high-level programming languages like Python <d-cite key="paszkePyTorchImperativeStyle2019"></d-cite> <d-cite key="bradburyJAXComposableTransformations2018"></d-cite> and Julia <d-cite key="sapienzaDifferentiableProgrammingDifferential2024"></d-cite>,
 **automatic sparse differentiation (ASD) is not as widely used**.
-One reason is that the underlying theory was developed outside of the ML research ecosystem,
-by people more familiar with low-level programming languages.
+One reason is that the underlying theory was developed in the AD community, outside of the ML research ecosystem.
 
 With this blog post, we aim to shed light on the inner workings of ASD, 
 bridging the gap between the ML and AD communities by presenting well established techniques from the latter field.
