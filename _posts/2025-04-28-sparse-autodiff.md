@@ -572,7 +572,7 @@ Figure 16 annotates these index sets on the edges of the computational graph.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/compute_graph.png" class="img-90" %}
 <div class="caption">
-    Figure 16: Computational graph of the function $ f(\mathbf{x}) = [x_1 x_2 + \text{sgn}(x_3), \text{sgn}(x_3) \frac{x_4}{2} ] $, annotated with corresponding index sets.  
+    Figure 16: Computational graph of the function $ f(\mathbf{x}) = [x_1 x_2 + \text{sgn}(x_3),\, \text{sgn}(x_3) \frac{x_4}{2} ] $, annotated with corresponding index sets.  
 </div>
 
 Abstract interpretation means that we imbue the computational graph with a different meaning.
