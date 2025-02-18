@@ -211,7 +211,7 @@ We will keep using these dimensions in following illustrations, even though the 
 
 We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian.
 In practice however, there is a problem:
-**computing intermediate Jacobian matrices is inefficient and often impossible**, especially with a dense matrix format.
+**computing intermediate Jacobian matrices is inefficient and often intractable**, especially with a dense matrix format.
 Examples of dense matrix formats include NumPy's `ndarray`, PyTorch's `Tensor`, JAX's `Array` and Julia's `Matrix`.
 
 As a motivating example, let us take a look at a tiny convolutional layer.
