@@ -216,7 +216,7 @@ Examples of dense matrix formats include NumPy's `ndarray`, PyTorch's `Tensor`, 
 
 As a motivating example, let us take a look at a tiny convolutional layer.
 We consider a convolutional filter of size $5 \times 5$, a single input channel and a single output channel.
-An input of size $28 \times 28 \times 1$ results in a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
+An input of size $28 \times 28 \times 1$ results in a $576$-dimensional output and therefore a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
 All the white coefficients are **structural zeros**.
 
 If we represent the Jacobian of each convolutional layer as a dense matrix, 
