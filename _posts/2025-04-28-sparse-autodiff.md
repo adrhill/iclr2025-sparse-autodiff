@@ -301,6 +301,7 @@ resulting in **reverse-mode AD**, shown in Figure 5.
 
 This is commonly called a **vector-Jacobian product** (VJP) or **pullback**.
 Just like forward mode, the cost of one VJP of $f$ is approximately the same as the cost of one evaluation of $f$. 
+However, the memory footprint is larger, as intermediate results of the computation of $f$ must be kept in memory (e.g. hidden activations between layers). 
 Reverse mode is also matrix-free: **no intermediate Jacobian matrices are computed at any point**.
 
 ### From linear maps back to Jacobians
