@@ -24,7 +24,7 @@ toc:
     - name: AD is matrix-free
     - name: Forward-mode AD
     - name: Reverse-mode AD
-    - name: From linear maps back to Jacobians
+    - name: From Jacobian operators back to Jacobian matrices
   - name: Automatic sparse differentiation
     subsections:
     - name: Sparse matrices
@@ -187,7 +187,7 @@ The insights gained from this toy example should translate directly to more deep
 ### The chain rule
 
 For a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and a point of linearization $\mathbf{x} \in \mathbb{R}^{n}$,
-the Jacobian $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, whose $(i,j)$-th entry is
+the Jacobian matrix $J_f(\mathbf{x})$ is the $m \times n$ matrix of first-order partial derivatives, whose $(i,j)$-th entry is
 
 $$ \big( \Jf \big)_{i,j} = \dfdx{i}{j} \in \sR \, . $$
 
@@ -195,7 +195,7 @@ For a composed function
 
 $$ \colorf{f} = \colorh{h} \circ \colorg{g} \, , $$
 
-the **multivariate chain rule** tells us that we obtain the Jacobian of $f$ by **multiplying** the Jacobians of $h$ and $g$:
+the **multivariate chain rule** tells us that we obtain the Jacobian matrix of $f$ by **multiplying** the Jacobian matrices of $h$ and $g$:
 
 $$ \Jfc = \Jhc \cdot \Jgc .$$
 
@@ -209,14 +209,14 @@ We will keep using these dimensions in following illustrations, even though the 
 
 ### AD is matrix-free
 
-We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian.
+We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian matrices.
 In practice however, there is a problem:
 **computing intermediate Jacobian matrices is inefficient and often intractable**, especially with a dense matrix format.
 Examples of dense matrix formats include NumPy's `ndarray`, PyTorch's `Tensor`, JAX's `Array` and Julia's `Matrix`.
 
 As a motivating example, let us take a look at a tiny convolutional layer.
 We consider a convolutional filter of size $5 \times 5$, a single input channel and a single output channel.
-An input of size $28 \times 28 \times 1$ results in a $576$-dimensional output and therefore a $576 \times 784$ Jacobian, the structure of which is shown in Figure 2.
+An input of size $28 \times 28 \times 1$ results in a $576$-dimensional output and therefore a $576 \times 784$ Jacobian matrix, the structure of which is shown in Figure 2.
 All the white coefficients are **structural zeros**.
 
 If we represent the Jacobian of each convolutional layer as a dense matrix, 
@@ -229,18 +229,19 @@ and we waste memory storing those zero coefficients.
 </div>
 
 In modern neural network architectures, which can contain over one trillion parameters,
-computing intermediate Jacobians is not only inefficient: it exceeds available memory.
-AD circumvents this limitation by using **linear maps, lazy operators that act exactly like matrices** 
+computing intermediate Jacobian matrices is not only inefficient: it exceeds available memory.
+AD circumvents this limitation by using **Jacobian operators** that act exactly like Jacobian matrices 
 but without explicitly storing every coefficient in memory.
 
-The differential $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
-We can rephrase  the chain rule as a **composition of linear maps** instead of a product of matrices:
+The Jacobian operator $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
+
+We can rephrase  the chain rule as a **composition of operators** instead of a product of matrices:
 
 $$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc \, .$$
 
-Note that all terms in this formulation of the chain rule are linear maps.
+Note that all terms in this formulation of the chain rule are Jacobian operators.
 A new visualization for our toy example can be found in Figure 3b.
-Our illustrations distinguish between matrices and linear maps by using solid and dashed lines respectively.
+Our illustrations distinguish between matrices and operators by using solid and dashed lines respectively.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/chainrule_num.svg" class="img-fluid" %}
 <div class="caption">
@@ -249,25 +250,25 @@ Our illustrations distinguish between matrices and linear maps by using solid an
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/matrixfree.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 3b: Chain rule using matrix-free linear maps (dashed outline).
+    Figure 3b: Chain rule using matrix-free Jacobian operators (dashed outline).
 </div>
 
 <aside class="l-body box-note" markdown="1">
-We visualize "matrix entries" in linear maps to build intuition.
+We visualize "matrix entries" in Jacobian operators to build intuition.
 Even though following illustrations will sometimes put numbers onto these entries,
-linear maps are best thought of as black-box operators.
+Jacobian operators are best thought of as black-boxes.
 </aside>
 
 ### Forward-mode AD
 
-Now that we have translated the compositional structure of our function $f$ into a compositional structure of linear maps, we can evaluate them by propagating vectors through them, one subfunction at a time.
+Now that we have translated the compositional structure of our function $f$ into a compositional structure of Jacobian operators, we can evaluate them by propagating vectors through them, one subfunction at a time.
 
 Figure 4 illustrates the propagation of a vector $\mathbf{v}_1 \in \mathbb{R}^n$ from the right-hand side.
 Since we propagate in the order of the original function evaluation ($g$ then $h$), this is called **forward-mode AD**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_eval.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 4: Evaluating linear maps in forward mode.
+    Figure 4: Evaluating Jacobian operators in forward mode.
 </div>
 
 In the first step, we evaluate $Dg(\mathbf{x})(\mathbf{v}_1)$.
@@ -276,6 +277,15 @@ Since this operation by definition corresponds to
 $$ \vvc{2} = \Dgc(\vvc{1}) = \Jgc \cdot \vvc{1} \;\in \sR^p \, ,$$
 
 it is commonly called a **Jacobian-vector product** (JVP) or **pushforward**.
+
+<aside class="l-body box-note" markdown="1">
+While we stick to the term "JVP" due to its prevalence in the ML community, 
+we want to emphasize that it is misleading:
+A JVP does not materialize and multiply a Jacobian matrix.
+Instead, it evaluates a matrix-free Jacobian operator.
+</aside>
+
+
 The resulting vector $\mathbf{v}_2$ is then used to compute the subsequent JVP 
 
 $$ \vvc{3} = \Dhc(\vvc{2}) = \Jhc \cdot \vvc{2} \;\in \sR^m \, ,$$
@@ -287,16 +297,16 @@ $$ \vvc{3} = \Dfc(\vvc{1}) = \Jfc \cdot \vvc{1} \, ,$$
 the JVP of our composed function $f$.
 
 The computational cost of one JVP of $f$ is approximately the same as the cost of one evaluation of $f$. 
-**Note that we did not compute intermediate Jacobian matrices at any point** – we only propagated vectors through linear maps.
+**Note that we did not compute intermediate Jacobian matrices at any point – we only propagated vectors through Jacobian operators**.
 
 ### Reverse-mode AD
 
-We can also propagate vectors through our linear maps from the left-hand side, 
+We can also propagate vectors through the Jacobian operators from the left-hand side, 
 resulting in **reverse-mode AD**, shown in Figure 5.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode_eval.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 5: Evaluating linear maps in reverse mode.
+    Figure 5: Evaluating Jacobian operators in reverse mode.
 </div>
 
 This is commonly called a **vector-Jacobian product** (VJP) or **pullback**.
@@ -304,33 +314,39 @@ Just like forward mode, the cost of one VJP of $f$ is approximately the same as 
 However, the memory footprint is larger, as intermediate results of the computation of $f$ must be kept in memory (e.g. hidden activations between layers). 
 Reverse mode is also matrix-free: **no intermediate Jacobian matrices are computed at any point**.
 
-### From linear maps back to Jacobians
+<aside class="l-body box-note" markdown="1">
+Just like the term "JVP" in forward-mode, the term "VJP" is misleading. 
+A VJP does not materialize and multiply a Jacobian matrix.
+Instead, it evaluates a matrix-free Jacobian operator.
+</aside>
 
-This machinery can be used to turn a composed linear map (a lazy matrix representation) 
-into a dense matrix in a computationally expensive process we call **materialization**.
+### From Jacobian operators back to Jacobian matrices
+
+In a computationally expensive process we call **materialization**,
+we can turn a composition of Jacobian operators into a dense Jacobian matrix.
 Counterintuitively, this process **does not materialize any intermediate Jacobian matrices**.
 
-Figure 6 demonstrates how to **materialize Jacobians column by column** in forward mode.
-Evaluating the linear map $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian $J_{f}(\mathbf{x})$:
+Figure 6 demonstrates how to **materialize Jacobian matrices column by column** in forward mode.
+Evaluating the Jacobian operator $Df(\mathbf{x})$ on the $i$-th standard basis vector materializes the $i$-th column of the Jacobian matrix $J_{f}(\mathbf{x})$:
 
 $$ \Dfc(\vbc{i}) = \left( \Jfc \right)_\colorv{i,:} $$
 
-Thus, recovering the full $m \times n$ Jacobian requires one JVP with each of the $n$ standard basis vectors of the **input space**.
-Once again, we distinguish between linear maps and materialized matrices by using dashed and solid lines respectively.
-While we put numbers into the linear maps for illustrative purposes, they are best thought of as black-box operators:
+Thus, recovering the full $m \times n$ Jacobian matrix requires one JVP with each of the $n$ standard basis vectors of the **input space**.
+Once again, we distinguish between Jacobian operators and materialized Jacobian matrices by using dashed and solid lines respectively.
+While we put numbers into the Jacobian operators for illustrative purposes, they are best thought of as black-box functions:
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 6: Forward-mode AD materializes Jacobians column-by-column.
+    Figure 6: Forward-mode AD materializes Jacobian matrices column-by-column.
 </div>
 
-As illustrated in Figure 7, we can also **materialize Jacobians row by row** in reverse mode.
+As illustrated in Figure 7, we can also **materialize Jacobian matrices row by row** in reverse mode.
 Unlike forward mode in Figure 6,
 this requires one VJP with each of the $m$ standard basis vectors of the **output space**.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/reverse_mode.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 7: Reverse-mode AD materializes Jacobians row-by-row.
+    Figure 7: Reverse-mode AD materializes Jacobian matrices row-by-row.
 </div>
 
 These processes of materialization are computationally expensive due the fact that each JVP and VJP costs approximately as much as the evaluation of the function $f$ itself.
@@ -347,7 +363,7 @@ who typically use the term backpropagation.
 ### Sparse matrices
 
 Sparse matrices are matrices in which most elements are zero.
-As shown in Figure 8, we refer to linear maps as "sparse linear maps" if they materialize to sparse matrices.
+As shown in Figure 8, we refer to Jacobian operators as "sparse operators" if they materialize to sparse matrices.
 
 <div class="row mt-3">
     <div class="col-sm mt-3 mt-md-0">
@@ -358,27 +374,27 @@ As shown in Figure 8, we refer to linear maps as "sparse linear maps" if they ma
     </div>
 </div>
 <div class="caption">
-    Figure 8: A sparse Jacobian and its corresponding sparse linear map.
+    Figure 8: A sparse Jacobian matrix and its corresponding sparse Jacobian operator.
 </div>
 
 When functions have many inputs and many outputs,
 a given output does not always depend on every single input.
-This endows the corresponding Jacobian with a **sparsity pattern**,
+This endows the corresponding Jacobian matrix with a **sparsity pattern**,
 where **zero coefficients denote an absence of (first-order) dependency**.
 The previous case of a convolutional layer is a simple example.
 An even simpler example is an activation function applied elementwise,
-for which the Jacobian is the identity matrix.
+for which the Jacobian matrix is the identity matrix.
 
 ### Leveraging sparsity
 
-For now, we assume that the sparsity pattern of the Jacobian is always the same, regardless of the input, and that we know it ahead of time.
+For now, we assume that the sparsity pattern of the Jacobian matrix is always the same, regardless of the input, and that we know it ahead of time.
 We say that two columns or rows of the Jacobian matrix are **structurally orthogonal** if, for every index, at most one of them has a nonzero coefficient.
 In other words, the sparsity patterns of the columns are non-overlapping vectors,
 whose dot product is always zero regardless of their actual values.
 
 The core idea of ASD is that **we can materialize multiple structurally orthogonal columns (or rows) with a single JVP (or VJP).**
 This trick was first suggested in 1974 by Curtis, Powell and Reid <d-cite key="curtisEstimationSparseJacobian1974"></d-cite>.
-Since linear maps are additive, it always holds that for a set of basis vectors,
+Since Jacobian operators are linear maps and therefore additive, it always holds that for a set of basis vectors,
 
 $$ \Dfc(\vbc{i}+\ldots+\vbc{j}) 
 = \underbrace{\Dfc(\vbc{i})}_{\left( \Jfc \right)_\colorv{i,:}} 
@@ -386,7 +402,7 @@ $$ \Dfc(\vbc{i}+\ldots+\vbc{j})
 + \underbrace{\Dfc(\vbc{j})}_{\left( \Jfc \right)_\colorv{j,:}} 
 \, . $$
 
-The components of the sum on the right-hand side each correspond to a column of the Jacobian.
+The components of the sum on the right-hand side each correspond to a column of the Jacobian matrix.
 If these columns are known to be structurally orthogonal,
 the sum can be uniquely decomposed into its components, a process known as **decompression**.
 Thus, a single JVP is enough to retrieve the nonzero coefficients of several columns at once.
@@ -394,7 +410,7 @@ Thus, a single JVP is enough to retrieve the nonzero coefficients of several col
 This specific example using JVPs corresponds to forward-mode ASD 
 and is visualized in Figure 9, where all structurally orthogonal columns have been colored in matching hues.
 By computing a single JVP with the vector $\mathbf{e}_1 + \mathbf{e}_2 + \mathbf{e}_5$, 
-we obtain the sum of the first, second and fifth column of our Jacobian.
+we obtain the sum of the first, second and fifth column of our Jacobian matrix.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/sparse_ad.svg" class="img-80" %}
 <div class="caption">
@@ -403,7 +419,7 @@ we obtain the sum of the first, second and fifth column of our Jacobian.
 
 
 A second JVP with the vector  $\mathbf{e}_3 + \mathbf{e}_4$ gives us the sum of the remaining columns. 
-We then assign the values in the resulting vectors back to the appropriate Jacobian entries.
+We then assign the values in the resulting vectors back to the appropriate entries of the Jacobian matrix.
 This final decompression step is shown in Figure 10.
 
 <div class="row mt-3">
@@ -437,14 +453,14 @@ We can then materialize multiple rows in a single VJP.
 ### Pattern detection and coloring
 
 Unfortunately, our initial assumption had a major flaw.
-Since AD only gives us a composition of linear maps and linear maps are black-box functions,
-the structure of the Jacobian is completely unknown.
+Since AD only gives us a composition of Jacobian operators, which are black-box functions,
+the structure of the corresponding Jacobian matrix is completely unknown.
 In other words, **we cannot tell which rows and columns form structurally orthogonal groups** without first materializing a Jacobian matrix.
-But if we materialize this Jacobian via traditional AD, then ASD isn't necessary anymore.
+But if we materialize this matrix via traditional AD, then ASD isn't necessary anymore.
 
 The solution to this problem is shown in Figure 12 (a):
-in order to find structurally orthogonal columns (or rows), we don't need to materialize the full Jacobian.
-Instead, it is enough to **detect the sparsity pattern** of the Jacobian.
+in order to find structurally orthogonal columns (or rows), we don't need to materialize the full Jacobian matrix.
+Instead, it is enough to **detect the sparsity pattern** of the matrix.
 This binary-valued pattern contains enough information to deduce structural orthogonality.
 From there, we use a **coloring algorithm** to group orthogonal columns (or rows) together.
 Such a coloring can be visualized on Figure 12 (b), 
@@ -487,14 +503,14 @@ there are also many possible approaches to sparsity pattern detection,
 each with its own advantages and tradeoffs.
 The work of Dixon <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> in the 1990's was among the first of many papers on this subject,
 most of which can be classified into operator overloading or source transformation techniques.
-There are also ways to detect a sparsity pattern by probing the Jacobian coefficients with AD<d-cite key="griewankDetectingJacobianSparsity2002"></d-cite>, but we do not linger on them here.
+There are also ways to detect a sparsity pattern by probing the Jacobian matrix coefficients with AD<d-cite key="griewankDetectingJacobianSparsity2002"></d-cite>, but we do not linger on them here.
 
 The method we present corresponds to a binary version of a forward-mode AD system, similar in spirit to <d-cite key="dixonAutomaticDifferentiationLarge1990"></d-cite> and <d-cite key="bischofEfficientComputationGradients1996"></d-cite>,
 in which performance is gained by representing matrix rows as index sets.
 
 ### Index sets
 
-Our goal with sparsity pattern detection is to quickly compute the binary pattern of the Jacobian.
+Our goal with sparsity pattern detection is to quickly compute the binary pattern of the Jacobian matrix.
 One way to achieve better performance than traditional AD is to encode row sparsity patterns as index sets.
 The $i$-th row of the Jacobian is given by 
 
@@ -511,7 +527,7 @@ However, since we are only interested in the binary pattern
 
 $$ \left[\dfdx{i}{j} \neq 0\right]_{1 \le j \le n} \, , $$
 
-we can instead represent the sparsity pattern of the $i$-th row of a Jacobian by the corresponding **index set of non-zero values**
+we can instead represent the sparsity pattern of the $i$-th row of a Jacobian matrix by the corresponding **index set of non-zero values**
 
 $$ \left\{j \;\Bigg|\; \dfdx{i}{j} \neq 0\right\} \, . $$
 
@@ -527,17 +543,17 @@ For instance, output $i=2$ was influenced by inputs $j=4$ and $j=5$.
 ### Efficient propagation
 
 Figure 14 shows the traditional forward mode pass we want to avoid:
-propagating a full identity matrix through a linear map would materialize the Jacobian matrix of $f$, 
-but also all intermediate linear maps.
+propagating a full identity matrix through a Jacobian operator would not only materialize the Jacobian matrix of $f$, 
+but also all intermediate Jacobian matrices.
 As previously discussed, this is not a viable option due to its inefficiency and high memory requirements.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_naive.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 14: Propagating an identity matrix in forward mode to obtain the Jacobian.
+    Figure 14: Propagating an identity matrix in forward mode to obtain the Jacobian matrix.
 </div>
 
 Instead, we initialize an input vector with index sets corresponding to the identity matrix. 
-An alternative view on this vector is that it corresponds to the index set representation of the Jacobian of the input, since $\frac{\partial x_i}{\partial x_j} \neq 0$ only holds for $i=j$.
+An alternative view on this vector is that it corresponds to the index set representation of the Jacobian matrix of the input, since $\frac{\partial x_i}{\partial x_j} \neq 0$ only holds for $i=j$.
 
 Our goal is to propagate this index set such that we get an output vector of index sets 
 that corresponds to the Jacobian sparsity pattern.
@@ -545,7 +561,7 @@ This idea is visualized in Figure 15.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/forward_mode_sparse.svg" class="img-fluid" %}
 <div class="caption">
-    Figure 15: Propagating an index set through a linear map to obtain a sparsity pattern.  
+    Figure 15: Propagating an index set through a Jacobian operator to obtain a sparsity pattern.  
 </div>
 
 ### Abstract interpretation
@@ -587,7 +603,7 @@ The sign function has a zero derivative for any input value.
 It therefore doesn't propagate the index set of its input and instead returns an empty set.
 
 Figure 16 shows the resulting output index sets $\\{1, 2\\}$ and $\\{4\\}$ for outputs 1 and 2 respectively.
-These match the analytic Jacobian
+These match the analytic Jacobian matrix
 
 $$ J_f(\mathbf{x}) = \begin{bmatrix}
 x_2 & x_1 & 0 & 0\\
@@ -615,7 +631,7 @@ However, they need to be recomputed when changing the input.
 
 ## Coloring
 
-Once we have detected a sparsity pattern, our next goal is to decide **how to group the columns (or rows)** of the Jacobian.
+Once we have detected a sparsity pattern, our next goal is to decide **how to group the columns (or rows)** of the Jacobian matrix.
 The columns (or rows) in each group will be evaluated simultaneously using a single JVP (or VJP), with a linear combination of basis vectors called a **seed**.
 If the members of the group are structurally orthogonal, then this gives all the necessary information to retrieve every nonzero coefficient of the matrix.
 
@@ -665,11 +681,11 @@ A crucial hyperparameter is the choice of ordering, for which various criteria h
 
 ### Bicoloring
 
-A more advanced coloring technique called **bicoloring** allows combining forward and reverse modes, because the recovery of the Jacobian leverages both columns (JVPs) and rows (VJPs) <d-cite key="hossainComputingSparseJacobian1998"></d-cite> <d-cite key="colemanEfficientComputationSparse1998"></d-cite>.
+A more advanced coloring technique called **bicoloring** allows combining forward and reverse modes, because the recovery of the Jacobian matrix leverages both columns (JVPs) and rows (VJPs) <d-cite key="hossainComputingSparseJacobian1998"></d-cite> <d-cite key="colemanEfficientComputationSparse1998"></d-cite>.
 
 Figure 20 shows bicoloring on a toy example in which no pair of columns or rows is structurally orthogonal.
-Even with ASD, materializing the Jacobian would require $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
-However, if we use both modes simultaneously, we can materialize the full Jacobian by computing only $1$ JVP and $1$ VJP.
+Even with ASD, materializing the Jacobian matrix would require $5$ JVPs in forward-mode or $4$ VJPs in reverse mode.
+However, if we use both modes simultaneously, we can materialize the full Jacobian matrix by computing only $1$ JVP and $1$ VJP.
 
 {% include figure.html path="assets/img/2025-04-28-sparse-autodiff/bicoloring.svg" class="img-50" %}
 <div class="caption">
@@ -678,7 +694,7 @@ However, if we use both modes simultaneously, we can materialize the full Jacobi
 
 ## Second order
 
-While first-order automatic differentiation AD focuses on computing the gradient or Jacobian, 
+While first-order automatic differentiation AD focuses on computing the gradient or Jacobian matrix, 
 second-order AD extends the same ideas to the **Hessian** matrix
 
 $$ \nabla^2 f (\mathbf{x}) = \left(\frac{\partial^2 f(\mathbf{x})}{\partial x_i ~ \partial x_j} \right)_{i,j} \, .$$
@@ -960,7 +976,7 @@ By now, the reader should have a better understanding of how sparsity can be use
 But should it always be used? Here are a list of criteria to consider when choosing between AD and ASD:
 
 - **Which derivative is needed?** When computing gradients of scalar functions using reverse mode, sparsity can't be leveraged, as only a single VJP is required. In practice, ASD only speeds up derivatives like the Jacobian and Hessian which have a matrix form.
-- **What operations will be performed on the derivative matrix?** For a single matrix-vector product $J \mathbf{v}$, the linear map will always be faster. But if we want to solve linear systems $J \mathbf{v} = \mathbf{y}$, then it may be useful to compute the full matrix first to leverage sparse factorization routines.
+- **What operations will be performed on the derivative matrix?** For a single matrix-vector product $J \mathbf{v}$, the Jacobian operator will always be faster. But if we want to solve linear systems $J \mathbf{v} = \mathbf{y}$, then it may be useful to compute the full Jacobian matrix first to leverage sparse factorization routines.
 - **How expensive is the function at hand?** This directly impacts the cost of a JVP, VJP or HVP, which scales with the cost of one function evaluation.
 - **How sparse would the matrix be?** This dictates the efficiency of sparsity detection and coloring, as well as the number of matrix-vector products necessary. While it may be hard to get an exact estimate, concepts like partial separability can help provide upper bounds <d-cite key="gowerComputingSparsityPattern2014"></d-cite>. In general, the relation between the number of colors $c$ and the dimension $n$ is among the most crucial quantities to analyze.
 
