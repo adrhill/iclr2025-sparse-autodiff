@@ -209,7 +209,7 @@ We will keep using these dimensions in following illustrations, even though the 
 
 ### AD is matrix-free
 
-We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian matrices.
+We have seen how the chain rule translates the compositional structure of a function into the product structure of its Jacobian matrix.
 In practice however, there is a problem:
 **computing intermediate Jacobian matrices is inefficient and often intractable**, especially with a dense matrix format.
 Examples of dense matrix formats include NumPy's `ndarray`, PyTorch's `Tensor`, JAX's `Array` and Julia's `Matrix`.
