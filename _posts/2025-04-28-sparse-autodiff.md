@@ -230,13 +230,13 @@ and we waste memory storing those zero coefficients.
 
 In modern neural network architectures, which can contain over one trillion parameters,
 computing intermediate Jacobian matrices is not only inefficient: it exceeds available memory.
+
 AD circumvents this limitation by using **Jacobian operators** that act exactly like Jacobian matrices 
 but without explicitly storing every coefficient in memory.
-On the other hand, Jacobian matrices are the representation of Jacobian operators in the standard basis.
-
 The Jacobian operator $Df: \mathbf{x} \longmapsto Df(\mathbf{x})$ is a linear map which provides the best linear approximation of $f$ around a given point $\mathbf{x}$.
+Jacobian matrices are the representation of Jacobian operators in the standard basis.
 
-We can rephrase  the chain rule as a **composition of operators** instead of a product of matrices:
+We can now rephrase the chain rule as a **composition of operators** instead of a product of matrices:
 
 $$ \Dfc = \colorf{\D{(h \circ g)}{\vx}} = \Dhc \circ \Dgc \, .$$
 
