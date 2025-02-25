@@ -757,7 +757,7 @@ While still at an early stage of development, we hope that such an example of un
 <aside class="l-body box-note" markdown="1">
 The authors of this blog post are all developers of the ASD ecosystem in Julia.
 We use Julia for our demonstration since we are not aware of a similar ecosystem in Python or R.
-PyTorch, TensorFlow and JAX currently lack sparsity detection and coloring capabilities.
+At the time of writing, PyTorch, TensorFlow, and JAX lack sparsity detection and coloring capabilities.
 The closest counterpart we know is coded in C, namely the combination of ADOL-C <d-cite key="waltherGettingStartedADOLC2009"></d-cite>
 and ColPack <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
 </aside>
