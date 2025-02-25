@@ -757,7 +757,8 @@ While still at an early stage of development, we hope that such an example of un
 <aside class="l-body box-note" markdown="1">
 The authors of this blog post are all developers of the ASD ecosystem in Julia.
 We use Julia for our demonstration since we are not aware of a similar ecosystem in Python or R.
-At the time of writing, PyTorch, TensorFlow, and JAX lack sparsity detection and coloring capabilities.
+At the time of writing, PyTorch, TensorFlow, and JAX lack comparable sparsity detection and coloring capabilities.
+We are only aware of one JAX library for sparse differentiation, [`sparsejac`](https://github.com/mfschubert/sparsejac), which does not support sparsity detection, uses less efficient graph encodings and has no functionality for symmetric (Hessian) matrices. 
 The closest counterpart we know is coded in C, namely the combination of ADOL-C <d-cite key="waltherGettingStartedADOLC2009"></d-cite>
 and ColPack <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
 </aside>
