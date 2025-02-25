@@ -46,6 +46,7 @@ toc:
     - name: Hessian-vector products
     - name: Second order pattern detection
     - name: Symmetric coloring
+  - name: Applications
   - name: Demonstration
     subsections:
     - name: Necessary packages
@@ -56,7 +57,6 @@ toc:
     - name: Coloring visualization
     - name: Performance benefits
   - name: Conclusion
-
 
 # Below is an example of injecting additional post-specific styles.
 # This is used in the 'Layouts' section of this post.
@@ -714,7 +714,7 @@ $$ \nabla^2 f (\mathbf{x}) = J_{\nabla f}(\mathbf{x}) \, .$$
 
 An HVP computes the product of the Hessian matrix with a vector, which can be viewed as the JVP of the gradient function.
 
-$$ \nabla^2 f(\mathbf{x}) (\mathbf{v}) = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
+$$ \nabla^2 f(\mathbf{x}) \cdot \mathbf{v} = D[\nabla f](\mathbf{x})(\mathbf{v}) $$
 
 Note that the gradient function is itself computed via a VJP of $f$.
 Thus, the HVP approach we described computes the JVP of a VJP, giving it the name "forward over reverse".
@@ -748,6 +748,32 @@ This backup storage enables the use of **fewer distinct colors**, reducing the c
 
 Powell and Toint <d-cite key="powellEstimationSparseHessian1979"></d-cite> were the first to notice symmetry-related optimizations, before Coleman and Moré <d-cite key="colemanEstimationSparseHessian1984"></d-cite> made the connection to graph coloring explicit.
 While symmetric coloring and decompression are more computationally expensive than their nonsymmetric counterparts, this cost is typically negligible compared to the savings we get from fewer HVPs.
+
+## Applications
+
+ASD is useful in applications which require the computation of full Jacobian or Hessian matrices with sparsity.
+One such example is given in the 2024 ICLR blog post *How to compute Hessian-vector products?* <d-cite key="dagreouHowComputeHessianvector2024"></d-cite>,
+where Hessians are used for second-order optimization:
+
+> When trying to find the minimum of the function $$f$$, methods that account for the second-order information often rely on the product between the inverse Hessian and a vector to find a good update direction.
+> For instance, Newton's method relies on update rules of the form
+> 
+> \begin{equation}
+>   \notag
+>   \theta_{k+1} = \theta_k - \eta_k[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)
+> \end{equation}
+> 
+> for some step-size $$\eta_k>0$$.
+
+The blog post goes on to argue that instead of materializing the full Hessian matrix, 
+matrix-free iterative solvers should be combined with Hessian operators by iteratively computing HVPs: 
+
+> When evaluating the term $$[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)$$, it would be very inefficient to first compute the full Hessian matrix $$\nabla^2f(\theta_k)$$, then invert it and finally multiply this with the gradient $$\nabla f(\theta_k)$$.
+
+While this holds true for dense Hessians, the opposite can be the case for sparse Hessians.
+Materializing a full Hessian matrix allows for an entirely new class of linear solvers to be used, e.g. enabling matrix factorization.
+Whether these are more performant depends on the number of colors in the sparity pattern of the Hessian 
+vs. the required numerical precision of the iterative solve.
 
 ## Demonstration
 
