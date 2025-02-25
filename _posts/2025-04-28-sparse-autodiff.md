@@ -755,8 +755,11 @@ We complement this tutorial with a demonstration of automatic sparse differentia
 While still at an early stage of development, we hope that such an example of unified pipeline for sparse Jacobians and Hessians can inspire developers in other languages to revisit ASD.
 
 <aside class="l-body box-note" markdown="1">
-The authors of this blog post are all developers of the ASD ecosystem in Julia. We are not aware of a similar ecosystem in Python or R, which is why we chose Julia to present it.
-The closest counterpart we know is coded in C, namely the combination of ADOL-C <d-cite key="waltherGettingStartedADOLC2009"></d-cite> and ColPack <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
+The authors of this blog post are all developers of the ASD ecosystem in Julia.
+We are not aware of a similar ecosystem in Python (including PyTorch and JAX) or R, 
+which is why we chose Julia to present it.
+The closest counterpart we know is coded in C, namely the combination of ADOL-C <d-cite key="waltherGettingStartedADOLC2009"></d-cite>
+and ColPack <d-cite key="gebremedhinColPackSoftwareGraph2013"></d-cite>.
 </aside>
 
 ### Necessary packages
