@@ -779,9 +779,10 @@ matrix-free iterative solvers should be combined with Hessian operators by itera
 > with $$b = \nabla f(\theta_k)$$.
 > This approach is much more efficient as it avoids computing and storing the full Hessian matrix, and only computes the inverse of the matrix in the direction $$v$$.
 
-While this holds true for dense Hessians, the opposite can be the case for sparse Hessians.
+While this holds true for dense Hessian matrices, the opposite can be the case for sparse Hessians.
+By leveraging ASD, fewer HVPs and less memory are required to compute and store a sparse Hessian matrix.
 Materializing a full Hessian matrix allows the use of direct linear solvers, which are more robust than iterative solvers for ill-conditioned problems.
-Whether these are more performant depends on the number of colors in the sparity pattern of the Hessian 
+Whether these are more performant depends on the number of colors in the sparsity pattern of the Hessian 
 vs. the required numerical precision of the iterative solve.
 
 ## Demonstration
