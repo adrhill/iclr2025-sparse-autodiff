@@ -771,7 +771,7 @@ matrix-free iterative solvers should be combined with Hessian operators by itera
 > When evaluating the term $$[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)$$, it would be very inefficient to first compute the full Hessian matrix $$\nabla^2f(\theta_k)$$, then invert it and finally multiply this with the gradient $$\nabla f(\theta_k)$$.
 
 While this holds true for dense Hessians, the opposite can be the case for sparse Hessians.
-Materializing a full Hessian matrix allows for an entirely new class of linear solvers to be used, e.g. enabling matrix factorization.
+Materializing a full Hessian matrix allows the use of direct linear solvers, which are more robust than iterative solvers for ill-conditioned problems.
 Whether these are more performant depends on the number of colors in the sparity pattern of the Hessian 
 vs. the required numerical precision of the iterative solve.
 
