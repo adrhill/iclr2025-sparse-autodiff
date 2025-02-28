@@ -769,6 +769,15 @@ The blog post goes on to argue that instead of materializing the full Hessian ma
 matrix-free iterative solvers should be combined with Hessian operators by iteratively computing HVPs: 
 
 > When evaluating the term $$[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)$$, it would be very inefficient to first compute the full Hessian matrix $$\nabla^2f(\theta_k)$$, then invert it and finally multiply this with the gradient $$\nabla f(\theta_k)$$.
+> Instead, one computes the inverse Hessian-Vector Product (iHPV) by solving the following linear system
+> 
+> \begin{equation}
+>   \notag
+>   \nabla^2f(\theta)v = b\enspace.
+> \end{equation}
+> 
+> with $$b = \nabla f(\theta_k)$$.
+> This approach is much more efficient as it avoids computing and storing the full Hessian matrix, and only computes the inverse of the matrix in the direction $$v$$.
 
 While this holds true for dense Hessians, the opposite can be the case for sparse Hessians.
 Materializing a full Hessian matrix allows the use of direct linear solvers, which are more robust than iterative solvers for ill-conditioned problems.
