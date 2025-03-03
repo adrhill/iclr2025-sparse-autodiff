@@ -751,40 +751,19 @@ While symmetric coloring and decompression are more computationally expensive th
 
 ## Applications
 
-ASD is useful in applications which require the computation of full Jacobian or Hessian matrices with sparsity.
-One such example is given in the 2024 ICLR blog post *How to compute Hessian-vector products?* <d-cite key="dagreouHowComputeHessianvector2024"></d-cite>,
-where Hessians are used for second-order optimization:
+ASD is useful in applications which involve the computation of full Jacobian or Hessian matrices with sparsity.
+Let us discuss one of the examples given in the 2024 ICLR blog post *How to compute Hessian-vector products?* <d-cite key="dagreouHowComputeHessianvector2024"></d-cite>: Newton's method.
+This canonical algorithm for nonlinear optimization uses Hessians within local steps of the form $[\nabla^2 f(\mathbf{x})]^{-1} \nabla f(\mathbf{x})$.
+Of course, the inverse $[\nabla^2f(\mathbf{x})]^{-1}$ is never created explicitly, since it suffices to solve a linear system $\nabla^2f(\mathbf{x}) \mathbf{v} = \nabla f(\mathbf{x})$.
+For such systems, as the blog post argues, matrix-free iterative solvers combine well with Hessian operators because they only require successive evaluations of HVPs.
+The main upside of iterative solvers is their small memory footprint and their ease of implementation.
 
-> When trying to find the minimum of the function $$f$$, methods that account for the second-order information often rely on the product between the inverse Hessian and a vector to find a good update direction.
-> For instance, Newton's method relies on update rules of the form
-> 
-> \begin{equation}
->   \notag
->   \theta_{k+1} = \theta_k - \eta_k[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)
-> \end{equation}
-> 
-> for some step-size $$\eta_k>0$$.
-
-The blog post goes on to argue that instead of materializing the full Hessian matrix, 
-matrix-free iterative solvers should be combined with Hessian operators by iteratively computing HVPs: 
-
-> When evaluating the term $$[\nabla^2f(\theta_k)]^{-1}\nabla f(\theta_k)$$, it would be very inefficient to first compute the full Hessian matrix $$\nabla^2f(\theta_k)$$, then invert it and finally multiply this with the gradient $$\nabla f(\theta_k)$$.
-> Instead, one computes the inverse Hessian-Vector Product (iHPV) by solving the following linear system
-> 
-> \begin{equation}
->   \notag
->   \nabla^2f(\theta)v = b\enspace.
-> \end{equation}
-> 
-> with $$b = \nabla f(\theta_k)$$.
-> This approach is much more efficient as it avoids computing and storing the full Hessian matrix, and only computes the inverse of the matrix in the direction $$v$$.
-
-While this holds true for dense Hessian matrices, the opposite can be the case for sparse Hessians.
-By leveraging ASD, fewer HVPs and less memory are required to compute and store a sparse Hessian matrix.
-Materializing a full Hessian matrix allows the use of direct linear solvers, which are more robust than iterative solvers for ill-conditioned problems.
-Whether these are more performant also depends on the number of colors in the sparsity pattern of the Hessian 
-vs. the required numerical precision of the iterative solve.
-Additionally, iterative solves with linear operators might not be supported by the underlying library (e.g. for nonlinear optimization).
+However, when it is possible to materialize the whole matrix, direct linear solvers (e.g. based on factorization) can be used.
+As we have seen, ASD unlocks this option whenever the Hessian matrix is sparse enough.
+In terms of performance, computing a sparse Hessian matrix might require fewer HVPs overall than applying an iterative solver like the conjugate gradient method.
+The exact comparison depends on the number of colors in the sparsity pattern of the Hessian, as well as the numerical precision expected from the iterative solver (which influences the number of iterations, hence the number of HVPs).
+In terms of numerical accuracy, direct solvers are more robust than their iterative counterparts.
+Finally, in terms of compatibility, some prominent nonlinear optimization libraries only support Hessian matrices, and not Hessian operators.
 
 ## Demonstration
 
