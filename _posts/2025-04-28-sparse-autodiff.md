@@ -754,14 +754,14 @@ While symmetric coloring and decompression are more computationally expensive th
 ASD is useful in applications which involve the computation of full Jacobian or Hessian matrices with sparsity.
 Let us discuss one of the examples given in the 2024 ICLR blog post *How to compute Hessian-vector products?* <d-cite key="dagreouHowComputeHessianvector2024"></d-cite>: Newton's method.
 This canonical algorithm for nonlinear optimization uses Hessians within local steps of the form $[\nabla^2 f(\mathbf{x})]^{-1} \nabla f(\mathbf{x})$.
-Of course, the inverse $[\nabla^2f(\mathbf{x})]^{-1}$ is never created explicitly, since it suffices to solve a linear system $\nabla^2f(\mathbf{x}) \mathbf{v} = \nabla f(\mathbf{x})$.
-For such systems, as the blog post argues, matrix-free iterative solvers combine well with Hessian operators because they only require successive evaluations of HVPs.
-The main upside of iterative solvers is their small memory footprint and their ease of implementation.
+The inverse $[\nabla^2f(\mathbf{x})]^{-1}$ is never created explicitly, since it suffices to solve a linear system $\nabla^2f(\mathbf{x}) \cdot \mathbf{v} = \nabla f(\mathbf{x})$.
+As the blog post argues, for such systems, matrix-free iterative solvers combine well with Hessian operators because they only require successive evaluations of HVPs.
+The main advantage of iterative solvers is their small memory footprint and their ease of implementation.
 
-However, when it is possible to materialize the whole matrix, direct linear solvers (e.g. based on factorization) can be used.
+However, when it is possible to materialize the whole Hessian matrix, direct linear solvers can be used (e.g. based on matrix factorization).
 As we have seen, ASD unlocks this option whenever the Hessian matrix is sparse enough.
 In terms of performance, computing a sparse Hessian matrix might require fewer HVPs overall than applying an iterative solver like the conjugate gradient method.
-The exact comparison depends on the number of colors in the sparsity pattern of the Hessian, as well as the numerical precision expected from the iterative solver (which influences the number of iterations, hence the number of HVPs).
+The exact performance depends on the number of colors in the sparsity pattern of the Hessian, as well as the numerical precision expected from the iterative solver (which influences the number of iterations, hence the number of HVPs).
 In terms of numerical accuracy, direct solvers are more robust than their iterative counterparts.
 Finally, in terms of compatibility, some prominent nonlinear optimization libraries only support Hessian matrices, and not Hessian operators.
 
