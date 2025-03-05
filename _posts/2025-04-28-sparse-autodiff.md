@@ -15,7 +15,7 @@ authors:
   - name: Guillaume Dalle
     url: "https://gdalle.github.io/"
     affiliations:
-      name: LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel
+      name: LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel, Marne-la-Vallée, France
   - name: Alexis Montoison
     affiliations:
       name: Argonne National Laboratory
