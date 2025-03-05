@@ -8,7 +8,17 @@ htmlwidgets: true
 hidden: false
 
 authors:
-  - name: Anonymous
+  - name: Adrian Hill
+    url: "https://adrianhill.de"
+    affiliations:
+      name: BIFOLD, Technical University of Berlin
+  - name: Guillaume Dalle
+    url: "https://gdalle.github.io/"
+    affiliations:
+      name: LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel
+  - name: Alexis Montoison
+    affiliations:
+      name: Argonne National Laboratory
 
 # must be the exact same name as your blogpost
 bibliography: 2025-04-28-sparse-autodiff.bib  
