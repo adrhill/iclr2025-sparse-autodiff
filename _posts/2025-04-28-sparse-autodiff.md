@@ -17,6 +17,7 @@ authors:
     affiliations:
       name: LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel, Marne-la-Vallée, France
   - name: Alexis Montoison
+  - url: "https://www.linkedin.com/in/alexis-montoison/"
     affiliations:
       name: Argonne National Laboratory
 
