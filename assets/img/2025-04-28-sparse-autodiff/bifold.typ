@@ -14,13 +14,13 @@
 #let bifold-accent-3 = rgb("#f4b11c")
 
 #let bifold-gray-1 = rgb("#666666")
-#let bifold-gray-1 = rgb("#808080")
-#let bifold-gray-1 = rgb("#999999")
-#let bifold-gray-1 = rgb("#cccccc")
-#let bifold-gray-1 = rgb("#e6e6e6")
+#let bifold-gray-2 = rgb("#808080")
+#let bifold-gray-3 = rgb("#999999")
+#let bifold-gray-4 = rgb("#cccccc")
+#let bifold-gray-5 = rgb("#e6e6e6")
 
 #let title-size = 120pt
-#let subtitle-size = 70pt
+#let subtitle-size = 65pt
 #let authors-size = 50pt
 #let institutes-size = 30pt
 #let heading-size = 48pt
@@ -31,7 +31,11 @@
 
 // BIFOLD poster template
 #let bifold-a0-poster(doc) = [
-  #set page("a0", margin: 3cm, background: image("bifold/BIFOLD_bg.png"))
+  #set page(
+    "a0",
+    margin: (top: 3cm, left: 4cm, right: 4cm, bottom: 2cm),
+    background: image("logos/BIFOLD_bg.png"),
+  )
   #set text(
     font: ("Catamaran", "Helvetica", "Arial"),
     size: layout-a0.at("body-size"),
@@ -117,6 +121,7 @@
       #if institutes != none {
         [
           #set text(size: institutes-size, weight: "regular")
+          // #set par(leading: 0.0em)
           #institutes
         ]
       }
@@ -135,7 +140,7 @@
     }
 
     /// Big title
-    [#set text(size: title-size, fill: white, weight: "bold")
+    [#set text(size: title-size, fill: white, weight: "extrabold")
       #upper(title)
     ]
     v(2.25em, weak: true)
