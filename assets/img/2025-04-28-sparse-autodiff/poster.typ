@@ -49,7 +49,7 @@
       they are evaluated with all standard basis vectors.
       #my-image("forward_mode.svg", width: 90%)
 
-      This either constructs matrices column-by-column
+      This either constructs Jacobian matrices column-by-column
       #text("(forward mode, computing as many JVPs as there are inputs)", fill:bifold-gray-2) or row-by-row
       #text(
         "(reverse mode, computing as many VJPs as there are outputs)",
@@ -86,10 +86,10 @@
 
     // Second column
 
-    #column-box(heading: [#capsify("Step 1:") Pattern Detection])[
-      To find orthogonal colomns, the sparsity pattern of non-zero values in the Jacobian matrix has to be detected.
+    #column-box(heading: [#capsify("Step 1:") Sparsity Pattern Detection])[
+      To find orthogonal colomns, the pattern of non-zero values in the Jacobian matrix has to be detected.
       This requires a fast binary AD system.
-      #my-image("sparsity_pattern.svg", width: 30%)
+      #my-image("sparsity_pattern.svg", width: 28%)
     ]
 
 
@@ -102,16 +102,15 @@
       ASD can be accelerated even further
       by coloring both rows and columns
       and combining forward and reverse modes.
-      #my-image("bicoloring.svg", width: 30%)
+      #my-image("bicoloring.svg", width: 28%)
     ]
 
-
-
     #column-box(heading: [Demonstration])[
+      ASD is fully automatic, as can be seen in the following Julia code:
       #show raw: it => block(
-        fill: rgb("#ffffff"),
-        inset: 8pt,
-        radius: 5pt,
+        fill: bifold-gray-5,
+        inset: 1em,
+        radius: 20pt,
         text(fill: rgb("#111111"), it),
       )
       #pad(
