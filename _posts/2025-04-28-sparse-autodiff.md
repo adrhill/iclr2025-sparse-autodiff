@@ -776,7 +776,7 @@ The exact performance depends on the number of colors in the sparsity pattern of
 In terms of numerical accuracy, direct solvers are more robust than their iterative counterparts.
 Finally, in terms of compatibility, some prominent nonlinear optimization libraries only support Hessian matrices, and not Hessian operators.
 
-The same reasoning also applies to Jacobian matrices, which can appear in settings like Newton's method for root-finding, implicit differentiation <d-cite key="blondel_efficient_2022"></d-cite>, or autodiff-friendly solvers for differential equations <d-cite key="sapienza_differentiable_2024"></d-cite>.
+The same reasoning also applies to Jacobian matrices, which can appear in settings like Newton's method for root-finding, implicit differentiation <d-cite key="blondel_efficient_2022"></d-cite>, or solvers for differential equations <d-cite key="sapienza_differentiable_2024"></d-cite>.
 
 ## Demonstration
 
