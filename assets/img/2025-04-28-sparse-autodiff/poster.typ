@@ -19,10 +19,10 @@
     Alexis Montoison#super("4")
   ],
   institutes: [
-    #super("1")BIFOLD – Berlin Institute for the Foundations of Learning and Data, Berlin, Germany,
+    #super("1")BIFOLD – Berlin Institute for the Foundations of Learning and Data, Berlin, Germany,\
     #super("2")Machine Learning Group, Technical University of Berlin, Berlin, Germany,\
-    #super("3")LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel, Marne-la-Vallée, France,
-    #super("4")Argonne National Laboratory
+    #super("3")LVMT, ENPC, Institut Polytechnique de Paris, Univ Gustave Eiffel, Marne-la-Vallée, France,\
+    #super("4")Argonne National Laboratory, Lemont, USA
   ],
   // keywords: [Automatic Differentiation, Sparsity, Second-order optimization],
   authors-size: authors-size,
@@ -39,15 +39,15 @@
     // First column
     #column-box(heading: [#capsify("Recap:") Automatic Differentiation (AD)])[
       The use of AD in Deep Learning is ubiquitous:
-      Instead of computing gradients, Jacobians and Hessians by hand, AD automatically computes them for given PyTorch, JAX and Julia code.
+      Instead having to compute gradients and Jacobians by hand, AD automatically computes them for given PyTorch, JAX or Julia code.
 
       *Matrix-free Jacobian operators* (dashed) lie at the core of AD.
-      While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions with unknown structure*.\
+      While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions* with unknown structure.\
       To turn such Jacobian operators into *Jacobian matrices* (solid),
       they are evaluated with all standard basis vectors.
       #my-image("forward_mode.svg", width: 90%)
 
-      This either constructs Jacobian matrices one column#super("1") or one row#super("2") at a time.
+      This constructs Jacobian matrices column-by-column#super("1") or row-by-row#super("2").
 
       #text(
         [#super("1") Forward mode, computing as many JVPs as there are inputs (pictured).],
@@ -65,8 +65,8 @@
       heading: [#capsify("Idea:") Automatic Sparse Differentiation (ASD)],
     )[
       Since Jacobian operators are linear maps,
-      we can *simultaneously compute the values of multiple orthogonal columns* (or rows).\
-      We then decompress the resulting vectors into the Jacobian matrix @griewankEvaluatingDerivativesPrinciples2008 @gebremedhinWhatColorYour2005.
+      we can *simultaneously compute the values of multiple orthogonal columns* (or rows)
+      and decompress the resulting vectors into the Jacobian matrix @griewankEvaluatingDerivativesPrinciples2008 @gebremedhinWhatColorYour2005.
 
       #grid(
         columns: 2,
@@ -83,11 +83,9 @@
 
     #bibliography-box(
       "2025-04-28-sparse-autodiff.bib",
-      body-size: 15pt,
+      body-size: 13.3pt,
       stretch-to-next: true,
     ) // peace-of-poster seems to have a bug that requires sticking the bibfile into it's source folder.
-
-
 
     #colbreak()
 
@@ -99,12 +97,11 @@
       #my-image("sparsity_pattern.svg", width: 28%)
 
       Mirroring the multitude of approaches to AD,
-      there are also many viable approaches to pattern detection
+      many viable approaches to pattern detection exist
       @dixonAutomaticDifferentiationLarge1990
       @bischofEfficientComputationGradients1996
       @waltherComputingSparseHessians2008.
     ]
-
 
     #column-box(heading: [#capsify("Step 2:") Coloring])[
       Graph coloring algorithms are applied to the sparsity pattern to detect orthogonal columns/rows @gebremedhinWhatColorYour2005.
@@ -121,16 +118,15 @@
     ]
 
     #column-box(heading: [Benchmarks], stretch-to-next: true)[
-      ASD can be drastically more performant than AD.
-      The performance depends on the sparsity of the Jacobian matrix:
+      ASD can be drastically faster than AD.
+      The performance depends on the sparsity of the Jacobian:
       The savings of fewer matrix-vector products have to outweigh the cost of sparsity pattern detection and coloring.
-      #my-image("demo/benchmark.png", width: 48%)
+      #my-image("demo/benchmark.png", width: 45%)
 
       *Benchmark:* $k=10$ iterations of difference operator on input of length $n$.
     ]
   ],
 )
-
 
 #bottom-box(
   logo: grid(

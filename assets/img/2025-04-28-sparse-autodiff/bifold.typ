@@ -25,10 +25,6 @@
 #let institutes-size = 30pt
 #let heading-size = 48pt
 
-#let my-custom-heading(heading, ..args) = {
-  align(center, rect(heading, ..args, width: 100% - 2em))
-}
-
 // BIFOLD poster template
 #let bifold-a0-poster(doc) = [
   #set page(
@@ -40,6 +36,10 @@
     font: ("Catamaran", "Helvetica", "Arial"),
     size: layout-a0.at("body-size"),
   )
+  #set super(typographic: false) // otherwise look weird Catamaran
+
+  #set cite(style: "springer-basic")
+
   #let box-spacing = 1.5cm
   #set columns(gutter: box-spacing)
   #set block(spacing: box-spacing)
@@ -113,26 +113,34 @@
     } else { keywords-size }
 
     /// Generate body of box
-    let text-content = [
-      #set text(size: subtitle-size)
-      #if subtitle != none { [#subtitle\ ] }
-      #set text(size: authors-size)
-      #if authors != none { [#authors\ ] }
-      #if institutes != none {
-        [
-          #set text(size: institutes-size, weight: "regular")
-          // #set par(leading: 0.0em)
-          #institutes
-        ]
-      }
-      #if keywords != none {
-        [
-          #v(1em, weak: true)
-          #set text(size: keywords-size)
-          #keywords
-        ]
-      }
-    ]
+    let text-content = grid(
+      columns: (8fr, 2fr),
+      align: (horizon + left, horizon + right),
+      column-gutter: 0em,
+      [
+        #set par(leading: 0.6em, spacing: 0.6em)
+        #set text(size: subtitle-size)
+        #if subtitle != none { [#subtitle] }
+        #set text(size: authors-size)
+        #if authors != none { [#authors] }
+        #if institutes != none {
+          [
+            #set text(size: institutes-size, weight: "regular")
+            #par(institutes, leading: 0.75em)
+          ]
+        }
+        #if keywords != none {
+          [
+            #v(1em, weak: true)
+            #set text(size: keywords-size)
+            #keywords
+          ]
+        }
+      ],
+      [
+        #image("iclr_qr.png", width: 60%)
+      ],
+    )
 
     /// Expand to full width of no image is specified
     if logo == none {
@@ -143,24 +151,19 @@
     [#set text(size: title-size, fill: white, weight: "extrabold")
       #upper(title)
     ]
-    v(2.25em, weak: true)
+    v(2.5em, weak: true)
     /// Finally construct the main rectangle
     common-box(
       heading: [
         #background
-        #v(-measure(background).height)
-        #stack(
-          dir: ltr,
-          box(text-content, width: text-relative-width),
-          align(right, box(logo, width: 100% - spacing - text-relative-width)),
-        )
+        // #v(-measure(background).height)
+        #text-content
       ],
       heading-box-args: (
         inset: 1em,
         width: 100%,
         fill: white,
         stroke: bifold-blue-6,
-        // radius: 5,
       ),
     )
   }
