@@ -38,7 +38,7 @@
   [
     // First column
     #column-box(heading: [#capsify("Recap:") Automatic Differentiation (AD)])[
-      The use of AD in Deep Learning is ubiquitous:
+      The use of AD in deep learning is ubiquitous:
       Instead having to compute gradients and Jacobians by hand, AD automatically computes them for given PyTorch, JAX or Julia code.
 
       *Matrix-free Jacobian operators* (dashed) lie at the core of AD.
@@ -92,7 +92,7 @@
     // Second column
 
     #column-box(heading: [#capsify("Step 1:") Sparsity Pattern Detection])[
-      To find orthogonal colomns, the pattern of non-zero values in the Jacobian matrix has to be detected.
+      To find orthogonal colomns, the pattern of non-zero values in the Jacobian matrix has to be computed.
       This requires a binary AD system.
       #my-image("sparsity_pattern.svg", width: 28%)
 
@@ -118,28 +118,42 @@
     ]
 
     #column-box(heading: [Benchmarks], stretch-to-next: true)[
-      ASD can be drastically faster than AD.
-      The performance depends on the sparsity of the Jacobian:
-      The savings of fewer matrix-vector products have to outweigh the cost of sparsity pattern detection and coloring.
-      #my-image("demo/benchmark.png", width: 45%)
+      ASD can drastically outperform AD.
+      The performance depends on the sparsity of the Jacobian matrix:
+      savings of fewer matrix-vector products have to outweigh the cost of sparsity pattern detection and coloring.
+      #my-image("demo/benchmark.png", width: 40%)
 
-      *Benchmark:* $k=10$ iterations of difference operator on input of length $n$.
+      *Benchmark:* $k$ iterations of difference operator on input of length $n$.
     ]
   ],
 )
 
-#bottom-box(
-  logo: grid(
+// #bottom-box(
+//   logo: grid(
+//     columns: 5,
+//     align: horizon + center,
+//     column-gutter: 1em,
+//     image("logos/BIFOLD_Logo_farbig.svg", height: 1.5em),
+//     image("logos/TUB-color.svg", height: 1.5em),
+//     image("logos/logo-enpc-ip-rvb.png", height: 2.0em),
+//     image("logos/LVMT LOGO.png", height: 1.2em),
+//     image("logos/Argonnelablogo.png", height: 1.5em),
+//   ),
+// )[
+//   Check out our ICLR blog post\
+//   for more information & code!
+// ]
+
+#bottom-box()[
+  #set align(center)
+  #grid(
     columns: 5,
     align: horizon + center,
     column-gutter: 1em,
-    image("logos/BIFOLD_Logo_farbig.svg", height: 1.5em),
-    image("logos/TUB-color.svg", height: 1.5em),
-    image("logos/logo-enpc-ip-rvb.png", height: 2.0em),
-    image("logos/LVMT LOGO.png", height: 1.2em),
-    image("logos/Argonnelablogo.png", height: 1.5em),
-  ),
-)[
-  Check out our ICLR blog post\
-  for more information & code!
+    image("logos/BIFOLD_Logo_farbig.svg", height: 1.65em),
+    image("logos/TUB-color.svg", height: 1.65em),
+    image("logos/logo-enpc-ip-rvb.png", height: 2em),
+    image("logos/LVMT LOGO.png", height: 1.5em),
+    image("logos/Argonnelablogo.png", height: 1.75em),
+  )
 ]
