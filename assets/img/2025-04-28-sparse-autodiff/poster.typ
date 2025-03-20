@@ -38,36 +38,35 @@
   [
     // First column
     #column-box(heading: [#capsify("Recap:") Automatic Differentiation (AD)])[
-      The chain rule tells us that
-      the Jacobian of a composed function $f = h compose g$ is obtained by multiplying the *Jacobian matrices* (solid) of $h$ and $g$.
-      #my-image("chainrule_num.svg")
+      The use of AD in Deep Learning is ubiquitous:
+      Instead of computing gradients, Jacobians and Hessians by hand, AD automatically computes them for given PyTorch, JAX and Julia code.
 
-      However, AD doesn't use Jacobian matrices, instead opting for matrix-free *Jacobian operators* (dashed). The chain rule now corresponds to a composition of operators.
-      #my-image("matrixfree.svg")
-
-      To turn such (composed) *Jacobian operators* into *Jacobian matrices*,
+      *Matrix-free Jacobian operators* (dashed) lie at the core of AD.
+      While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions with unknown structure*.\
+      To turn such Jacobian operators into *Jacobian matrices* (solid),
       they are evaluated with all standard basis vectors.
       #my-image("forward_mode.svg", width: 90%)
 
-      This either constructs Jacobian matrices column-by-column
-      #text("(forward mode, computing as many JVPs as there are inputs)", fill:bifold-gray-2) or row-by-row
+      This either constructs Jacobian matrices one column#super("1") or one row#super("2") at a time.
+
       #text(
-        "(reverse mode, computing as many VJPs as there are outputs)",
+        [#super("1") Forward mode, computing as many JVPs as there are inputs (pictured).],
+        fill: bifold-gray-2,
+      )\
+      #text(
+        [#super("2") Reverse mode, computing as many VJPs as there are outputs.],
         fill: bifold-gray-2,
       )
-      .
       // The computational cost therefore depends on the input and output dimensionality of $f$.
     ]
 
 
     #column-box(
       heading: [#capsify("Idea:") Automatic Sparse Differentiation (ASD)],
-      stretch-to-next: true,
     )[
       Since Jacobian operators are linear maps,
-      we can:
-      1. simultaneously compute the values of orthogonal columns/rows
-      2. decompress the resulting vectors into the Jacobian matrix.
+      we can *simultaneously compute the values of multiple orthogonal columns* (or rows).\
+      We then decompress the resulting vectors into the Jacobian matrix @griewankEvaluatingDerivativesPrinciples2008 @gebremedhinWhatColorYour2005.
 
       #grid(
         columns: 2,
@@ -77,10 +76,18 @@
         image("sparse_ad_forward_decompression.svg", width: 100%),
       )
 
-      Unfortunately, contrary to our illustrations,
-      Jacobian operators (dashed) are black-box functions with unknown structure.
-      Two preliminary steps are therefore required to determine orthogonal columns/rows.
+      *To do this, ASD requires knowledge of the structure of the resulting Jacobian matrix.*
+      Since Jacobian operators have unknown structure,
+      two preliminary steps are required.
     ]
+
+    #bibliography-box(
+      "2025-04-28-sparse-autodiff.bib",
+      body-size: 15pt,
+      stretch-to-next: true,
+    ) // peace-of-poster seems to have a bug that requires sticking the bibfile into it's source folder.
+
+
 
     #colbreak()
 
@@ -88,56 +95,38 @@
 
     #column-box(heading: [#capsify("Step 1:") Sparsity Pattern Detection])[
       To find orthogonal colomns, the pattern of non-zero values in the Jacobian matrix has to be detected.
-      This requires a fast binary AD system.
+      This requires a binary AD system.
       #my-image("sparsity_pattern.svg", width: 28%)
+
+      Mirroring the multitude of approaches to AD,
+      there are also many viable approaches to pattern detection
+      @dixonAutomaticDifferentiationLarge1990
+      @bischofEfficientComputationGradients1996
+      @waltherComputingSparseHessians2008.
     ]
 
 
     #column-box(heading: [#capsify("Step 2:") Coloring])[
-      Graph coloring algorithms are applied to the sparsity pattern to detect orthogonal columns/rows.
+      Graph coloring algorithms are applied to the sparsity pattern to detect orthogonal columns/rows @gebremedhinWhatColorYour2005.
       #my-image("colored_graph.svg")
     ]
 
     #column-box(heading: [Bicoloring])[
       ASD can be accelerated even further
       by coloring both rows and columns
-      and combining forward and reverse modes.
+      and combining forward and reverse modes
+      @hossainComputingSparseJacobian1998
+      @colemanEfficientComputationSparse1998.
       #my-image("bicoloring.svg", width: 28%)
     ]
 
-    #column-box(heading: [Demonstration])[
-      ASD is fully automatic, as can be seen in the following Julia code:
-      #show raw: it => block(
-        fill: bifold-gray-5,
-        inset: 1em,
-        radius: 20pt,
-        text(fill: rgb("#111111"), it),
-      )
-      #pad(
-        left: 1em,
-        ```julia
-        using DifferentiationInterface
-        using SparseConnectivityTracer, SparseMatrixColorings
-        import ForwardDiff
+    #column-box(heading: [Benchmarks], stretch-to-next: true)[
+      ASD can be drastically more performant than AD.
+      The performance depends on the sparsity of the Jacobian matrix:
+      The savings of fewer matrix-vector products have to outweigh the cost of sparsity pattern detection and coloring.
+      #my-image("demo/benchmark.png", width: 48%)
 
-        ad_backend = AutoForwardDiff()
-        asd_backend = AutoSparse(
-            ad_backend;
-            TracerSparsityDetector(),
-            GreedyColoringAlgorithm()
-        )
-
-        jacobian(f, ad_backend,  x) # dense
-        jacobian(f, asd_backend, x) # sparse
-
-        ```,
-      )]
-
-    #column-box(
-      heading: [References],
-      stretch-to-next: true,
-    )[
-      Bibliography goes here
+      *Benchmark:* $k=10$ iterations of difference operator on input of length $n$.
     ]
   ],
 )
@@ -156,5 +145,5 @@
   ),
 )[
   Check out our ICLR blog post\
-  for more information!
+  for more information & code!
 ]

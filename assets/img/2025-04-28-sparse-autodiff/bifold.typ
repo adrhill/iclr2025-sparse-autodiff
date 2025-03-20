@@ -1,4 +1,4 @@
-#import "@preview/peace-of-posters:0.5.2": *
+#import "@preview/peace-of-posters:0.5.3": *
 
 // BIFOLD CI colors
 #let bifold-blue-1 = rgb("#002f67")
