@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -135,13 +135,13 @@ end
 # ╔═╡ 2b332332-0104-4749-b06b-3cc1789e60bd
 let
 	fig = Figure()
-	ax = Axis(fig[1, 1], xlabel=L"Input dimension $n$, with constant $k=10$", ylabel=L"\text{Execution time (s)}", xscale=log10, yscale=log10)
+	ax = Axis(fig[1, 1], title="Benchmark: 10 iterations of finite difference operator on input", xlabel="Input dimension", ylabel="Execution time (s)", xscale=log10, yscale=log10)
 	sparse_prep = @rsubset(data, :sparse && :prepared)
 	sparse_noprep = @rsubset(data, :sparse && !:prepared)
 	dense = @rsubset(data, !:sparse && :prepared)
-	scatterlines!(ax, dense[!, :n], dense[!, :time], linewidth=2, label=L"\text{AD}")
-	scatterlines!(ax, sparse_noprep[!, :n], sparse_noprep[!, :time], linestyle=:dash, linewidth=2, label=L"\text{ASD}")
-	scatterlines!(ax, sparse_prep[!, :n], sparse_prep[!, :time], linestyle=:dot, linewidth=2, label=L"\text{ASD (excluding detection and coloring)}")
+	scatterlines!(ax, dense[!, :n], dense[!, :time], linewidth=2, label="AD")
+	scatterlines!(ax, sparse_noprep[!, :n], sparse_noprep[!, :time], linestyle=:dash, linewidth=2, label="ASD")
+	scatterlines!(ax, sparse_prep[!, :n], sparse_prep[!, :time], linestyle=:dot, linewidth=2, label="ASD (excluding detection and coloring)")
 	axislegend(position=:lt)
 	save("benchmark.png", fig)
 	fig
@@ -184,7 +184,7 @@ SparseMatrixColorings = "~0.4.10"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.4"
 manifest_format = "2.0"
 project_hash = "bf21a6204ea72281dc6c55a4fe2051f00ef6224c"
 
@@ -1588,7 +1588,7 @@ version = "2.4.0+0"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.1+4"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]

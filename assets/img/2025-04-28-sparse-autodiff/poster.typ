@@ -39,7 +39,7 @@
     // First column
     #column-box(heading: [#capsify("Recap:") Automatic Differentiation (AD)])[
       The use of AD in deep learning is ubiquitous:
-      Instead having to compute gradients and Jacobians by hand, AD automatically computes them for given PyTorch, JAX or Julia code.
+      Instead of having to compute gradients and Jacobians by hand, AD automatically computes them given PyTorch, JAX or Julia code.
 
       *Matrix-free Jacobian operators* (dashed) lie at the core of AD.
       While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions* with unknown structure.\
@@ -62,7 +62,7 @@
 
 
     #column-box(
-      heading: [#capsify("Idea:") Automatic Sparse Differentiation (ASD)],
+      heading: [Automatic Sparse Differentiation (ASD)],
     )[
       Since Jacobian operators are linear maps,
       we can *simultaneously compute the values of multiple orthogonal columns* (or rows)
@@ -104,7 +104,7 @@
     ]
 
     #column-box(heading: [#capsify("Step 2:") Coloring])[
-      Graph coloring algorithms are applied to the sparsity pattern to detect orthogonal columns/rows @gebremedhinWhatColorYour2005.
+      Graph coloring algorithms are applied to the sparsity pattern to group together orthogonal columns/rows @gebremedhinWhatColorYour2005.
       #my-image("colored_graph.svg")
     ]
 
@@ -120,10 +120,8 @@
     #column-box(heading: [Benchmarks], stretch-to-next: true)[
       ASD can drastically outperform AD.
       The performance depends on the sparsity of the Jacobian matrix:
-      savings of fewer matrix-vector products have to outweigh the cost of sparsity pattern detection and coloring.
-      #my-image("demo/benchmark.png", width: 40%)
-
-      *Benchmark:* $k$ iterations of difference operator on input of length $n$.
+      the cost of sparsity pattern detection and coloring has to be amortized by having to compute fewer matrix-vector products.
+      #my-image("demo/benchmark.png", width: 50%)
     ]
   ],
 )
