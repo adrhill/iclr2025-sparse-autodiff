@@ -134,7 +134,7 @@ end
 
 # ╔═╡ 2b332332-0104-4749-b06b-3cc1789e60bd
 let
-	fig = Figure()
+	fig = Figure(; size=(550, 400))
 	ax = Axis(fig[1, 1], title="Benchmark: 10 iterations of finite difference operator on input", xlabel="Input dimension", ylabel="Execution time (s)", xscale=log10, yscale=log10)
 	sparse_prep = @rsubset(data, :sparse && :prepared)
 	sparse_noprep = @rsubset(data, :sparse && !:prepared)
