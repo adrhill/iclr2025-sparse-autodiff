@@ -92,7 +92,7 @@
     // Second column
 
     #column-box(heading: [#capsify("Step 1:") Sparsity Pattern Detection])[
-      To find orthogonal colomns, the pattern of non-zero values in the Jacobian matrix has to be computed.
+      To find orthogonal columns, the pattern of non-zero values in the Jacobian matrix has to be computed.
       This requires a binary AD system.
       #my-image("sparsity_pattern.svg", width: 28%)
 
@@ -121,7 +121,7 @@
       ASD can drastically outperform AD.
       The performance depends on the sparsity of the Jacobian matrix:
       the cost of sparsity pattern detection and coloring has to be amortized by having to compute fewer matrix-vector products.
-      #my-image("demo/benchmark.png", width: 50%)
+      #my-image("demo/benchmark.png", width: 53%)
     ]
   ],
 )
