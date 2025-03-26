@@ -19,7 +19,7 @@
 #let bifold-gray-4 = rgb("#cccccc")
 #let bifold-gray-5 = rgb("#e6e6e6")
 
-#let title-size = 120pt
+#let title-size = 110pt
 #let subtitle-size = 65pt
 #let authors-size = 50pt
 #let institutes-size = 30pt
@@ -30,7 +30,9 @@
   #set page(
     "a0",
     margin: (top: 3cm, left: 4cm, right: 4cm, bottom: 2cm),
-    background: image("logos/BIFOLD_bg.png"),
+    flipped: true,
+    fill: bifold-blue-1,
+    // background: image("logos/BIFOLD_bg.png"),
   )
   #set text(
     font: ("Catamaran", "Helvetica", "Arial"),
@@ -120,7 +122,7 @@
       [
         #set par(leading: 0.6em, spacing: 0.6em)
         #set text(size: subtitle-size)
-        #if subtitle != none { [#subtitle] }
+        #if subtitle != none { [#subtitle] }\
         #set text(size: authors-size)
         #if authors != none { [#authors] }
         #if institutes != none {
@@ -138,7 +140,7 @@
         }
       ],
       [
-        #image("iclr_qr.png", width: 60%)
+        #image("iclr_qr.png", width: 30%)
       ],
     )
 
