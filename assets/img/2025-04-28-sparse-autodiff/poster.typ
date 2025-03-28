@@ -58,12 +58,12 @@
         [#super("2") Reverse mode, computing as many VJPs as there are outputs.],
         fill: bifold-gray-2,
       )
-      #v(3.68cm)
+      #v(1.11cm)
     ]
 
     #bibliography-box(
       "2025-04-28-sparse-autodiff.bib",
-      body-size: 18pt,
+      body-size: 20pt,
       // stretch-to-next: true
     ) // peace-of-poster seems to have a bug that requires sticking the bibfile into it's source folder.
 
@@ -81,8 +81,8 @@
         columns: 2,
         align: horizon + center,
         column-gutter: 0em,
-        image("sparse_ad_forward_full.svg", width: 90%),
-        image("sparse_ad_forward_decompression.svg", width: 90%),
+        image("sparse_ad_forward_full.svg", width: 95%),
+        image("sparse_ad_forward_decompression.svg", width: 95%),
       )
 
       *To do this, ASD requires knowledge of the structure of the resulting Jacobian matrix.*
@@ -114,17 +114,17 @@
 
       ASD can be accelerated even further
       by coloring both rows and columns
-      and combining forward and reverse modes
+      and combining forward and reverse mode
       @hossainComputingSparseJacobian1998
       @colemanEfficientComputationSparse1998.
-      #my-image("bicoloring.svg", width: 27%)
+      #my-image("bicoloring.svg", width: 28%)
     ]
 
     #column-box(heading: [Benchmarks], stretch-to-next: true)[
       ASD can drastically outperform AD.
       The performance depends on the sparsity of the Jacobian matrix:
       the cost of sparsity pattern detection and coloring has to be amortized by having to compute fewer matrix-vector products.
-      #my-image("demo/benchmark.png", width: 53%)
+      #my-image("demo/benchmark.png", width: 58%)
     ]
   ],
 )
