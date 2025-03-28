@@ -1,4 +1,4 @@
-#import "@preview/peace-of-posters:0.5.3": *
+#import "@preview/peace-of-posters:0.5.4": *
 
 // BIFOLD CI colors
 #let bifold-blue-1 = rgb("#002f67")
@@ -32,7 +32,7 @@
     margin: (top: 3cm, left: 4cm, right: 4cm, bottom: 2cm),
     flipped: true,
     fill: bifold-blue-1,
-    // background: image("logos/BIFOLD_bg.png"),
+    background: image("logos/BIFOLD_bg_landscape.png"),
   )
   #set text(
     font: ("Catamaran", "Helvetica", "Arial"),
@@ -140,7 +140,7 @@
         }
       ],
       [
-        #image("iclr_qr.png", width: 30%)
+        #image("qr_landscape3.png", width: 61%)
       ],
     )
 

@@ -42,10 +42,11 @@
       Instead of having to compute gradients and Jacobians by hand, AD automatically computes them given PyTorch, JAX or Julia code.
 
       *Matrix-free Jacobian operators* (dashed) lie at the core of AD.
-      While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions* with unknown structure.\
+      While we illustrate them as matrices to provide intuition, they are best thought of as *black-box functions* with unknown structure.
+
       To turn such Jacobian operators into *Jacobian matrices* (solid),
       they are evaluated with all standard basis vectors.
-      #my-image("forward_mode.svg", width: 90%)
+      #my-image("forward_mode.svg", width: 95%)
 
       This constructs Jacobian matrices column-by-column#super("1") or row-by-row#super("2").
 
@@ -57,24 +58,31 @@
         [#super("2") Reverse mode, computing as many VJPs as there are outputs.],
         fill: bifold-gray-2,
       )
-      // The computational cost therefore depends on the input and output dimensionality of $f$.
+      #v(3.68cm)
     ]
 
+    #bibliography-box(
+      "2025-04-28-sparse-autodiff.bib",
+      body-size: 18pt,
+      // stretch-to-next: true
+    ) // peace-of-poster seems to have a bug that requires sticking the bibfile into it's source folder.
 
-    #column-box(
-      heading: [Automatic Sparse Differentiation (ASD)],
-      stretch-to-next: true,
-    )[
+    // Second column
+    #colbreak()
+
+    #column-box(heading: [Automatic Sparse Differentiation (ASD)])[
       Since Jacobian operators are linear maps,
       we can *simultaneously compute the values of multiple orthogonal columns* (or rows)
-      and decompress the resulting vectors into the Jacobian matrix @griewankEvaluatingDerivativesPrinciples2008 @gebremedhinWhatColorYour2005.
+      and decompress the resulting vectors into the Jacobian matrix
+      @griewankEvaluatingDerivativesPrinciples2008
+      @gebremedhinWhatColorYour2005.
 
       #grid(
         columns: 2,
         align: horizon + center,
         column-gutter: 0em,
-        image("sparse_ad_forward_full.svg", width: 50%),
-        image("sparse_ad_forward_decompression.svg", width: 50%),
+        image("sparse_ad_forward_full.svg", width: 90%),
+        image("sparse_ad_forward_decompression.svg", width: 90%),
       )
 
       *To do this, ASD requires knowledge of the structure of the resulting Jacobian matrix.*
@@ -82,12 +90,10 @@
       two preliminary steps are required.
     ]
 
-
-    #colbreak()
-
-    // Second column
-
-    #column-box(heading: [#capsify("Step 1:") Sparsity Pattern Detection])[
+    #column-box(
+      heading: [#capsify("Step 1:") Sparsity Pattern Detection],
+      stretch-to-next: true,
+    )[
       To find orthogonal columns, the pattern of non-zero values in the Jacobian matrix has to be computed.
       This requires a binary AD system.
       #my-image("sparsity_pattern.svg", width: 28%)
@@ -99,71 +105,50 @@
       @waltherComputingSparseHessians2008.
     ]
 
+    // Third column
+    #colbreak()
+
     #column-box(heading: [#capsify("Step 2:") Coloring])[
       Graph coloring algorithms are applied to the sparsity pattern to group together orthogonal columns/rows @gebremedhinWhatColorYour2005.
-      #my-image("colored_graph.svg")
-    ]
+      #my-image("colored_graph.svg", width: 70%)
 
-
-
-    #column-box(
-      heading: [Bicoloring],
-      stretch-to-next: true,
-    )[
       ASD can be accelerated even further
       by coloring both rows and columns
       and combining forward and reverse modes
       @hossainComputingSparseJacobian1998
       @colemanEfficientComputationSparse1998.
-      #my-image("bicoloring.svg", width: 28%)
+      #my-image("bicoloring.svg", width: 27%)
     ]
 
-    #colbreak()
-
-    #column-box(heading: [Benchmarks])[
+    #column-box(heading: [Benchmarks], stretch-to-next: true)[
       ASD can drastically outperform AD.
       The performance depends on the sparsity of the Jacobian matrix:
       the cost of sparsity pattern detection and coloring has to be amortized by having to compute fewer matrix-vector products.
       #my-image("demo/benchmark.png", width: 53%)
     ]
-
-    #bibliography-box(
-      "2025-04-28-sparse-autodiff.bib",
-      body-size: 15pt,
-      // stretch-to-next: true,
-    ) // peace-of-poster seems to have a bug that requires sticking the bibfile into it's source folder.
-
-    #bottom-box(stretch-to-next: true,
-)[
-      #set align(center)
-      #grid(
-        columns: 2,
-        align: horizon + center,
-        column-gutter: 1em,
-        image("logos/BIFOLD_Logo_farbig.svg", height: 1.65em),
-        image("logos/TUB-color.svg", height: 1.65em),
-      )
-      #grid(
-        columns: 3,
-        align: horizon + center,
-        column-gutter: 1em,
-        image("logos/logo-enpc-ip-rvb.png", height: 2em),
-        image("logos/LVMT LOGO.png", height: 1.5em),
-        image("logos/Argonnelablogo.png", height: 1.75em),
-      )
-    ]
   ],
 )
 
-// #bottom-box()[]
 
-// #grid(
-//   columns: 5,
-//   align: horizon + center,
-//   column-gutter: 1em,
-//   image("logos/BIFOLD_Logo_farbig.svg", height: 1.65em),
-//   image("logos/TUB-color.svg", height: 1.65em),
-//   image("logos/logo-enpc-ip-rvb.png", height: 2em),
-//   image("logos/LVMT LOGO.png", height: 1.5em),
-//   image("logos/Argonnelablogo.png", height: 1.75em),
-// )
+// Custom code that acts like `bottom-box`
+#align(
+  bottom,
+  common-box(
+    heading: align(center)[
+      #grid(
+        columns: 5,
+        align: horizon + center,
+        column-gutter: 1.5em,
+        image("logos/BIFOLD_Logo_farbig.svg", height: 1.5em),
+        image("logos/TUB-color.svg", height: 1.5em),
+        image("logos/logo-enpc-ip-rvb.png", height: 1.5em),
+        image("logos/LVMT LOGO.png", height: 1.25em),
+        image("logos/Argonnelablogo.png", height: 1.5em),
+      )
+    ],
+    bottom-box: true,
+  ),
+)
+
+
+
